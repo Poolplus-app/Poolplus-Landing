@@ -1,0 +1,783 @@
+<style>*::before,*::after{content:unset!important;display:none!important;background:none!important;}</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pool Plus — South Florida's First Pool Service Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--dark:#0b1120;--dark2:#111827;--blue:#1e90c8;--blue2:#1578aa;--light:#f5f9fc;--white:#fff;--text:#0f172a;--muted:#6b7280;--border:#e5eaf2;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;color:var(--text);background:var(--white);-webkit-font-smoothing:antialiased;}
+
+/* NAV */
+nav{background:var(--dark);padding:0 6%;position:sticky;top:0;z-index:100;}
+.nav-inner{max-width:1200px;margin:0 auto;height:68px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{height:34px;display:block;}
+.nav-contact{display:flex;align-items:center;gap:8px;background:transparent;border:1.5px solid rgba(255,255,255,.2);border-radius:50px;padding:9px 20px;color:white;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;}
+.nav-contact:hover{background:rgba(255,255,255,.08);}
+.nav-contact-arrow{width:16px;filter:brightness(10);}
+
+/* HERO */
+.hero{background:var(--dark);position:relative;overflow:hidden;min-height:640px;}
+.hero-bg{position:absolute;inset:0;background-image:url('https://poolplus.app/forms/images/hero-bg.jpg'),linear-gradient(135deg,#0b1120,#1e3a5f);background-size:cover;background-position:center 40%;opacity:.3;}
+.hero-grad{position:absolute;inset:0;background:linear-gradient(to right,rgba(11,17,32,.97) 40%,rgba(11,17,32,.5) 70%,rgba(11,17,32,.2) 100%);}
+.hero-inner{max-width:1200px;margin:0 auto;padding:80px 6% 0;display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:flex-start;position:relative;z-index:2;}
+.hero-tag{display:inline-block;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;margin-bottom:20px;letter-spacing:.02em;}
+.hero h1{font-size:clamp(2rem,4.5vw,3.4rem);font-weight:800;color:white;line-height:1.08;letter-spacing:-.02em;margin-bottom:20px;}
+.hero-sub{font-size:16px;color:rgba(255,255,255,.6);line-height:1.75;margin-bottom:32px;max-width:460px;}
+.hero-pills{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:48px;}
+.hero-pill{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.75);}
+.hero-pill-star{width:14px;filter:brightness(10) saturate(.5);}
+
+/* WIDGET */
+.widget{background:white;border-radius:16px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.3);}
+.widget-body{padding:28px 28px 0;}
+.widget-footer{padding:20px 28px 28px;}
+.widget-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:22px;}
+.field{margin-bottom:16px;}
+.field-label{font-size:12px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;display:flex;align-items:center;gap:7px;}
+.field-label-icon{width:15px;opacity:.5;}
+.select-wrap{position:relative;}
+.select-wrap select{width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:13px 40px 13px 14px;font-size:14px;font-family:inherit;color:var(--text);outline:none;appearance:none;cursor:pointer;transition:border .2s;}
+.select-wrap select:focus{border-color:var(--blue);background:white;}
+.select-arr{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;width:16px;}
+.price-box{background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:12px;padding:18px 20px;margin:18px 0;}
+.price-box-label{font-size:12px;color:#9ca3af;margin-bottom:2px;}
+.price-box-service{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;}
+.price-from{font-size:11px;color:#9ca3af;font-weight:500;}
+.price-amount{font-size:30px;font-weight:800;color:var(--text);line-height:1;}
+.price-currency{font-size:14px;font-weight:600;color:#9ca3af;margin-left:4px;}
+.book-btn{width:100%;background:var(--dark);color:white;border:none;border-radius:12px;padding:16px 24px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .2s;font-family:inherit;}
+.book-btn:hover{background:#1a2540;}
+.book-btn-arrow{width:20px;filter:brightness(10);}
+.widget-note{font-size:12px;color:#9ca3af;line-height:1.65;margin-top:16px;padding-top:16px;border-top:1px solid #f0f0f0;}
+.widget-note strong{color:var(--text);}
+
+/* STEP 2 */
+.step2{display:none;padding:28px;}
+.step2.active{display:block;}
+.step2-title{font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.step2-icon{width:20px;}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.input-field{position:relative;}
+.input-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;opacity:.4;}
+.input-field input,.input-field select{width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px 12px 38px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:border .2s;appearance:none;}
+.input-field input:focus,.input-field select:focus{border-color:var(--blue);background:white;}
+.schedule-tabs{display:flex;gap:8px;margin-bottom:16px;}
+.sched-tab{flex:1;padding:11px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;text-align:center;transition:all .2s;}
+.sched-tab.on{border-color:var(--blue);background:#eff7fd;color:var(--blue);}
+.consent-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
+.consent-row input[type=checkbox]{width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--blue);}
+.consent-row label{font-size:12px;color:#9ca3af;line-height:1.6;cursor:pointer;}
+.consent-row label strong{color:var(--text);}
+.send-btn{width:100%;background:var(--dark);color:white;border:none;border-radius:12px;padding:15px 24px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-top:16px;font-family:inherit;transition:all .2s;}
+.send-btn:hover{background:#1a2540;}
+.send-arrow{width:20px;filter:brightness(10);}
+.back-btn{display:flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #e5e7eb;border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;margin-top:10px;width:100%;justify-content:center;font-family:inherit;transition:all .2s;}
+.back-btn:hover{border-color:#94a3b8;color:var(--text);}
+.back-arrow{width:16px;opacity:.5;}
+
+/* STEP 3 */
+.step3{display:none;padding:40px 28px;text-align:center;}
+.step3.active{display:block;}
+.tick-img{width:72px;margin-bottom:20px;}
+
+/* SECTIONS */
+.section{padding:88px 6%;}
+.section-inner{max-width:1200px;margin:0 auto;}
+.section-title{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-.02em;margin-bottom:14px;}
+
+/* Cards */
+.cards-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:48px;}
+.pool-card{border-radius:16px;overflow:hidden;cursor:pointer;}
+.pool-card-img{width:100%;height:180px;object-fit:cover;display:block;transition:transform .4s;}
+.pool-card:hover .pool-card-img{transform:scale(1.04);}
+.pool-card-title{font-size:15px;font-weight:700;margin:14px 0 6px;}
+.pool-card-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* Dark mid */
+.dark-mid{background:var(--dark2);padding:88px 6%;color:white;}
+.dark-mid-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.dark-mid h2{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-.02em;margin-bottom:16px;}
+.dark-mid-sub{font-size:15px;color:rgba(255,255,255,.6);line-height:1.8;margin-bottom:32px;}
+.dark-pills{display:flex;flex-wrap:wrap;gap:10px;}
+.dark-pill{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.8);}
+.dark-pill-star{width:14px;filter:brightness(10) saturate(.5);}
+.dark-visual{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:24px;}
+.dark-visual-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;}
+.how-step{display:flex;gap:14px;margin-bottom:18px;}
+.how-num{width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;flex-shrink:0;}
+.how-step-title{font-size:13px;font-weight:700;color:white;}
+.how-step-desc{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px;}
+
+/* Services */
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px;}
+.service-tile{background:white;border:1.5px solid var(--border);border-radius:14px;padding:22px;transition:all .2s;cursor:pointer;}
+.service-tile:hover{border-color:#93c5fd;transform:translateY(-2px);box-shadow:0 8px 24px rgba(30,144,200,.1);}
+.service-ico{font-size:28px;margin-bottom:12px;}
+.service-name{font-size:14px;font-weight:700;margin-bottom:6px;}
+.service-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+.service-price{font-size:18px;font-weight:800;color:var(--blue);}
+.tag-urgent{display:inline-block;font-size:10px;font-weight:700;background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:20px;margin-bottom:8px;}
+.tag-recurring{display:inline-block;font-size:10px;font-weight:700;background:#eff7fd;color:var(--blue);padding:2px 8px;border-radius:20px;margin-bottom:8px;}
+.tag-spacer{display:inline-block;height:20px;}
+
+/* Plans */
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px;}
+.plan{background:white;border:1.5px solid var(--border);border-radius:16px;padding:28px;transition:all .2s;}
+.plan:hover{border-color:#93c5fd;box-shadow:0 8px 32px rgba(30,144,200,.1);}
+.plan.featured{background:var(--dark);border-color:var(--blue);color:white;}
+.plan-badge{font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
+.plan-name{font-size:16px;font-weight:700;margin-bottom:4px;}
+.plan-freq{font-size:13px;color:#9ca3af;margin-bottom:6px;}
+.plan.featured .plan-freq{color:rgba(255,255,255,.5);}
+.plan-note{font-size:11px;color:#10b981;font-weight:600;margin-bottom:16px;}
+.plan.featured .plan-note{color:#34d399;}
+.plan-price{font-size:38px;font-weight:800;letter-spacing:-.02em;color:var(--blue);margin-bottom:4px;}
+.plan-price-sub{font-size:13px;font-weight:500;color:#9ca3af;}
+.plan.featured .plan-price-sub{color:rgba(255,255,255,.5);}
+.plan-features{list-style:none;margin:20px 0 24px;display:flex;flex-direction:column;gap:9px;}
+.plan-features li{font-size:13px;display:flex;align-items:center;gap:9px;}
+.plan-features li::before{content:'✓';font-weight:800;color:var(--blue);flex-shrink:0;}
+.plan.featured .plan-features li{color:rgba(255,255,255,.8);}
+.plan-btn{width:100%;padding:13px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .2s;}
+.plan-btn-dark{background:var(--dark);color:white;}
+.plan-btn-dark:hover{background:#1a2540;}
+.plan-btn-outline{background:transparent;color:var(--blue);border:1.5px solid var(--blue);}
+.plan-btn-outline:hover{background:var(--blue);color:white;}
+
+/* Partners */
+.partners{background:var(--light);padding:48px 6%;text-align:center;}
+.partners-inner{max-width:1200px;margin:0 auto;}
+.partners-label{font-size:13px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:28px;}
+.partners-logos{display:flex;align-items:center;justify-content:center;gap:56px;flex-wrap:wrap;}
+.partner-logo{height:30px;opacity:.55;filter:grayscale(1);object-fit:contain;transition:all .3s;}
+.partner-logo:hover{opacity:.9;filter:none;}
+.partner-text{font-size:15px;font-weight:800;color:#9ca3af;}
+
+/* App */
+.app-section{background:var(--dark);padding:88px 6%;color:white;}
+.app-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 360px;gap:80px;align-items:center;}
+.app-inner h2{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-.02em;margin-bottom:16px;}
+.app-sub{font-size:15px;color:rgba(255,255,255,.6);line-height:1.8;margin-bottom:32px;}
+.app-btns{display:flex;gap:12px;flex-wrap:wrap;}
+.app-store-img{height:44px;border-radius:10px;}
+.iphone-img{max-width:260px;width:100%;}
+
+/* Footer */
+footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding:56px 6% 28px;}
+.footer-inner{max-width:1200px;margin:0 auto;}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px;}
+.footer-logo{height:28px;display:block;margin-bottom:20px;}
+.footer-desc{font-size:13px;color:rgba(255,255,255,.45);line-height:1.75;max-width:240px;}
+.footer-social{display:flex;gap:12px;margin-top:20px;}
+.footer-social-icon{width:20px;opacity:.4;transition:opacity .2s;cursor:pointer;}
+.footer-social-icon:hover{opacity:.9;}
+.footer-col h4{font-size:12px;font-weight:700;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;}
+.footer-col a{display:block;font-size:13px;color:rgba(255,255,255,.45);text-decoration:none;margin-bottom:9px;transition:color .2s;}
+.footer-col a:hover{color:white;}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.07);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.footer-copy{font-size:12px;color:rgba(255,255,255,.3);}
+.footer-contact{display:flex;gap:24px;flex-wrap:wrap;}
+.footer-contact a{display:flex;align-items:center;gap:7px;font-size:13px;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s;}
+.footer-contact a:hover{color:white;}
+.footer-contact-icon{width:15px;opacity:.5;}
+.footer-legal{display:flex;gap:16px;}
+.footer-legal a{font-size:12px;color:rgba(255,255,255,.3);text-decoration:none;}
+
+@media(max-width:1000px){
+  .hero-inner,.dark-mid-inner,.app-inner,.footer-top{grid-template-columns:1fr;}
+  .cards-grid{grid-template-columns:repeat(2,1fr);}
+  .services-grid,.plans-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:600px){
+  .cards-grid,.services-grid,.plans-grid,.input-row{grid-template-columns:1fr;}
+  .hero-inner{padding:40px 5% 0;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#">
+      <img src="https://poolplus.app/forms/images/logo.png" alt="Pool Plus" class="nav-logo" onerror="this.outerHTML='<span style=&quot;font-family:Inter;font-weight:800;font-size:20px;color:white;&quot;>Pool<span style=&quot;color:#1e90c8;&quot;>plus</span></span>'"/>
+    </a>
+    <a href="tel:7542034376" class="nav-contact">
+      Contact Us
+      <img src="https://poolplus.app/forms/images/btn-arrow.svg" class="nav-contact-arrow" onerror="this.remove()"/>
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grad"></div>
+  <div class="hero-inner">
+
+    <!-- Left copy -->
+    <div style="padding-bottom:80px;">
+      <div class="hero-tag">🏆 South Florida's First Pool Service Marketplace</div>
+      <h1>Book your pool<br/>service in minutes.</h1>
+      <p class="hero-sub">Fast, reliable pool service powered by advanced technology. No delays. No guesswork. You only pay when you approve.</p>
+      <div class="hero-pills">
+        <div class="hero-pill">
+          <img src="https://poolplus.app/forms/images/star.svg" class="hero-pill-star" onerror="this.remove()"/>
+          Book in Minutes
+        </div>
+        <div class="hero-pill">
+          <img src="https://poolplus.app/forms/images/star.svg" class="hero-pill-star" onerror="this.remove()"/>
+          Upfront Pricing
+        </div>
+        <div class="hero-pill">
+          <img src="https://poolplus.app/forms/images/star.svg" class="hero-pill-star" onerror="this.remove()"/>
+          Licensed &amp; Insured
+        </div>
+        <div class="hero-pill">
+          <img src="https://poolplus.app/forms/images/star.svg" class="hero-pill-star" onerror="this.remove()"/>
+          Same-Day Available
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOKING WIDGET -->
+    <div class="widget" id="widgetWrap">
+
+      <!-- STEP 1 -->
+      <div id="step1">
+        <div class="widget-body">
+          <div class="widget-title">Get your instant price</div>
+
+          <div class="field">
+            <div class="field-label">
+              <img src="https://poolplus.app/forms/images/doc-icon.svg" class="field-label-icon" onerror="this.remove()"/>
+              Pool Size
+            </div>
+            <div class="select-wrap">
+              <select id="poolSize" onchange="calcPrice()">
+                <option value="">Choose your pool size</option>
+                <option value="small">Small (up to 10,000 gal)</option>
+                <option value="medium">Medium (10,000–20,000 gal)</option>
+                <option value="large">Large (20,000–35,000 gal)</option>
+                <option value="xl">XL (35,000+ gal)</option>
+              </select>
+              <img src="https://poolplus.app/forms/images/arrow-down.svg" class="select-arr" onerror="this.remove()"/>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">
+              <img src="https://poolplus.app/forms/images/doc-icon.svg" class="field-label-icon" onerror="this.remove()"/>
+              Service Type
+            </div>
+            <div class="select-wrap">
+              <select id="serviceType" onchange="calcPrice()">
+                <option value="">Choose the service your pool needs</option>
+                <optgroup label="── Monthly Maintenance Plan">
+                  
+                  
+                  <option value="maintenance">Weekly Maintenance Plan</option>
+                </optgroup>
+                <optgroup label="── One-Time Services">
+                  <option value="green">Green Pool Rescue ⚡</option>
+                  <option value="chemical">Chemical Balance</option>
+                  <option value="filter">Filter Service</option>
+                  <option value="leak">Leak Detection</option>
+                  <option value="repair">Equipment Repair (Diagnostic)</option>
+                  <option value="party">Pre-Party Cleanup ⚡</option>
+                  <option value="remodel">Remodeling Consult</option>
+                </optgroup>
+              </select>
+              <img src="https://poolplus.app/forms/images/arrow-down.svg" class="select-arr" onerror="this.remove()"/>
+            </div>
+          </div>
+
+          <div class="price-box">
+            <div class="price-box-label">Estimated Price</div>
+            <div class="price-box-service" id="priceService">Select size &amp; service above</div>
+            <div class="price-from" id="priceFrom"></div>
+            <div style="display:flex;align-items:baseline;gap:4px;margin-top:4px;">
+              <div class="price-amount" id="priceAmt">—</div>
+              <div class="price-currency" id="priceCurr"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget-footer">
+          <button class="book-btn" onclick="goStep2()">
+            Book Your Service
+            <img src="https://poolplus.app/forms/images/btn-arrow2.svg" class="book-btn-arrow" onerror="this.remove()"/>
+          </button>
+          <div class="widget-note">
+            <strong>Card not charged until you give the GO</strong> when your tech arrives. For repair &amp; renovation, a diagnostic fee applies upfront — reimbursable upon completion.
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step2" id="step2">
+        <div class="step2-title">
+          <img src="https://poolplus.app/forms/images/doc-icon.svg" class="step2-icon" onerror="this.remove()"/>
+          Tell us about you
+        </div>
+        <div class="input-row">
+          <div class="input-field">
+            <img src="https://poolplus.app/forms/images/doc-icon.svg" class="input-icon" onerror="this.remove()"/>
+            <input type="text" placeholder="Full name"/>
+          </div>
+          <div class="input-field">
+            <img src="https://poolplus.app/forms/images/sms-icon.svg" class="input-icon" onerror="this.remove()"/>
+            <input type="email" placeholder="Email"/>
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="input-field">
+            <img src="https://poolplus.app/forms/images/call-icon.svg" class="input-icon" onerror="this.remove()"/>
+            <input type="text" placeholder="Phone"/>
+          </div>
+          <div class="input-field">
+            <img src="https://poolplus.app/forms/images/archive-icon.svg" class="input-icon" onerror="this.remove()"/>
+            <input type="text" placeholder="Zip code"/>
+          </div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div class="input-field">
+            <img src="https://poolplus.app/forms/images/home-icon.svg" class="input-icon" onerror="this.remove()"/>
+            <input type="text" placeholder="Address"/>
+          </div>
+        </div>
+        <div class="input-row" style="margin-bottom:16px;">
+          <div class="input-field">
+            <img src="https://poolplus.app/forms/images/home-icon.svg" class="input-icon" onerror="this.remove()"/>
+            <input type="text" placeholder="City"/>
+          </div>
+          <div class="input-field">
+            <img src="https://poolplus.app/forms/images/location-icon.svg" class="input-icon" onerror="this.remove()"/>
+            <select>
+              <option>Select your state</option>
+              <option selected>Florida</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">Schedule your service</div>
+        <div class="schedule-tabs">
+          <div class="sched-tab on" onclick="setSched(this)">Same-day service</div>
+          <div class="sched-tab" onclick="setSched(this)">Schedule for later</div>
+        </div>
+        <div class="input-field" style="margin-bottom:16px;">
+          <img src="https://poolplus.app/forms/images/doc-icon.svg" class="input-icon" onerror="this.remove()"/>
+          <input type="date"/>
+        </div>
+        <div style="font-size:13px;font-weight:500;color:var(--muted);margin-bottom:10px;">Tell us about your request</div>
+        <textarea style="width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:13px;font-family:inherit;color:var(--text);outline:none;resize:none;height:72px;" placeholder="Any notes for the technician..."></textarea>
+        <div style="margin:14px 0 0;">
+          <div class="consent-row">
+            <input type="checkbox" id="c1"/>
+            <label for="c1">By checking this box, I consent to receive non-marketing text messages from <strong>PoolPlus LLC</strong>. Message &amp; data rates may apply. Text STOP to opt out.</label>
+          </div>
+          <div class="consent-row" style="margin-bottom:0;">
+            <input type="checkbox" id="c2"/>
+            <label for="c2">By checking this box, I consent to receive marketing and promotional messages from <strong>PoolPlus LLC</strong>. Text STOP to opt out.</label>
+          </div>
+        </div>
+        <button class="send-btn" onclick="goStep3()">
+          Send request
+          <img src="https://poolplus.app/forms/images/btn-arrow-step2.svg" class="send-arrow" onerror="this.remove()"/>
+        </button>
+        <button class="back-btn" onclick="goStep1()">
+          <img src="https://poolplus.app/forms/images/btn-arrow-outline.svg" class="back-arrow" onerror="this.remove()"/>
+          Back
+        </button>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step3" id="step3">
+        <img src="https://poolplus.app/forms/images/tick-circle-lg.svg" class="tick-img" onerror="this.style.display='none'"/>
+        <div style="font-size:13px;font-weight:700;color:#9ca3af;margin-bottom:8px;">You're almost done</div>
+        <div style="font-size:20px;font-weight:800;margin-bottom:12px;">We've got your request</div>
+        <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:28px;">Follow the instructions in the email we sent you. We will assign you a technician as soon as possible.</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:24px;">Need help? <a href="mailto:contact@poolplus.com" style="color:var(--blue);">Contact us.</a></div>
+        <button class="back-btn" onclick="goStep1()">
+          <img src="https://poolplus.app/forms/images/btn-arrow-outline.svg" class="back-arrow" onerror="this.remove()"/>
+          Back home
+        </button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CARDS SECTION -->
+<section class="section" style="background:#fff;">
+  <div class="section-inner">
+    <h2 class="section-title">We are reinventing<br/>Pool Cleaning Services</h2>
+    <div class="cards-grid">
+
+      <div class="pool-card">
+        <img src="https://poolplus.app/forms/images/pool-card.jpg" class="pool-card-img" onerror="this.src='https://images.unsplash.com/photo-1570129477492-45c003dc8c2a?w=600&q=80';this.onerror=null;" alt="Same Day Service" onerror="this.src='https://images.unsplash.com/photo-1570129477492-45c003dc8c2a?w=600&q=80';this.onerror=null;"/>
+        <div class="pool-card-title">Request Same Day Service</div>
+        <div class="pool-card-desc">Get your pool cleaned within hours. Book emergency cleaning services when you need them most.</div>
+      </div>
+
+      <div class="pool-card">
+        <img src="https://poolplus.app/forms/images/pool-card.jpg" class="pool-card-img" onerror="this.src='https://images.unsplash.com/photo-1570129477492-45c003dc8c2a?w=600&q=80';this.onerror=null;" alt="Scheduled Services" onerror="this.src='https://images.unsplash.com/photo-1570129477492-45c003dc8c2a?w=600&q=80';this.onerror=null;"/>
+        <div class="pool-card-title">Scheduled Services</div>
+        <div class="pool-card-desc">Set up recurring cleanings that continue automatically until you cancel. Weekly, bi-weekly, or monthly — you choose.</div>
+      </div>
+
+      <div class="pool-card">
+        <img src="https://poolplus.app/forms/images/pool-card.jpg" class="pool-card-img" onerror="this.src='https://images.unsplash.com/photo-1570129477492-45c003dc8c2a?w=600&q=80';this.onerror=null;" alt="Verified PoolTechs" onerror="this.src='https://images.unsplash.com/photo-1570129477492-45c003dc8c2a?w=600&q=80';this.onerror=null;"/>
+        <div class="pool-card-title">Verified PoolTechs</div>
+        <div class="pool-card-desc">All our technicians are background-checked, licensed, and insured for your peace of mind.</div>
+      </div>
+
+      <div class="pool-card">
+        <img src="https://poolplus.app/forms/images/pool-card.jpg" class="pool-card-img" onerror="this.src='https://images.unsplash.com/photo-1570129477492-45c003dc8c2a?w=600&q=80';this.onerror=null;" alt="Constant Monitoring" onerror="this.src='https://images.unsplash.com/photo-1570129477492-45c003dc8c2a?w=600&q=80';this.onerror=null;"/>
+        <div class="pool-card-title">Constant Monitoring</div>
+        <div class="pool-card-desc">Track your service in real-time and receive updates throughout the cleaning process.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- DARK MID -->
+<div class="dark-mid">
+  <div class="dark-mid-inner">
+    <div>
+      <h2>The Smartest Way<br/>to Care for Your Pool</h2>
+      <p class="dark-mid-sub">Designed to keep your pool ready, clean, and problem-free at all times. The first marketplace connecting South Florida homeowners with certified pool pros.</p>
+      <div class="dark-pills">
+        <div class="dark-pill"><img src="https://poolplus.app/forms/images/star-white.svg" class="dark-pill-star" onerror="this.remove()"/> Same Day Service</div>
+        <div class="dark-pill"><img src="https://poolplus.app/forms/images/star-white.svg" class="dark-pill-star" onerror="this.remove()"/> Fast Support</div>
+        <div class="dark-pill"><img src="https://poolplus.app/forms/images/star-white.svg" class="dark-pill-star" onerror="this.remove()"/> Trusted Technicians</div>
+        <div class="dark-pill"><img src="https://poolplus.app/forms/images/star-white.svg" class="dark-pill-star" onerror="this.remove()"/> Advanced Technology</div>
+        <div class="dark-pill"><img src="https://poolplus.app/forms/images/star-white.svg" class="dark-pill-star" onerror="this.remove()"/> Transparent Pricing</div>
+      </div>
+    </div>
+    <div class="dark-visual">
+      <div class="dark-visual-label">How it works</div>
+      <div class="how-step">
+        <div class="how-num">1</div>
+        <div><div class="how-step-title">Book in Minutes</div><div class="how-step-desc">Select service, enter address, get instant price</div></div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">2</div>
+        <div><div class="how-step-title">Tech Dispatched</div><div class="how-step-desc">Highest-rated available tech notified first</div></div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">3</div>
+        <div><div class="how-step-title">You Give the GO</div><div class="how-step-desc">Tech arrives, evaluates, you approve — then pay</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section class="section" style="background:var(--light);">
+  <div class="section-inner">
+    <h2 class="section-title">All services, one platform</h2>
+    <p style="font-size:15px;color:var(--muted);margin-top:8px;max-width:520px;">From weekly maintenance to emergency rescues — certified pros available same day across South Florida.</p>
+    <div class="services-grid">
+
+      <div class="service-tile" style="border-color:#1e90c8;background:#f0f7fd;position:relative;">
+        <div style="position:absolute;top:14px;right:14px;background:#10b981;color:white;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;">🎉 50% off first month</div>
+        <div class="tag-recurring">🔄 Auto-renewing · Cancel anytime</div>
+        <div class="service-ico">🧹</div>
+        <div class="service-name">Weekly Maintenance Plan</div>
+        <div class="service-desc">1 visit per week — skimming, vacuuming, chemical balance, filter check &amp; service report. Renews monthly until you cancel.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+          <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
+            <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">Small</div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;">$110<span style="font-size:11px;font-weight:500;">/mo</span></div>
+          </div>
+          <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
+            <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">Medium</div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;">$135<span style="font-size:11px;font-weight:500;">/mo</span></div>
+          </div>
+          <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
+            <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">Large</div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;">$160<span style="font-size:11px;font-weight:500;">/mo</span></div>
+          </div>
+          <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
+            <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">XL</div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;">$220<span style="font-size:11px;font-weight:500;">/mo</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="service-tile">
+        <div class="tag-urgent">⚡ Same Day Available</div>
+        <div class="service-ico">🌿</div>
+        <div class="service-name">Green Pool Rescue</div>
+        <div class="service-desc">Algae shock treatment, brush &amp; full chemical restore. Back to blue in 48h.</div>
+        <div class="service-price">$350</div>
+      </div>
+
+      <div class="service-tile">
+        <div class="tag-urgent">⚡ Same Day Available</div>
+        <div class="service-ico">💧</div>
+        <div class="service-name">Leak Detection</div>
+        <div class="service-desc">Multi-method detection (pressure, dye, camera). Includes minor epoxy repairs.</div>
+        <div class="service-price">$390</div>
+      </div>
+
+      <div class="service-tile">
+        <div class="tag-spacer"></div>
+        <div class="service-ico">⚙️</div>
+        <div class="service-name">Equipment Repair</div>
+        <div class="service-desc">Pump, motor, filter, heater. $99 diagnostic fee — fully deductible from repair cost.</div>
+        <div class="service-price">$99+</div>
+      </div>
+
+      <div class="service-tile">
+        <div class="tag-urgent">⚡ Same Day Available</div>
+        <div class="service-ico">🎉</div>
+        <div class="service-name">Pre-Party Cleanup</div>
+        <div class="service-desc">Same-day deep clean so your pool is ready for guests. Book at least 24h in advance.</div>
+        <div class="service-price">$199</div>
+      </div>
+
+      <div class="service-tile">
+        <div class="tag-spacer"></div>
+        <div class="service-ico">🏗</div>
+        <div class="service-name">Remodeling Consult</div>
+        <div class="service-desc">On-site consultation for resurfacing, tile &amp; automation. Fee fully deductible from project cost.</div>
+        <div class="service-price">$150</div>
+      </div>
+
+      <div class="service-tile">
+        <div class="tag-spacer"></div>
+        <div class="service-ico">🔧</div>
+        <div class="service-name">Filter Service</div>
+        <div class="service-desc">Full filter clean, backwash, cartridge inspection &amp; pressure optimization.</div>
+        <div class="service-price">$120</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- PLANS -->
+<section class="section" style="background:#fff;">
+  <div class="section-inner">
+    <h2 class="section-title">Weekly Maintenance Plan</h2>
+    <p style="font-size:15px;color:var(--muted);margin-top:8px;">One simple plan · Weekly visits · Monthly billing · Cancel anytime</p>
+
+    <!-- PROMO BANNER -->
+    <div style="background:linear-gradient(135deg,#0b1120,#1e3a5f);border-radius:14px;padding:20px 28px;margin:24px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">🎉 Launch Offer</div>
+        <div style="font-size:20px;font-weight:800;color:white;">First month 50% off</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:4px;">No contracts · No commitment · Cancel anytime</div>
+      </div>
+      <a href="#" onclick="document.querySelector('.hero').scrollIntoView({behavior:'smooth'});return false;" style="background:#1e90c8;color:white;padding:13px 28px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap;">Claim Offer →</a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;">
+      <div style="background:white;border:1.5px solid #dde8f4;border-radius:14px;padding:20px;text-align:center;">
+        <div style="font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:10px;">Small Pool</div>
+        <div style="font-size:11px;color:#10b981;font-weight:700;margin-bottom:6px;">First month $55</div>
+        <div style="font-size:32px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;">$110</div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">/month after</div>
+      </div>
+      <div style="background:white;border:1.5px solid #dde8f4;border-radius:14px;padding:20px;text-align:center;">
+        <div style="font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:10px;">Medium Pool</div>
+        <div style="font-size:11px;color:#10b981;font-weight:700;margin-bottom:6px;">First month $67</div>
+        <div style="font-size:32px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;">$135</div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">/month after</div>
+      </div>
+      <div style="background:#0b1120;border:1.5px solid #1e90c8;border-radius:14px;padding:20px;text-align:center;">
+        <div style="font-size:11px;font-weight:700;color:#1e90c8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Most Common</div>
+        <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:10px;">Large Pool</div>
+        <div style="font-size:11px;color:#34d399;font-weight:700;margin-bottom:6px;">First month $80</div>
+        <div style="font-size:32px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;">$160</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">/month after</div>
+      </div>
+      <div style="background:white;border:1.5px solid #dde8f4;border-radius:14px;padding:20px;text-align:center;">
+        <div style="font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:10px;">XL Pool</div>
+        <div style="font-size:11px;color:#10b981;font-weight:700;margin-bottom:6px;">First month $110</div>
+        <div style="font-size:32px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;">$220</div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">/month after</div>
+      </div>
+    </div>
+
+    <div style="background:white;border:1.5px solid #dde8f4;border-radius:14px;padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Weekly visit by certified tech</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Surface skim &amp; vacuum</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Chemical testing &amp; balance</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Filter check &amp; equipment inspection</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Photo proof after every visit</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Digital service report</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Real-time tracking via app</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Cancel anytime — no contracts</div>
+    </div>
+  </div>
+</section>
+
+<!-- PARTNERS -->
+<div class="partners">
+  <div class="partners-inner">
+    <div class="partners-label">Trusted by Industry Leaders</div>
+    <div class="partners-logos">
+      <img src="https://poolplus.app/forms/images/ipssa.svg" class="partner-logo" alt="IPSSA" onerror="this.outerHTML='<span class=&quot;partner-text&quot;>IPSSA</span>'"/>
+      <img src="https://poolplus.app/forms/images/totalplan.png" class="partner-logo" alt="TotalPlan" onerror="this.outerHTML='<span class=&quot;partner-text&quot;>TOTALPLAN</span>'"/>
+      <img src="https://poolplus.app/forms/images/pentair.svg" class="partner-logo" alt="Pentair" onerror="this.outerHTML='<span class=&quot;partner-text&quot;>PENTAIR</span>'"/>
+    </div>
+  </div>
+</div>
+
+<!-- APP DOWNLOAD -->
+<div class="app-section">
+  <div class="app-inner">
+    <div>
+      <h2>Download our app now</h2>
+      <p class="app-sub">Manage your pool, track your tech in real time, view chemistry history, report issues and chat — all in one place.</p>
+      <div class="app-btns">
+        <a href="#"><img src="https://poolplus.app/forms/images/apple-store.png" class="app-store-img" alt="App Store" onerror="this.outerHTML='<span style=&quot;color:white;font-weight:700;&quot;>App Store</span>'"/></a>
+        <a href="#"><img src="https://poolplus.app/forms/images/play-store.png" class="app-store-img" alt="Google Play" onerror="this.outerHTML='<span style=&quot;color:white;font-weight:700;&quot;>Google Play</span>'"/></a>
+      </div>
+    </div>
+    <div style="text-align:center;">
+      <img src="https://poolplus.app/forms/images/iphone.png" class="iphone-img" alt="Poolplus App" onerror="this.style.display='none'"/>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <img src="https://poolplus.app/forms/images/logo.png" class="footer-logo" alt="Pool Plus" onerror="this.outerHTML='<span style=&quot;font-family:Inter;font-weight:800;font-size:18px;color:white;&quot;>Pool<span style=&quot;color:#1e90c8;&quot;>plus</span></span>'"/>
+        <p class="footer-desc">South Florida's first pool service marketplace — Miami-Dade, Broward &amp; Palm Beach County.</p>
+        <div class="footer-social">
+          <img src="https://poolplus.app/forms/images/social-1.svg" class="footer-social-icon" alt="Facebook"/>
+          <img src="https://poolplus.app/forms/images/social-2.svg" class="footer-social-icon" alt="Twitter"/>
+          <img src="https://poolplus.app/forms/images/social-3.svg" class="footer-social-icon" alt="Instagram"/>
+          <img src="https://poolplus.app/forms/images/social-4.svg" class="footer-social-icon" alt="LinkedIn"/>
+          <img src="https://poolplus.app/forms/images/social-5.svg" class="footer-social-icon" alt="YouTube"/>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#">About Us</a>
+        <a href="#">Services</a>
+        <a href="#">Community</a>
+        <a href="#">Testimonials</a>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <a href="#">Weekly Cleaning</a>
+        <a href="#">Green Pool Rescue</a>
+        <a href="#">Leak Detection</a>
+        <a href="#">Equipment Repair</a>
+        <a href="#">Remodeling</a>
+      </div>
+      <div class="footer-col">
+        <h4>For Pros</h4>
+        <a href="#">Join as a Tech</a>
+        <a href="#">Partnership Program</a>
+        <a href="#">Tech App</a>
+        <a href="#">Support</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 Pool Plus. All rights reserved.</span>
+      <div class="footer-contact">
+        <a href="tel:7542034376">
+          <img src="https://poolplus.app/forms/images/phone-icon.svg" class="footer-contact-icon" onerror="this.remove()"/>
+          (754) 203-4376
+        </a>
+        <a href="mailto:contact@poolplus.com">
+          <img src="https://poolplus.app/forms/images/email-icon.svg" class="footer-contact-icon" onerror="this.remove()"/>
+          contact@poolplus.com
+        </a>
+      </div>
+      <div class="footer-legal">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+var PRICES={
+  maintenance:{small:110,medium:135,large:160,xl:220},
+  
+  
+  green:{small:299,medium:350,large:399,xl:449},
+  chemical:{small:80,medium:90,large:110,xl:130},
+  filter:{small:99,medium:120,large:140,xl:160},
+  leak:{small:390,medium:390,large:390,xl:490},
+  repair:{small:99,medium:99,large:99,xl:99},
+  party:{small:199,medium:219,large:249,xl:279},
+  remodel:{small:150,medium:150,large:150,xl:150}
+};
+var RECURRING=["maintenance"];
+var LABELS={
+  maintenance:"Weekly Maintenance Plan",
+  
+  
+  green:"Green Pool Rescue",
+  chemical:"Chemical Balance",
+  filter:"Filter Service",
+  leak:"Leak Detection",
+  repair:"Equipment Diagnostic",
+  party:"Pre-Party Cleanup",
+  remodel:"Remodeling Consult"
+};
+
+function calcPrice(){
+  var size=document.getElementById("poolSize").value;
+  var svc=document.getElementById("serviceType").value;
+  var svcEl=document.getElementById("priceService");
+  var amtEl=document.getElementById("priceAmt");
+  var currEl=document.getElementById("priceCurr");
+  var fromEl=document.getElementById("priceFrom");
+  if(!size||!svc){
+    svcEl.textContent="Select size & service above";
+    amtEl.textContent="—";
+    currEl.textContent="";
+    fromEl.textContent="";
+    return;
+  }
+  var price=PRICES[svc]&&PRICES[svc][size]?PRICES[svc][size]:149;
+  var isRec=RECURRING.indexOf(svc)>-1;
+  var sizeLabel=size.charAt(0).toUpperCase()+size.slice(1);
+  svcEl.textContent=sizeLabel+" pool • "+(LABELS[svc]||svc);
+  fromEl.textContent="From";
+  amtEl.textContent="$"+price;
+  currEl.textContent=isRec?"USD / month":"USD";
+}
+
+function goStep2(){
+  document.getElementById("step1").style.display="none";
+  document.getElementById("step2").classList.add("active");
+  document.getElementById("step3").classList.remove("active");
+  document.getElementById("widgetWrap").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function goStep1(){
+  document.getElementById("step1").style.display="block";
+  document.getElementById("step2").classList.remove("active");
+  document.getElementById("step3").classList.remove("active");
+}
+function goStep3(){
+  document.getElementById("step1").style.display="none";
+  document.getElementById("step2").classList.remove("active");
+  document.getElementById("step3").classList.add("active");
+}
+function setSched(el){
+  var tabs=document.querySelectorAll(".sched-tab");
+  for(var i=0;i<tabs.length;i++){tabs[i].classList.remove("on");}
+  el.classList.add("on");
+}
+</script>
+</body>
+</html>
