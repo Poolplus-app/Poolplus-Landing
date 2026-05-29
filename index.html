@@ -608,9 +608,13 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
   <div class="partners-inner">
     <div class="partners-label">Trusted by Industry Leaders</div>
     <div class="partners-logos">
-      <img src="https://poolplus.app/forms/images/ipssa.svg" class="partner-logo" alt="IPSSA" onerror="this.outerHTML='<span class=&quot;partner-text&quot;>IPSSA</span>'"/>
-      <img src="https://poolplus.app/forms/images/totalplan.png" class="partner-logo" alt="TotalPlan" onerror="this.outerHTML='<span class=&quot;partner-text&quot;>TOTALPLAN</span>'"/>
-      <img src="https://poolplus.app/forms/images/pentair.svg" class="partner-logo" alt="Pentair" onerror="this.outerHTML='<span class=&quot;partner-text&quot;>PENTAIR</span>'"/>
+      <span class="partner-text" style="font-size:17px;font-weight:800;color:#6b7280;letter-spacing:.04em;">PENTAIR</span>
+      <span class="partner-text" style="font-size:17px;font-weight:800;color:#6b7280;letter-spacing:.04em;">KREEPY KRAULY</span>
+      <span class="partner-text" style="font-size:17px;font-weight:800;color:#6b7280;letter-spacing:.04em;">IPSSA</span>
+      <span class="partner-text" style="font-size:17px;font-weight:800;color:#1e90c8;letter-spacing:.04em;">TotalPlan</span>
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e5eaf2;">
+      <span style="font-size:12px;color:#9ca3af;font-weight:500;">Technology developed by <strong style="color:#1e90c8;">TotalPlan Services LLC</strong></span>
     </div>
   </div>
 </div>
@@ -754,13 +758,4 @@ function goStep1(){
 function goStep3(){
   document.getElementById("step1").style.display="none";
   document.getElementById("step2").classList.remove("active");
-  document.getElementById("step3").classList.add("active");
-}
-function setSched(el){
-  var tabs=document.querySelectorAll(".sched-tab");
-  for(var i=0;i<tabs.length;i++){tabs[i].classList.remove("on");}
-  el.classList.add("on");
-}
-</script>
-</body>
-</html>
+  document.getElementById("step3").classList
