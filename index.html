@@ -63,7 +63,7 @@ nav{background:var(--dark);padding:0 6%;position:sticky;top:0;z-index:100;}
 .input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
 .input-field{position:relative;}
 .input-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;opacity:.4;}
-.input-field input,.input-field select{width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px 12px 38px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:border .2s;appearance:none;}
+.input-field input,.input-field select{width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:border .2s;appearance:none;}
 .input-field input:focus,.input-field select:focus{border-color:var(--blue);background:white;}
 .schedule-tabs{display:flex;gap:8px;margin-bottom:16px;}
 .sched-tab{flex:1;padding:11px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;text-align:center;transition:all .2s;}
@@ -208,7 +208,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
     </a>
     <a href="tel:7542034376" class="nav-contact">
       Contact Us
-      <img src="https://poolplus.app/forms/images/btn-arrow.svg" class="nav-contact-arrow" onerror="this.remove()"/>
+      <span style="font-size:12px;">→</span>
     </a>
   </div>
 </nav>
@@ -225,22 +225,10 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
       <h1>Book your pool<br/>service in minutes.</h1>
       <p class="hero-sub">Fast, reliable pool service powered by advanced technology. No delays. No guesswork. You only pay when you approve.</p>
       <div class="hero-pills">
-        <div class="hero-pill">
-          <img src="https://poolplus.app/forms/images/star.svg" class="hero-pill-star" onerror="this.remove()"/>
-          Book in Minutes
-        </div>
-        <div class="hero-pill">
-          <img src="https://poolplus.app/forms/images/star.svg" class="hero-pill-star" onerror="this.remove()"/>
-          Upfront Pricing
-        </div>
-        <div class="hero-pill">
-          <img src="https://poolplus.app/forms/images/star.svg" class="hero-pill-star" onerror="this.remove()"/>
-          Licensed &amp; Insured
-        </div>
-        <div class="hero-pill">
-          <img src="https://poolplus.app/forms/images/star.svg" class="hero-pill-star" onerror="this.remove()"/>
-          Same-Day Available
-        </div>
+        <div class="hero-pill"><span class="hero-pill-dot"></span> Book in Minutes</div>
+        <div class="hero-pill"><span class="hero-pill-dot"></span> Upfront Pricing</div>
+        <div class="hero-pill"><span class="hero-pill-dot"></span> Licensed &amp; Insured</div>
+        <div class="hero-pill"><span class="hero-pill-dot"></span> Same-Day Available</div>
       </div>
     </div>
 
@@ -254,7 +242,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
 
           <div class="field">
             <div class="field-label">
-              <img src="https://poolplus.app/forms/images/doc-icon.svg" class="field-label-icon" onerror="this.remove()"/>
+              
               Pool Size
             </div>
             <div class="select-wrap">
@@ -265,13 +253,13 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
                 <option value="large">Large (20,000–35,000 gal)</option>
                 <option value="xl">XL (35,000+ gal)</option>
               </select>
-              <img src="https://poolplus.app/forms/images/arrow-down.svg" class="select-arr" onerror="this.remove()"/>
+              <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#9ca3af;">▾</span>
             </div>
           </div>
 
           <div class="field">
             <div class="field-label">
-              <img src="https://poolplus.app/forms/images/doc-icon.svg" class="field-label-icon" onerror="this.remove()"/>
+              
               Service Type
             </div>
             <div class="select-wrap">
@@ -292,7 +280,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
                   <option value="remodel">Remodeling Consult</option>
                 </optgroup>
               </select>
-              <img src="https://poolplus.app/forms/images/arrow-down.svg" class="select-arr" onerror="this.remove()"/>
+              <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#9ca3af;">▾</span>
             </div>
           </div>
 
@@ -310,7 +298,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="widget-footer">
           <button class="book-btn" onclick="goStep2()">
             Book Your Service
-            <img src="https://poolplus.app/forms/images/btn-arrow2.svg" class="book-btn-arrow" onerror="this.remove()"/>
+            <span style="font-size:18px;">→</span>
           </button>
           <div class="widget-note">
             <strong>Card not charged until you give the GO</strong> when your tech arrives. For repair &amp; renovation, a diagnostic fee applies upfront — reimbursable upon completion.
@@ -321,42 +309,42 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
       <!-- STEP 2 -->
       <div class="step2" id="step2">
         <div class="step2-title">
-          <img src="https://poolplus.app/forms/images/doc-icon.svg" class="step2-icon" onerror="this.remove()"/>
+          
           Tell us about you
         </div>
         <div class="input-row">
           <div class="input-field">
-            <img src="https://poolplus.app/forms/images/doc-icon.svg" class="input-icon" onerror="this.remove()"/>
+            
             <input type="text" placeholder="Full name"/>
           </div>
           <div class="input-field">
-            <img src="https://poolplus.app/forms/images/sms-icon.svg" class="input-icon" onerror="this.remove()"/>
+            
             <input type="email" placeholder="Email"/>
           </div>
         </div>
         <div class="input-row">
           <div class="input-field">
-            <img src="https://poolplus.app/forms/images/call-icon.svg" class="input-icon" onerror="this.remove()"/>
+            
             <input type="text" placeholder="Phone"/>
           </div>
           <div class="input-field">
-            <img src="https://poolplus.app/forms/images/archive-icon.svg" class="input-icon" onerror="this.remove()"/>
+            
             <input type="text" placeholder="Zip code"/>
           </div>
         </div>
         <div style="margin-bottom:12px;">
           <div class="input-field">
-            <img src="https://poolplus.app/forms/images/home-icon.svg" class="input-icon" onerror="this.remove()"/>
+            
             <input type="text" placeholder="Address"/>
           </div>
         </div>
         <div class="input-row" style="margin-bottom:16px;">
           <div class="input-field">
-            <img src="https://poolplus.app/forms/images/home-icon.svg" class="input-icon" onerror="this.remove()"/>
+            
             <input type="text" placeholder="City"/>
           </div>
           <div class="input-field">
-            <img src="https://poolplus.app/forms/images/location-icon.svg" class="input-icon" onerror="this.remove()"/>
+            
             <select>
               <option>Select your state</option>
               <option selected>Florida</option>
@@ -369,7 +357,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
           <div class="sched-tab" onclick="setSched(this)">Schedule for later</div>
         </div>
         <div class="input-field" style="margin-bottom:16px;">
-          <img src="https://poolplus.app/forms/images/doc-icon.svg" class="input-icon" onerror="this.remove()"/>
+          
           <input type="date"/>
         </div>
         <div style="font-size:13px;font-weight:500;color:var(--muted);margin-bottom:10px;">Tell us about your request</div>
@@ -386,10 +374,10 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         </div>
         <button class="send-btn" onclick="goStep3()">
           Send request
-          <img src="https://poolplus.app/forms/images/btn-arrow-step2.svg" class="send-arrow" onerror="this.remove()"/>
+          <span style="font-size:18px;">→</span>
         </button>
         <button class="back-btn" onclick="goStep1()">
-          <img src="https://poolplus.app/forms/images/btn-arrow-outline.svg" class="back-arrow" onerror="this.remove()"/>
+          
           Back
         </button>
       </div>
@@ -402,7 +390,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:28px;">Follow the instructions in the email we sent you. We will assign you a technician as soon as possible.</div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:24px;">Need help? <a href="mailto:contact@poolplus.com" style="color:var(--blue);">Contact us.</a></div>
         <button class="back-btn" onclick="goStep1()">
-          <img src="https://poolplus.app/forms/images/btn-arrow-outline.svg" class="back-arrow" onerror="this.remove()"/>
+          
           Back home
         </button>
       </div>
@@ -448,11 +436,11 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
       <h2>The Smartest Way<br/>to Care for Your Pool</h2>
       <p class="dark-mid-sub">Designed to keep your pool ready, clean, and problem-free at all times. The first marketplace connecting South Florida homeowners with certified pool pros.</p>
       <div class="dark-pills">
-        <div class="dark-pill"><img src="https://poolplus.app/forms/images/star-white.svg" class="dark-pill-star" onerror="this.remove()"/> Same Day Service</div>
-        <div class="dark-pill"><img src="https://poolplus.app/forms/images/star-white.svg" class="dark-pill-star" onerror="this.remove()"/> Fast Support</div>
-        <div class="dark-pill"><img src="https://poolplus.app/forms/images/star-white.svg" class="dark-pill-star" onerror="this.remove()"/> Trusted Technicians</div>
-        <div class="dark-pill"><img src="https://poolplus.app/forms/images/star-white.svg" class="dark-pill-star" onerror="this.remove()"/> Advanced Technology</div>
-        <div class="dark-pill"><img src="https://poolplus.app/forms/images/star-white.svg" class="dark-pill-star" onerror="this.remove()"/> Transparent Pricing</div>
+        <div class="dark-pill"><span style="color:#1e90c8;font-weight:800;">✓</span> Same Day Service</div>
+        <div class="dark-pill"><span style="color:#1e90c8;font-weight:800;">✓</span> Fast Support</div>
+        <div class="dark-pill"><span style="color:#1e90c8;font-weight:800;">✓</span> Trusted Technicians</div>
+        <div class="dark-pill"><span style="color:#1e90c8;font-weight:800;">✓</span> Advanced Technology</div>
+        <div class="dark-pill"><span style="color:#1e90c8;font-weight:800;">✓</span> Transparent Pricing</div>
       </div>
     </div>
     <div class="dark-visual">
