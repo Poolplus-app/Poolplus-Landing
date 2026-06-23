@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PoolPlus Pro — Technician Sign In</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a1628;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 2rem 1.25rem;
+  }
+  .wrap { width: 100%; max-width: 360px; }
+  .header { text-align: center; margin-bottom: 2rem; }
+  .logo {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #1a73e8, #0d47a1);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem; font-size: 26px;
+  }
+  .pro-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #1a73e818; border: 0.5px solid #1a73e840;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem;
+  }
+  .pro-badge i { font-size: 13px; color: #1a73e8; }
+  .pro-badge span { color: #1a73e8; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+  .header p { color: #7a9cc0; font-size: 14px; }
+
+  .card {
+    background: #ffffff08; border: 0.5px solid #ffffff18;
+    border-radius: 18px; padding: 1.75rem;
+  }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block; font-size: 12px; color: #7a9cc0;
+    margin-bottom: 6px; font-weight: 600;
+  }
+  .field input {
+    width: 100%; background: #ffffff08; border: 1px solid #ffffff20;
+    border-radius: 12px; padding: 13px 14px; color: #fff; font-size: 14px; outline: none;
+  }
+  .field input:focus { border-color: #1a73e8; }
+  .field input::placeholder { color: #5a7596; }
+  .pass-wrap { position: relative; }
+  .eye-icon {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: #5a7596; cursor: pointer; font-size: 16px;
+  }
+
+  .btn-login {
+    width: 100%; background: #1a73e8; color: #fff; border: none;
+    border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-top: 6px;
+  }
+  .btn-login:hover { background: #1864c4; }
+
+  .msg { display: none; text-align: center; font-size: 13px; margin-top: 14px; padding: 10px; border-radius: 10px; }
+
+  .secure {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    color: #4d6788; font-size: 12px; margin-top: 1.5rem;
+  }
+  .secure i { font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo">🏊</div>
+    <div class="pro-badge">
+      <i class="ti ti-tool" aria-hidden="true"></i>
+      <span>POOLPLUS PRO</span>
+    </div>
+    <p>Technician sign in</p>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <label for="tech-email">Email</label>
+      <input type="email" id="tech-email" placeholder="you@poolplus.app" />
+    </div>
+    <div class="field">
+      <label for="tech-pass">Password</label>
+      <div class="pass-wrap">
+        <input type="password" id="tech-pass" placeholder="••••••••" />
+        <i class="ti ti-eye eye-icon" id="eye-icon" onclick="togglePass()"></i>
+      </div>
+    </div>
+
+    <button class="btn-login" onclick="doLogin()">Sign in</button>
+    <div class="msg" id="login-msg"></div>
+  </div>
+
+  <p style="text-align:center;color:#5a7596;font-size:12px;margin-top:1rem;">
+    Don't have an account yet? Apply to join PoolPlus Pro.
+  </p>
+
+  <div class="secure">
+    <i class="ti ti-shield-check" aria-hidden="true"></i>
+    <span>Technician access only</span>
+  </div>
+
+</div>
+
+<script>
+function togglePass() {
+  var inp = document.getElementById('tech-pass');
+  var icon = document.getElementById('eye-icon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.className = 'ti ti-eye-off eye-icon';
+  } else {
+    inp.type = 'password';
+    icon.className = 'ti ti-eye eye-icon';
+  }
+}
+
+function doLogin() {
+  var email = document.getElementById('tech-email').value.trim();
+  var pass = document.getElementById('tech-pass').value;
+  var msg = document.getElementById('login-msg');
+  msg.style.display = 'block';
+
+  if (!email || !pass) {
+    msg.style.background = '#f2898918';
+    msg.style.color = '#f28b82';
+    msg.textContent = 'Please enter your email and password.';
+    return;
+  }
+
+  // TODO: connect to real auth (Supabase) and redirect to
+  // https://poolplus-tech-dashboard.vercel.app
+  msg.style.background = '#81c99518';
+  msg.style.color = '#81c995';
+  msg.textContent = 'Signing in...';
+  setTimeout(function () {
+    window.location.href = 'https://poolplus-tech-dashboard.vercel.app';
+  }, 800);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PoolPlus Pro — Technician Flow</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0a1628;
+  min-height: 100vh;
+  padding: 1.25rem 1.25rem 4rem;
+}
+.wrap { max-width: 420px; margin: 0 auto; }
+
+/* top bar */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.topbar .logo { color: #fff; font-size: 17px; font-weight: 800; }
+.topbar .pro-badge {
+  background: #1a73e818; border: 0.5px solid #1a73e840;
+  padding: 4px 10px; border-radius: 20px;
+  color: #6cb2ff; font-size: 11px; font-weight: 700;
+}
+
+/* nav pills */
+.nav-pills {
+  display: flex; gap: 6px; margin-bottom: 1.25rem; overflow-x: auto;
+  padding-bottom: 2px;
+}
+.nav-pills button {
+  flex-shrink: 0; padding: 7px 14px; border-radius: 20px; border: none;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  background: #ffffff0a; color: #7a9cc0;
+}
+.nav-pills button.active { background: #1a73e8; color: #fff; }
+
+/* cards */
+.card {
+  background: #ffffff08; border: 0.5px solid #ffffff18;
+  border-radius: 18px; padding: 1.5rem; margin-bottom: 1rem;
+}
+.section-label {
+  font-size: 11px; font-weight: 700; color: #4d6788;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* job row */
+.job-row {
+  display: flex; align-items: center; gap: 12px;
+  background: #ffffff06; border-radius: 12px; padding: 12px;
+  margin-bottom: 10px; cursor: pointer;
+}
+.job-row:hover { background: #ffffff0e; }
+.job-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #1a73e8; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.job-info h3 { color: #fff; font-size: 14px; font-weight: 600; }
+.job-info p { color: #7a9cc0; font-size: 12px; margin-top: 2px; }
+.job-status {
+  margin-left: auto; font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px; flex-shrink: 0;
+}
+.s-pending { background: #ffffff0a; color: #7a9cc0; }
+.s-active { background: #1a73e818; color: #6cb2ff; }
+.s-done { background: #81c99518; color: #81c995; }
+
+/* filter badge */
+.filter-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; margin-bottom: 10px;
+}
+.filter-ok { background: #81c99518; color: #81c995; }
+.filter-warn { background: #f59e0b18; color: #f59e0b; }
+.filter-due { background: #f2898918; color: #f28b82; }
+
+/* novedad types */
+.nov-option {
+  display: flex; align-items: center; gap: 10px;
+  background: #ffffff06; border: 1px solid #ffffff18;
+  border-radius: 12px; padding: 12px; margin-bottom: 8px; cursor: pointer;
+}
+.nov-option:hover { border-color: #1a73e860; background: #1a73e808; }
+.nov-icon { font-size: 20px; width: 36px; text-align: center; }
+.nov-text h4 { color: #fff; font-size: 13px; font-weight: 600; }
+.nov-text p { color: #7a9cc0; font-size: 11px; margin-top: 2px; }
+.nov-arrow { margin-left: auto; color: #4d6788; }
+
+/* photo box */
+.photo-box {
+  width: 100%; height: 160px; border-radius: 12px;
+  background: linear-gradient(135deg,#0d2137,#1a3550);
+  border: 2px dashed #ffffff20;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px; cursor: pointer; margin-bottom: 12px; position: relative;
+  overflow: hidden;
+}
+.photo-box.has-photo {
+  background: #0008 url('https://i.imgur.com/n0aV3JT.jpeg') center/cover;
+  border-style: solid; border-color: #81c99560;
+}
+.photo-box i { font-size: 28px; color: #4d6788; }
+.photo-box span { color: #5a7596; font-size: 13px; }
+.photo-meta-overlay {
+  position: absolute; bottom: 8px; left: 8px; right: 8px;
+  background: #000b; color: #fff; font-size: 10px;
+  padding: 4px 8px; border-radius: 6px;
+  display: flex; justify-content: space-between;
+}
+
+/* buttons */
+.btn {
+  width: 100%; padding: 13px; border-radius: 12px;
+  font-size: 14px; font-weight: 700; cursor: pointer; border: none;
+  margin-top: 8px;
+}
+.btn-primary { background: #1a73e8; color: #fff; }
+.btn-primary:hover { background: #1864c4; }
+.btn-primary:disabled { background: #ffffff18; color: #4d6788; cursor: not-allowed; }
+.btn-success { background: #2d9e6b; color: #fff; }
+.btn-success:disabled { background: #ffffff18; color: #4d6788; cursor: not-allowed; }
+.btn-ghost { background: #ffffff0a; color: #c5d6e8; border: 1px solid #ffffff20; }
+.btn-warn { background: #f59e0b18; color: #f59e0b; border: 1px solid #f59e0b40; }
+.btn-danger { background: #f2898918; color: #f28b82; border: 1px solid #f2898940; }
+.btn-sm {
+  padding: 9px 16px; font-size: 13px; border-radius: 10px;
+  border: none; cursor: pointer; font-weight: 600;
+}
+
+.info-box {
+  background: #1a73e810; border: 1px solid #1a73e830;
+  border-radius: 12px; padding: 12px; font-size: 13px; color: #c5d6e8;
+  line-height: 1.5; margin-bottom: 10px;
+}
+.warn-box {
+  background: #f59e0b10; border: 1px solid #f59e0b40;
+  border-radius: 12px; padding: 12px; font-size: 13px; color: #f59e0b;
+  line-height: 1.5; margin-bottom: 10px;
+}
+.success-box {
+  background: #81c99510; border: 1px solid #81c99540;
+  border-radius: 12px; padding: 12px; font-size: 13px; color: #81c995;
+  line-height: 1.5; margin-bottom: 10px;
+}
+
+/* modal overlay */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: #000a; align-items: flex-end; justify-content: center; z-index: 99;
+}
+.modal-overlay.show { display: flex; }
+.modal-sheet {
+  background: #0f1e33; border-radius: 24px 24px 0 0;
+  padding: 2rem 1.5rem; width: 100%; max-width: 420px;
+}
+.modal-sheet h2 { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.modal-sheet p { color: #7a9cc0; font-size: 14px; line-height: 1.5; margin-bottom: 1.25rem; }
+.modal-btn-row { display: flex; flex-direction: column; gap: 10px; }
+
+/* receipt */
+.receipt-row {
+  display: flex; justify-content: space-between;
+  font-size: 13px; color: #c5d6e8; padding: 8px 0;
+  border-bottom: 0.5px solid #ffffff10;
+}
+.receipt-row:last-of-type { border-bottom: none; font-weight: 700; color: #fff; font-size: 15px; }
+
+/* step tracker */
+.step-track {
+  display: flex; gap: 0; margin-bottom: 1.25rem; overflow-x: auto;
+}
+.step-item {
+  display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 52px;
+}
+.step-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #ffffff0a; border: 2px solid #ffffff20;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: #4d6788; font-weight: 700;
+}
+.step-dot.done { background: #2d9e6b; border-color: #2d9e6b; color: #fff; }
+.step-dot.active { background: #1a73e8; border-color: #1a73e8; color: #fff; }
+.step-label { font-size: 9px; color: #4d6788; margin-top: 4px; text-align: center; }
+.step-line { width: 100%; height: 2px; background: #ffffff10; margin-top: 13px; }
+.step-line.done { background: #2d9e6b; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="logo">🏊 PoolPlus</div>
+    <div class="pro-badge">⚡ PRO</div>
+  </div>
+
+  <div class="nav-pills">
+    <button class="active" onclick="goScreen('route',this)">Route</button>
+    <button onclick="goScreen('arrive',this)">Arrived</button>
+    <button onclick="goScreen('service',this)">Service</button>
+    <button onclick="goScreen('novedad-menu',this)">Novedad</button>
+    <button onclick="goScreen('filter',this)">Filter</button>
+    <button onclick="goScreen('complete',this)">Complete</button>
+  </div>
+
+  <div id="screen"></div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal-sheet">
+    <h2>⚠️ Confirm completion</h2>
+    <p>This will charge the client immediately. <strong>This action cannot be undone.</strong></p>
+    <div class="modal-btn-row">
+      <button class="btn btn-success" onclick="finalConfirm()">Yes, complete and charge</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Go back</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let photoTaken = false;
+let currentScreenId = 'route';
+
+function goScreen(id, btn) {
+  currentScreenId = id;
+  document.querySelectorAll('.nav-pills button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  photoTaken = false;
+  render();
+}
+
+const screens = {
+
+  route: () => `
+    <div class="section-label">Today's Route — 4 stops</div>
+    ${jobRow(1,'Martinez Residence','1842 SW 145th Ave, Weston','active','Next up')}
+    ${jobRow(2,'Chen Pool','5510 NW 112th Way, Doral','pending','Pending')}
+    ${jobRow(3,'Garcia Estate','803 Andora Ave, Coral Gables','pending','Pending')}
+    ${jobRow(4,'Williams Home','2200 NE 30th St, Fort Lauderdale','done','Done')}
+    <button class="btn btn-primary" onclick="goScreen('arrive', getBtn('arrive'))">▶ Arrive at Stop 1</button>
+  `,
+
+  arrive: () => `
+    <div class="card">
+      <div class="section-label">Stop 1 — Arrived</div>
+      <h2 style="color:#fff;font-size:18px;font-weight:700;margin-bottom:4px;">Martinez Residence</h2>
+      <p style="color:#7a9cc0;font-size:13px;margin-bottom:1rem;">1842 SW 145th Ave, Weston, FL</p>
+      <div class="info-box">
+        🏊 <strong>Biweekly maintenance</strong> — Standard pool (~14,000 gal)<br/>
+        Last visit: June 5, 2026 · No issues noted
+      </div>
+      <button class="btn btn-primary" onclick="goScreen('service', getBtn('service'))">Start service now</button>
+      <button class="btn btn-ghost" style="margin-top:8px;" onclick="goScreen('novedad-menu', getBtn('novedad-menu'))">Report a novedad before starting</button>
+    </div>
+  `,
+
+  service: () => `
+    <div class="card">
+      <div class="section-label">Service in progress</div>
+      <h2 style="color:#fff;font-size:17px;font-weight:700;margin-bottom:4px;">Martinez Residence</h2>
+      <p style="color:#7a9cc0;font-size:13px;margin-bottom:1rem;">Started at 9:14 AM</p>
+
+      <div class="info-box">
+        💡 <strong>Leaves and debris are NOT a novedad.</strong><br/>
+        Remove them as part of normal service — no report needed.
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <div class="section-label">Checklist</div>
+        ${check('Skim surface')}
+        ${check('Brush walls and steps')}
+        ${check('Vacuum floor')}
+        ${check('Empty pump/skimmer baskets')}
+        ${check('Check and balance chemicals')}
+        ${check('Inspect equipment (pump, filter, cleaner)')}
+      </div>
+
+      <button class="btn btn-primary" onclick="goScreen('filter', getBtn('filter'))">Check filter cycle →</button>
+      <button class="btn btn-ghost" style="margin-top:8px;" onclick="goScreen('novedad-menu', getBtn('novedad-menu'))">+ Report a novedad</button>
+      <button class="btn btn-ghost" style="margin-top:8px;" onclick="goScreen('complete', getBtn('complete'))">Go to completion →</button>
+    </div>
+  `,
+
+  'novedad-menu': () => `
+    <div class="card">
+      <div class="section-label">Report a Novedad</div>
+      <p style="color:#7a9cc0;font-size:13px;margin-bottom:1rem;line-height:1.5;">
+        Choose the situation you found. Leaves and debris are NOT a novedad — handle them in normal service.
+      </p>
+
+      ${novRow('🟢','Green Pool','Blocks service. Client must approve in 8 min or $30 penalty applies.','green-pool')}
+      ${novRow('🟤','Fine Sediment / Sistema Back','Blocks service — missing specialized equipment. No penalty if declined.','sediment')}
+      ${novRow('🔧','Equipment Problem','Does NOT block service. Maintenance continues.','equipment')}
+      ${novRow('🧪','Acid Wash Needed','Does NOT block service. Scheduled separately.','acidwash')}
+    </div>
+  `,
+
+  'green-pool': () => `
+    <div class="card">
+      <div class="warn-box">
+        ⛔ <strong>Green Pool — Blocks service</strong><br/>
+        Service cannot proceed until the client approves the treatment.
+        If they don't respond within 8 minutes, service is cancelled and a $30 fee applies.
+      </div>
+      <div class="section-label">Step 1 — Take photo evidence</div>
+      <div class="photo-box ${photoTaken ? 'has-photo' : ''}" id="photo-green" onclick="takePhoto('photo-green')">
+        ${photoTaken
+          ? `<div class="photo-meta-overlay"><span>📍 Weston, FL · 9:22 AM</span><span>🔒 GPS verified</span></div>`
+          : `<i class="ti ti-camera" aria-hidden="true"></i><span>Tap to take photo</span>`}
+      </div>
+      <button class="btn btn-primary" id="send-green-btn" ${photoTaken ? '' : 'disabled'}
+        onclick="goScreen('green-waiting', getBtn('green-pool'))">
+        Send to client for approval
+      </button>
+    </div>
+  `,
+
+  'green-waiting': () => `
+    <div class="card">
+      <div class="warn-box">
+        ⏳ <strong>Waiting for client response…</strong><br/>
+        Sent at 9:22 AM · 7 minutes 42 seconds remaining
+      </div>
+      <div class="success-box">📸 Photo sent with GPS + timestamp. Client can see it in the portal.</div>
+      <div class="section-label">While you wait</div>
+      <div class="info-box">Don't start green pool treatment yet. You may check equipment or take notes.</div>
+      <button class="btn btn-success" onclick="goScreen('green-approved', getBtn('novedad-menu'))">✅ Client approved</button>
+      <button class="btn btn-danger" style="margin-top:8px;" onclick="goScreen('green-declined', getBtn('novedad-menu'))">❌ Client declined / timed out</button>
+    </div>
+  `,
+
+  'green-approved': () => `
+    <div class="card">
+      <div class="success-box">✅ Client approved green pool treatment. Price pulled from admin config.</div>
+      <div class="info-box">Proceed with treatment. Complete normal maintenance as well — both will be charged at the end.</div>
+      <button class="btn btn-primary" onclick="goScreen('complete', getBtn('complete'))">Continue to completion →</button>
+    </div>
+  `,
+
+  'green-declined': () => `
+    <div class="card">
+      <div class="warn-box">❌ Client declined (or timed out). No treatment performed.</div>
+      <div class="info-box">A $30 fee has been logged automatically. Normal maintenance is NOT charged since service was blocked. Leave site.</div>
+      <button class="btn btn-ghost" onclick="goScreen('route', getBtn('route'))">← Back to route</button>
+    </div>
+  `,
+
+  sediment: () => `
+    <div class="card">
+      <div class="warn-box">
+        ⛔ <strong>Fine Sediment / Sistema Back — Blocks service</strong><br/>
+        Specialized equipment is required and not available today.
+        If client declines, only standard maintenance is charged — NO penalty.
+      </div>
+      <div class="section-label">Take photo evidence</div>
+      <div class="photo-box ${photoTaken ? 'has-photo' : ''}" id="photo-sed" onclick="takePhoto('photo-sed')">
+        ${photoTaken
+          ? `<div class="photo-meta-overlay"><span>📍 Weston, FL · 9:25 AM</span><span>🔒 GPS verified</span></div>`
+          : `<i class="ti ti-camera" aria-hidden="true"></i><span>Tap to take photo</span>`}
+      </div>
+      <button class="btn btn-primary" ${photoTaken ? '' : 'disabled'}
+        onclick="goScreen('service', getBtn('service'))">
+        Notify client &amp; continue normal maintenance
+      </button>
+    </div>
+  `,
+
+  equipment: () => `
+    <div class="card">
+      <div class="info-box">
+        🔧 <strong>Equipment Problem — Does NOT block service</strong><br/>
+        Continue normal maintenance. A repair visit will be scheduled separately by a specialist.
+      </div>
+      <div class="section-label">Take photo evidence</div>
+      <div class="photo-box ${photoTaken ? 'has-photo' : ''}" id="photo-eq" onclick="takePhoto('photo-eq')">
+        ${photoTaken
+          ? `<div class="photo-meta-overlay"><span>📍 Weston, FL · 9:30 AM</span><span>🔒 GPS verified</span></div>`
+          : `<i class="ti ti-camera" aria-hidden="true"></i><span>Tap to take photo</span>`}
+      </div>
+      <button class="btn btn-primary" ${photoTaken ? '' : 'disabled'}
+        onclick="goScreen('service', getBtn('service'))">
+        Log &amp; continue service
+      </button>
+    </div>
+  `,
+
+  acidwash: () => `
+    <div class="card">
+      <div class="info-box">
+        🧪 <strong>Acid Wash — Does NOT block service</strong><br/>
+        Continue normal maintenance. Acid wash is scheduled separately at a price configured in the admin panel.
+      </div>
+      <div class="section-label">Take photo evidence</div>
+      <div class="photo-box ${photoTaken ? 'has-photo' : ''}" id="photo-aw" onclick="takePhoto('photo-aw')">
+        ${photoTaken
+          ? `<div class="photo-meta-overlay"><span>📍 Weston, FL · 9:33 AM</span><span>🔒 GPS verified</span></div>`
+          : `<i class="ti ti-camera" aria-hidden="true"></i><span>Tap to take photo</span>`}
+      </div>
+      <button class="btn btn-primary" ${photoTaken ? '' : 'disabled'}
+        onclick="goScreen('service', getBtn('service'))">
+        Log &amp; continue service
+      </button>
+    </div>
+  `,
+
+  filter: () => `
+    <div class="card">
+      <div class="section-label">Filter Cycle Tracker</div>
+      <h2 style="color:#fff;font-size:17px;margin-bottom:1rem;">Martinez Residence</h2>
+      ${filterStatus()}
+      <div class="info-box" style="margin-top:1rem;">
+        🔒 This indicator is visible only to you and the admin — not to the client.
+      </div>
+      <button class="btn btn-ghost" onclick="goScreen('service', getBtn('service'))">← Back to service</button>
+    </div>
+  `,
+
+  complete: () => `
+    <div class="card">
+      <div class="section-label">Complete service</div>
+      <h2 style="color:#fff;font-size:17px;margin-bottom:4px;">Martinez Residence</h2>
+      <p style="color:#7a9cc0;font-size:13px;margin-bottom:1rem;">Required: final photo before charging</p>
+
+      <div class="photo-box ${photoTaken ? 'has-photo' : ''}" id="photo-final" onclick="takePhoto('photo-final')">
+        ${photoTaken
+          ? `<div class="photo-meta-overlay"><span>📍 Weston, FL · 9:46 AM</span><span>🔒 GPS verified</span></div>`
+          : `<i class="ti ti-camera" aria-hidden="true"></i><span>Take final photo to enable charge</span>`}
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <div class="receipt-row"><span>Weekly Maintenance</span><span>$27.00</span></div>
+        <div class="receipt-row"><span>Total</span><span>$27.00</span></div>
+      </div>
+
+      <button class="btn btn-success" id="complete-btn" ${photoTaken ? '' : 'disabled'} onclick="openModal()">
+        Mark as completed &amp; charge client
+      </button>
+      ${!photoTaken ? `<p style="color:#4d6788;font-size:12px;text-align:center;margin-top:8px;">Take the final photo first</p>` : ''}
+    </div>
+  `,
+
+  charged: () => `
+    <div class="card">
+      <div class="success-box">✅ Service completed and client charged.</div>
+      <h2 style="color:#fff;font-size:17px;margin-bottom:4px;">Done — Martinez Residence</h2>
+      <p style="color:#7a9cc0;font-size:13px;margin-bottom:1rem;">June 18, 2026 · 9:46 AM</p>
+      <div class="receipt-row"><span>Weekly Maintenance</span><span>$27.00</span></div>
+      <div class="receipt-row"><span>Your cut (75% Pro)</span><span style="color:#81c995;">$20.25</span></div>
+      <button class="btn btn-primary" style="margin-top:1rem;" onclick="goScreen('route', getBtn('route'))">← Back to route</button>
+    </div>
+  `
+};
+
+function jobRow(n, name, addr, status, label) {
+  const cls = status === 'active' ? 's-active' : status === 'done' ? 's-done' : 's-pending';
+  return `<div class="job-row" onclick="goScreen('arrive', getBtn('arrive'))">
+    <div class="job-num">${n}</div>
+    <div class="job-info"><h3>${name}</h3><p>${addr}</p></div>
+    <span class="job-status ${cls}">${label}</span>
+  </div>`;
+}
+
+function check(label) {
+  return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid #ffffff08;">
+    <i class="ti ti-square-rounded-check" style="color:#2d9e6b;font-size:16px;" aria-hidden="true"></i>
+    <span style="color:#c5d6e8;font-size:13px;">${label}</span>
+  </div>`;
+}
+
+function novRow(icon, title, desc, target) {
+  return `<div class="nov-option" onclick="goScreen('${target}', null)">
+    <div class="nov-icon">${icon}</div>
+    <div class="nov-text"><h4>${title}</h4><p>${desc}</p></div>
+    <i class="ti ti-chevron-right nov-arrow" aria-hidden="true"></i>
+  </div>`;
+}
+
+function filterStatus() {
+  const week = 5; // simulated current week in cycle
+  if (week <= 3) {
+    return `<span class="filter-badge filter-ok"><i class="ti ti-circle-check" aria-hidden="true"></i> Filter OK — Week ${week} of cycle</span>
+    <p style="color:#7a9cc0;font-size:13px;">Next cleaning due around week 4–6.</p>`;
+  } else if (week <= 6) {
+    return `<span class="filter-badge filter-warn"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Filter due soon — Week ${week}</span>
+    <p style="color:#c5d6e8;font-size:13px;margin-bottom:10px;">This filter is in the 4–6 week window. Clean it this visit if condition warrants.</p>
+    <button class="btn btn-warn" onclick="resetFilter()">✅ Filter cleaned — reset cycle</button>`;
+  } else {
+    return `<span class="filter-badge filter-due"><i class="ti ti-alert-octagon" aria-hidden="true"></i> Filter OVERDUE — Week ${week}</span>
+    <p style="color:#f28b82;font-size:13px;margin-bottom:10px;">This filter is past the 6-week window. Clean immediately.</p>
+    <button class="btn btn-danger" onclick="resetFilter()">✅ Filter cleaned — reset cycle</button>`;
+  }
+}
+
+function resetFilter() {
+  alert('Filter cycle reset. Week counter starts from 1.');
+}
+
+function takePhoto(boxId) {
+  photoTaken = true;
+  const box = document.getElementById(boxId);
+  if (box) {
+    box.classList.add('has-photo');
+    box.innerHTML = `<div class="photo-meta-overlay"><span>📍 Weston, FL · Now</span><span>🔒 GPS verified</span></div>`;
+  }
+  // re-enable any disabled buttons
+  ['send-green-btn','complete-btn'].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.disabled = false;
+  });
+  render();
+}
+
+function openModal() {
+  document.getElementById('confirm-modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('confirm-modal').classList.remove('show');
+}
+
+function finalConfirm() {
+  closeModal();
+  goScreen('charged', null);
+}
+
+function getBtn(screenId) {
+  const labels = {
+    route: 'Route', arrive: 'Arrived', service: 'Service',
+    'novedad-menu': 'Novedad', filter: 'Filter', complete: 'Complete'
+  };
+  return null; // nav handled by index
+}
+
+function render() {
+  const fn = screens[currentScreenId];
+  document.getElementById('screen').innerHTML = fn ? fn() : '';
+}
+
+render();
+</script>
+</body>
+</html>

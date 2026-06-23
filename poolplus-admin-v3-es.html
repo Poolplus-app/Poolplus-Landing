@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PoolPlus Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--pool:#0ea5e9;--deep:#0369a1;--bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;--muted:#64748b;--text:#e2e8f0;--r:14px;}
+body{background:#0a0f1e;color:#e2e8f0;font-family:'DM Sans',sans-serif;display:flex;min-height:100vh;}
+/* SIDEBAR */
+#sidebar{width:224px;background:#0d1424;border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:4px;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.logo-row{padding:12px 10px 20px;display:flex;align-items:center;gap:8px;}
+.logo-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#0ea5e9,#0369a1);display:flex;align-items:center;justify-content:center;font-size:14px;}
+.logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;}
+.logo-text span{color:var(--pool);}
+.logo-sub{font-size:10px;color:var(--muted);font-weight:400;}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted);border:none;background:none;font-family:inherit;width:100%;text-align:left;transition:all .2s;}
+.nav-btn:hover{background:var(--surface2);color:var(--text);}
+.nav-btn.active{background:linear-gradient(135deg,#0ea5e920,#0ea5e910);color:var(--pool);border:1px solid #0ea5e930;}
+.nav-badge{background:#ef4444;color:white;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:auto;}
+.sidebar-footer{margin-top:auto;padding:12px 10px;border-top:1px solid var(--border);}
+.sidebar-footer .sub{font-size:12px;color:var(--muted);}
+.sidebar-footer .name{font-size:13px;font-weight:600;margin-top:2px;}
+/* CONTENT */
+#content{flex:1;overflow:auto;}
+.page{padding:28px;display:none;}
+.page.active{display:block;}
+/* TYPOGRAPHY */
+.page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px;}
+.page-sub{color:var(--muted);font-size:13px;margin-bottom:24px;}
+.section-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);}
+.card-p{padding:20px;}
+/* GRID */
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:16px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+/* STAT CARD */
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;}
+.stat-icon{font-size:22px;margin-bottom:10px;}
+.stat-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;}
+.stat-label{font-size:12px;color:var(--muted);margin-top:4px;}
+/* ALERTS */
+.alert{border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;margin-bottom:14px;}
+.alert-warn{background:#f59e0b15;border:1px solid #f59e0b30;color:#f59e0b;}
+.alert-danger{background:#ef444415;border:1px solid #ef444430;color:#ef4444;}
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .2s;}
+.btn-primary{background:var(--pool);color:white;}.btn-primary:hover{background:var(--deep);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}.btn-ghost:hover{color:var(--text);}
+.btn-danger{background:#ef444420;color:#ef4444;border:1px solid #ef444430;}
+.btn-warning{background:#f59e0b20;color:#f59e0b;border:1px solid #f59e0b30;}
+.btn-success{background:#10b98120;color:#10b981;border:1px solid #10b98130;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.tbl td{padding:13px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:hover td{background:#1a2235;}
+/* BADGE */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+/* FILTERS */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+.tab-btn{padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;background:transparent;color:var(--muted);}
+.tab-btn.on{background:#0ea5e920;color:var(--pool);}
+input[type=text],input[type=number],input[type=date],input[type=email],select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit;outline:none;transition:border .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--pool);}
+select option{background:#1a2235;}
+/* PRICE FIELD */
+.price-field{background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:10px;}
+.price-row{display:flex;justify-content:space-between;align-items:center;}
+.price-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
+.price-edit-row{display:flex;gap:8px;align-items:center;margin-top:10px;}
+/* PROGRESS */
+.progress{height:5px;background:#1e2d45;border-radius:3px;overflow:hidden;display:inline-block;}
+.progress-fill{height:100%;border-radius:3px;}
+/* TOGGLE */
+.toggle{width:40px;height:22px;border-radius:11px;cursor:pointer;border:none;position:relative;transition:background .2s;flex-shrink:0;vertical-align:middle;}
+.toggle::after{content:'';position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:white;transition:left .2s;}
+.toggle.on{background:var(--pool);}.toggle.on::after{left:21px;}
+.toggle.off{background:#334155;}.toggle.off::after{left:3px;}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#111827;border:1px solid var(--border);border-radius:20px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;}
+.modal-head{padding:24px 24px 0;display:flex;justify-content:space-between;align-items:center;}
+.modal-body{padding:24px;display:flex;flex-direction:column;gap:16px;}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;color:white;z-index:999;display:none;animation:up .3s ease;}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* RULE ROW */
+.rule-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
+.rule-row:last-child{border-bottom:none;}
+/* NOVEDAD CARD */
+.nov-card{border-radius:12px;padding:20px;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);}
+/* AVATAR */
+.avatar{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:white;flex-shrink:0;}
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#334155;border-radius:4px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="position:fixed;inset:0;background:#0a0f1e;display:flex;align-items:center;justify-content:center;padding:1.5rem;z-index:999;">
+  <div style="width:100%;max-width:360px;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#0ea5e9,#0369a1);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 1rem;">💧</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:4px;">Pool<span style="color:#0ea5e9">plus</span> Admin</div>
+      <div style="color:#64748b;font-size:13px;">Acceso restringido</div>
+    </div>
+    <div style="background:#ffffff08;border:0.5px solid #ffffff18;border-radius:16px;padding:1.75rem;">
+      <div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Usuario</div>
+        <input type="email" id="login-user" placeholder="usuario@poolplus.app" style="width:100%;background:#ffffff08;border:1px solid #ffffff20;border-radius:10px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;" onfocus="this.style.borderColor='#0ea5e9'" onblur="this.style.borderColor='#ffffff20'"/>
+      </div>
+      <div style="margin-bottom:18px;">
+        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Contraseña</div>
+        <div style="position:relative;">
+          <input id="login-pass" type="password" placeholder="••••••••••" style="width:100%;background:#ffffff08;border:1px solid #ffffff20;border-radius:10px;padding:12px 42px 12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;" onkeydown="if(event.key==='Enter')doLogin()"/>
+          <span id="eye-icon" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;color:#64748b;user-select:none;" onclick="var i=document.getElementById('login-pass');var e=document.getElementById('eye-icon');if(i.type=='password'){i.type='text';e.textContent='🙈';}else{i.type='password';e.textContent='👁';}">👁</span>
+        </div>
+      </div>
+      <button onclick="doLogin()" style="width:100%;background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Entrar</button>
+      <div id="login-error" style="display:none;margin-top:12px;background:#ef444418;border:1px solid #ef444430;border-radius:8px;padding:10px;font-size:13px;color:#ef4444;text-align:center;">Usuario o contraseña incorrectos.</div>
+    </div>
+    <div style="text-align:center;color:#334155;font-size:11px;margin-top:1.25rem;">🔒 Acceso exclusivo para administradores de PoolPlus</div>
+  </div>
+</div>
+<div id="sidebar">
+  <div class="logo-row">
+    <div class="logo-icon">💧</div>
+    <div class="logo-text">Pool<span>plus</span> <span class="logo-sub">Admin</span></div>
+  </div>
+  <button class="nav-btn active" onclick="goTab('dashboard',this)"><span>▦</span><span style="flex:1">Panel General</span></button>
+  <button class="nav-btn" onclick="goTab('precios',this)"><span>💲</span><span style="flex:1">Precios y Promos</span></button>
+  <button class="nav-btn" onclick="goTab('novedades',this)"><span>⚠️</span><span style="flex:1">Novedades</span><span class="nav-badge" id="badge-nov">2</span></button>
+  <button class="nav-btn" onclick="goTab('techs',this)"><span>🔧</span><span style="flex:1">Técnicos</span><span class="nav-badge" id="badge-tech">2</span></button>
+  <button class="nav-btn" onclick="goTab('aplicaciones',this)"><span>📥</span><span style="flex:1">Aplicaciones</span><span class="nav-badge" id="badge-apps">3</span></button>
+  <button class="nav-btn" onclick="goTab('clients',this)"><span>👥</span><span style="flex:1">Clientes</span></button>
+  <button class="nav-btn" onclick="goTab('promos',this)"><span>🏷</span><span style="flex:1">Promociones</span></button>
+  <button class="nav-btn" onclick="goTab('pagos',this)"><span>💰</span><span style="flex:1">Pagos a Técnicos</span></button>
+  <button class="nav-btn" onclick="goTab('config',this)"><span>⚙️</span><span style="flex:1">Configuración</span></button>
+  <div class="sidebar-footer">
+    <div class="sub">Conectado como</div>
+    <div class="name">Admin · PoolPlus</div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div id="content">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-title">Panel General</div>
+    <div class="page-sub">Resumen — Junio 2026</div>
+    <div class="alert alert-warn">⚠️ <strong>2 técnicos</strong> requieren atención — documentos faltantes o aprobación pendiente. <button class="btn btn-warning btn-sm" style="margin-left:auto" onclick="goTabById('techs')">Revisar →</button></div>
+    <div class="alert alert-danger">🔔 <strong>2 novedades</strong> esperando tu decisión. <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="goTabById('novedades')">Revisar →</button></div>
+    <div style="background:#0ea5e915;border:1px solid #0ea5e930;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;color:#0ea5e9;margin-bottom:14px">
+      📥 <strong>3 aplicaciones</strong> de técnicos esperando revisión.
+      <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="goTabById('aplicaciones')">Revisar →</button>
+    </div>
+    <div class="grid-auto" style="margin-bottom:24px" id="stats-grid"></div>
+    <!-- Price snapshot -->
+    <div class="card card-p" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-weight:700;font-size:15px">💲 Precios Activos</div>
+        <button class="btn btn-ghost btn-sm" onclick="goTabById('precios')">Editar precios →</button>
+      </div>
+      <div id="price-snapshot" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px"></div>
+    </div>
+    <!-- Plan dist -->
+    <div class="card card-p">
+      <div style="font-weight:700;font-size:15px;margin-bottom:14px">Distribución por Plan</div>
+      <div class="grid-3" id="plan-dist"></div>
+    </div>
+  </div>
+
+  <!-- PRECIOS -->
+  <div class="page" id="page-precios">
+    <div class="page-title">Precios y Promociones</div>
+    <div class="page-sub">Config central — cualquier cambio aquí se refleja en el portal del cliente, el flujo del técnico y los recibos</div>
+    <div class="card card-p" style="margin-bottom:20px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px">📋 Planes de Servicio Recurrente</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Estos precios aparecen en el landing, el portal del cliente y los comprobantes de cobro.</p>
+      <div id="plan-prices"></div>
+    </div>
+    <div class="card card-p" style="margin-bottom:20px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px">⚠️ Precios de Novedades</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Se muestran al cliente cuando se solicita aprobación. Solo se cobran si el cliente aprueba (o si aplica penalidad).</p>
+      <div id="nov-prices"></div>
+    </div>
+    <div class="card card-p" style="margin-bottom:20px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px">🚫 Penalidad por Cancelación / Sin Respuesta</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Se cobra cuando el cliente cancela tarde o no responde a una novedad bloqueante en 8 minutos.</p>
+      <div id="penalty-price"></div>
+    </div>
+    <div class="card card-p">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:4px">🏷 Promociones Activas</div>
+          <p style="font-size:13px;color:var(--muted)" id="promos-summary">3 activas · 59 usos totales</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="goTabById('promos')">Gestionar promos →</button>
+      </div>
+      <div id="promos-quick"></div>
+    </div>
+  </div>
+
+  <!-- NOVEDADES -->
+  <div class="page" id="page-novedades">
+    <div class="page-title">Centro de Novedades</div>
+    <div class="page-sub">Decide si reenviar cada novedad al cliente o registrarla internamente</div>
+    <div class="card card-p" style="margin-bottom:24px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:14px">⚙️ Reglas de Alerta Actuales</div>
+      <div class="grid-3" id="alert-rules-display"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:14px" onclick="goTabById('config')">Editar reglas en Configuración →</button>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#ef4444;margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">🔴 Decisión Pendiente</div>
+    <div id="pending-alerts"></div>
+    <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:12px;margin-top:24px;text-transform:uppercase;letter-spacing:.05em">Resueltas</div>
+    <div class="card" style="overflow:hidden">
+      <table class="tbl"><thead><tr style="border-bottom:1px solid var(--border)">
+        <th>Cliente</th><th>Tipo</th><th>Técnico</th><th>Fecha</th><th>Resolución</th>
+      </tr></thead><tbody id="resolved-alerts"></tbody></table>
+    </div>
+  </div>
+
+  <!-- TÉCNICOS -->
+  <div class="page" id="page-techs">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <div><div class="page-title" style="margin-bottom:0">Técnicos</div><div style="color:var(--muted);font-size:13px;margin-top:4px">6 registrados · 4 activos</div></div>
+      <button class="btn btn-primary btn-sm">+ Invitar Técnico</button>
+    </div>
+    <div class="filters">
+      <input type="text" placeholder="Buscar nombre o ciudad..." oninput="filterTechs(this.value)" style="max-width:220px"/>
+      <button class="tab-btn on" onclick="setTechFilter('all',this)">Todos</button>
+      <button class="tab-btn" onclick="setTechFilter('active',this)">Activo</button>
+      <button class="tab-btn" onclick="setTechFilter('pending',this)">Pendiente</button>
+      <button class="tab-btn" onclick="setTechFilter('suspended',this)">Suspendido</button>
+    </div>
+    <div class="card" style="overflow:hidden">
+      <table class="tbl"><thead><tr style="border-bottom:1px solid var(--border)">
+        <th>Técnico</th><th>Ubicación</th><th>Documentos</th><th>Rating</th><th>Servicios</th><th>Ganancias</th><th>Estado</th><th></th>
+      </tr></thead><tbody id="techs-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- APLICACIONES -->
+  <div class="page" id="page-aplicaciones">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <div><div class="page-title" style="margin-bottom:0">Aplicaciones de Técnicos</div><div style="color:var(--muted);font-size:13px;margin-top:4px" id="apps-count">3 pendientes de revisión</div></div>
+    </div>
+    <div class="filters">
+      <button class="tab-btn on" onclick="setAppFilter('pending',this)">⏳ Pendientes</button>
+      <button class="tab-btn" onclick="setAppFilter('approved',this)">✅ Aprobadas</button>
+      <button class="tab-btn" onclick="setAppFilter('rejected',this)">❌ Rechazadas</button>
+      <button class="tab-btn" onclick="setAppFilter('all',this)">Todas</button>
+    </div>
+    <div id="apps-list"></div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div class="page" id="page-clients">
+    <div style="margin-bottom:20px"><div class="page-title" style="margin-bottom:0">Clientes</div><div style="color:var(--muted);font-size:13px;margin-top:4px">6 total · 4 activos</div></div>
+    <div class="filters">
+      <input type="text" placeholder="Buscar nombre o dirección..." oninput="filterClients(this.value)" style="max-width:240px"/>
+      <button class="tab-btn on" onclick="setClientFilter('all',this)">Todos</button>
+      <button class="tab-btn" onclick="setClientFilter('active',this)">Activo</button>
+      <button class="tab-btn" onclick="setClientFilter('paused',this)">Pausado</button>
+      <button class="tab-btn" onclick="setClientFilter('cancelled',this)">Cancelado</button>
+    </div>
+    <div class="card" style="overflow:hidden">
+      <table class="tbl"><thead><tr style="border-bottom:1px solid var(--border)">
+        <th>Cliente</th><th>Plan</th><th>Técnico</th><th>Promo</th><th>Próx. Cobro</th><th>Estado</th><th></th>
+      </tr></thead><tbody id="clients-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- PROMOCIONES -->
+  <div class="page" id="page-promos">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <div><div class="page-title" style="margin-bottom:0">Promociones</div><div style="color:var(--muted);font-size:13px;margin-top:4px">Crear y gestionar códigos de descuento</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openPromoModal(null)">+ Nueva Promoción</button>
+    </div>
+    <div class="card" style="overflow:hidden">
+      <table class="tbl"><thead><tr style="border-bottom:1px solid var(--border)">
+        <th>Promoción</th><th>Código</th><th>Descuento</th><th>Aplica a</th><th>Usos</th><th>Vence</th><th>Estado</th><th></th>
+      </tr></thead><tbody id="promos-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- PAGOS -->
+  <div class="page" id="page-pagos">
+    <div class="page-title">Pagos a Técnicos</div>
+    <div class="page-sub">Dispersal vía Stripe Connect</div>
+    <div style="background:#f59e0b10;border:1px solid #f59e0b30;border-radius:12px;padding:16px;margin-bottom:24px;font-size:13px;color:#f59e0b;line-height:1.6">
+      ⚠️ <strong>Stripe Connect aún no está configurado.</strong> Los pagos son manuales por ahora. Una vez conectado, la comisión de cada técnico se dispersará automáticamente al completar cada servicio.
+    </div>
+    <div class="card" style="overflow:hidden">
+      <table class="tbl"><thead><tr style="border-bottom:1px solid var(--border)">
+        <th>Técnico</th><th>Nivel</th><th>Servicios</th><th>Ganancias</th><th>Pago Pendiente</th><th>Stripe Connect</th><th></th>
+      </tr></thead><tbody id="pagos-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- CONFIG -->
+  <div class="page" id="page-config">
+    <div class="page-title">Configuración</div>
+    <div class="page-sub">Reglas operativas y ajustes del sistema</div>
+    <div class="card card-p" style="margin-bottom:20px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px">🔄 Ciclo de Limpieza del Filtro</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">El técnico ve un indicador de color interno. Los clientes nunca lo ven.</p>
+      <div class="grid-2" id="filter-config"></div>
+    </div>
+    <div class="card card-p" style="margin-bottom:20px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px">🔔 Reglas de Alerta de Novedades</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Define qué pasa cuando el técnico reporta una novedad, según el tipo de cliente.</p>
+      <div id="alert-rules-config"></div>
+    </div>
+    <div class="card card-p">
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px">⏱ Ventana de Respuesta — Novedades</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+        <div>
+          <div style="font-weight:600;font-size:14px">Ventana de respuesta</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">Solo para piscina verde y novedades bloqueantes</div>
+        </div>
+        <span style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--pool)">8 min</span>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:10px">⚠️ Cambiar la ventana de respuesta requiere actualizar la configuración de Supabase.</p>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- MODAL TÉCNICO -->
+<div class="modal-overlay" id="modal-tech">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div style="display:flex;align-items:center;gap:12px" id="modal-tech-head"></div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-tech')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-tech-body"></div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div style="display:flex;align-items:center;gap:12px" id="modal-client-head"></div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-client')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-client-body"></div>
+  </div>
+</div>
+
+<!-- MODAL PROMO -->
+<div class="modal-overlay" id="modal-promo">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px" id="modal-promo-title">Nueva Promoción</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-promo')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="section-label">Código Promo</div>
+        <input type="text" id="pf-code" placeholder="BIENVENIDO50" style="width:100%" oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+      <div>
+        <div class="section-label">Nombre de la Promoción</div>
+        <input type="text" id="pf-label" placeholder="ej. Primer mes 50% off" style="width:100%"/>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="section-label">Tipo de Descuento</div>
+          <select id="pf-type" style="width:100%">
+            <option value="percent">Porcentaje (%)</option>
+            <option value="fixed">Monto fijo ($)</option>
+            <option value="months_free">Meses gratis</option>
+          </select>
+        </div>
+        <div>
+          <div class="section-label">Valor</div>
+          <input type="number" id="pf-val" placeholder="50" style="width:100%"/>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="section-label">Límite de Usos</div>
+          <input type="number" id="pf-limit" placeholder="Sin límite" style="width:100%"/>
+        </div>
+        <div>
+          <div class="section-label">Vencimiento</div>
+          <input type="date" id="pf-expires" style="width:100%"/>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Aplica a</div>
+        <select id="pf-applies" style="width:100%">
+          <option>Todos los planes</option>
+          <option>Esencial</option>
+          <option>Premium</option>
+          <option>Elite</option>
+          <option>Solo primer mes</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modal-promo')">Cancelar</button>
+        <button class="btn btn-primary" style="flex:2" onclick="savePromo()">Guardar Promoción</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── AUTH ──────────────────────────────────────────────────────
+function togglePass(){
+  const inp = document.getElementById('login-pass');
+  const eye = document.getElementById('eye-icon');
+  if(inp.type === 'password'){ inp.type = 'text'; eye.textContent = '🙈'; }
+  else { inp.type = 'password'; eye.textContent = '👁'; }
+}
+
+function doLogin(){
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err  = document.getElementById('login-error');
+  if(user === 'totalplan22@gmail.com' && pass === 'Totalplan22@'){
+    document.getElementById('login-screen').style.display = 'none';
+    err.style.display = 'none';
+  } else {
+    err.style.display = 'block';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+}
+
+// ── DATA ──────────────────────────────────────────────────────
+const TECHS = [
+  {id:1,name:"Oscar Carabaño",    email:"oscar@poolplus.app",   loc:"Weston",        rating:4.9,jobs:1200,status:"active",   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded"}, earn:12400,pend:840,  stripe:"acct_1A2B"},
+  {id:2,name:"Abel López",        email:"abel@poolplus.app",    loc:"Davie",          rating:4.8,jobs:980, status:"active",   docs:{id:"uploaded",lic:"missing", ins:"uploaded"}, earn:9800, pend:560,  stripe:""},
+  {id:3,name:"Renny Diaz",        email:"renny@poolplus.app",   loc:"Pembroke Pines", rating:4.9,jobs:1850,status:"suspended",docs:{id:"uploaded",lic:"uploaded",ins:"expired" }, earn:18200,pend:0,    stripe:"acct_4D5E"},
+  {id:4,name:"Luis Paz",          email:"luis@poolplus.app",    loc:"Doral",          rating:4.7,jobs:760, status:"pending",  docs:{id:"missing", lic:"missing", ins:"missing" }, earn:0,    pend:0,    stripe:""},
+  {id:5,name:"Christian Castillo",email:"christian@poolplus.app",loc:"Coral Springs", rating:4.6,jobs:430, status:"active",   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded"}, earn:4300, pend:280,  stripe:"acct_7G8H"},
+  {id:6,name:"Giann Bentivegna",  email:"giann@poolplus.app",   loc:"Plantation",     rating:4.8,jobs:610, status:"active",   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded"}, earn:6100, pend:420,  stripe:"acct_J1K2"},
+];
+const CLIENTS = [
+  {id:1,name:"John & Maria Rivera",addr:"123 Alhambra Pl, Coral Gables", plan:"Premium", status:"active",   promo:"WELCOME50", bill:"$124.50",  tech:"Oscar Carabaño",    isNew:false,notes:""},
+  {id:2,name:"Sarah Thompson",     addr:"456 Collins Ave, Miami Beach",   plan:"Elite",   status:"active",   promo:"ANNUAL2026",bill:"$0 (anual)",tech:"Abel López",        isNew:false,notes:""},
+  {id:3,name:"Mike Delgado",       addr:"789 SW 107th Ave, Kendall",      plan:"Esencial",status:"active",   promo:"REF-OSCAR", bill:"$74.50",   tech:"Oscar Carabaño",    isNew:false,notes:""},
+  {id:4,name:"Ana Castillo",       addr:"321 NW 87th Ave, Doral",         plan:"Premium", status:"paused",   promo:null,        bill:"Pausado",  tech:"Luis Paz",           isNew:false,notes:"Viajando hasta junio"},
+  {id:5,name:"Roberto Campos",     addr:"654 Bird Rd, South Miami",       plan:"Esencial",status:"cancelled",promo:null,        bill:"—",        tech:null,                 isNew:false,notes:"Canceló — precio"},
+  {id:6,name:"Jennifer Walsh",     addr:"1842 SW 145th Ave, Weston",      plan:"Premium", status:"active",   promo:"WELCOME50", bill:"$124.50",  tech:"Christian Castillo", isNew:true, notes:""},
+];
+let PROMOS = [
+  {id:1,code:"WELCOME50", label:"Primer Mes 50% Off",          type:"percent",    val:50,  uses:38,limit:100,active:true, expires:"2026-07-31"},
+  {id:2,code:"ANNUAL2026",label:"Plan Anual — Paga 10, Usa 12",type:"months_free",val:2,   uses:14,limit:50, active:true, expires:"2026-12-31"},
+  {id:3,code:"REF-OSCAR", label:"Referido de Oscar Carabaño",  type:"percent",    val:50,  uses:7, limit:null,active:true, expires:null},
+];
+const ALERTAS = [
+  {id:1,client:"Jennifer Walsh",   type:"green_pool",isNew:true, tech:"Christian Castillo",time:"9:22 AM",date:"18 Jun",status:"pending"},
+  {id:2,client:"John & Maria Rivera",type:"equipment",isNew:false,tech:"Oscar Carabaño",   time:"8:45 AM",date:"18 Jun",status:"pending"},
+  {id:3,client:"Sarah Thompson",   type:"green_pool",isNew:false,tech:"Abel López",        time:"7:30 AM",date:"17 Jun",status:"logged"},
+];
+let alertasState = [...ALERTAS];
+
+const PRICES = {
+  planes:{
+    Esencial:{precio:149,color:"#0ea5e9",desc:"Mantenimiento semanal, piscina estándar"},
+    Premium: {precio:249,color:"#8b5cf6",desc:"Semanal + químicos incluidos"},
+    Elite:   {precio:349,color:"#f59e0b",desc:"Dos veces por semana + prioridad"},
+  },
+  novedades:{
+    green_pool:{precio:85, icon:"🟢",label:"Piscina Verde",          bloquea:true, penalidad:true },
+    sedimento: {precio:65, icon:"🟤",label:"Sedimento Fino / Sistema Back",bloquea:true, penalidad:false},
+    equipo:    {precio:120,icon:"🔧",label:"Problema de Equipo",     bloquea:false,penalidad:false},
+    acid_wash: {precio:250,icon:"🧪",label:"Limpieza Ácida",         bloquea:false,penalidad:false},
+  },
+  penalidad:30,
+  filtro:{alerta:4,vencido:6},
+};
+let alertRules = {
+  cliente_nuevo:"directo",
+  recurrente_conocido:"registrar",
+  recurrente_nuevo:"admin",
+};
+const NOV_META = {
+  green_pool:{label:"Piscina Verde",  icon:"🟢",color:"#10b981"},
+  sedimento: {label:"Sedimento Fino", icon:"🟤",color:"#f59e0b"},
+  equipo:    {label:"Equipo",         icon:"🔧",color:"#8b5cf6"},
+  acid_wash: {label:"Limpieza Ácida", icon:"🧪",color:"#0ea5e9"},
+};
+const STATUS_META = {
+  active:    {color:"#10b981",bg:"#10b98120",label:"Activo"},
+  suspended: {color:"#ef4444",bg:"#ef444420",label:"Suspendido"},
+  pending:   {color:"#f59e0b",bg:"#f59e0b20",label:"Pendiente"},
+  paused:    {color:"#f59e0b",bg:"#f59e0b20",label:"Pausado"},
+  cancelled: {color:"#64748b",bg:"#64748b20",label:"Cancelado"},
+};
+const DOC_META = {
+  uploaded:{icon:"✅",color:"#10b981",label:"Cargado"},
+  missing: {icon:"⚠️",color:"#f59e0b",label:"Faltante"},
+  expired: {icon:"🔴",color:"#ef4444",label:"Vencido"},
+};
+const PLAN_COLORS = {Esencial:"#0ea5e9",Premium:"#8b5cf6",Elite:"#f59e0b"};
+
+// ── HELPERS ───────────────────────────────────────────────────
+function avatar(name,size=34){
+  const i=name.split(" ").map(n=>n[0]).slice(0,2).join("");
+  const colors=["#0ea5e9,#0369a1","#8b5cf6,#7c3aed","#10b981,#059669","#f59e0b,#d97706","#ef4444,#dc2626","#06b6d4,#0891b2"];
+  const c=colors[name.charCodeAt(0)%colors.length];
+  return `<div class="avatar" style="width:${size}px;height:${size}px;background:linear-gradient(135deg,${c});font-size:${size*.35}px">${i}</div>`;
+}
+function badge(status){
+  const m=STATUS_META[status]||STATUS_META.active;
+  return `<span class="badge" style="background:${m.bg};color:${m.color};border:1px solid ${m.color}30">${m.label}</span>`;
+}
+function discountLabel(p){
+  if(p.type==="percent") return `${p.val}% desc.`;
+  if(p.type==="months_free") return `${p.val} meses gratis`;
+  return `$${p.val}`;
+}
+function comp(docs){
+  const vals=Object.values(docs);
+  return Math.round(vals.filter(v=>v==="uploaded").length/vals.length*100);
+}
+
+function showToast(msg,color="#10b981"){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.style.background=color; t.style.display="block";
+  setTimeout(()=>t.style.display="none",2600);
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+function goTab(id,btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  if(btn) btn.classList.add("active");
+}
+function goTabById(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>{b.classList.remove("active");if(b.getAttribute("onclick")&&b.getAttribute("onclick").includes("'"+id+"'"))b.classList.add("active");});
+  document.getElementById("page-"+id).classList.add("active");
+}
+
+// ── MODAL ─────────────────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add("open");}
+function closeModal(id){document.getElementById(id).classList.remove("open");}
+
+// ── FILTERS ───────────────────────────────────────────────────
+let techFilter="all", clientFilter="all", techSearch="", clientSearch="";
+function setTechFilter(f,btn){
+  techFilter=f;
+  document.querySelectorAll("#page-techs .tab-btn").forEach(b=>b.classList.remove("on"));
+  if(btn)btn.classList.add("on");
+  renderTechs();
+}
+function filterTechs(v){techSearch=v;renderTechs();}
+function setClientFilter(f,btn){
+  clientFilter=f;
+  document.querySelectorAll("#page-clients .tab-btn").forEach(b=>b.classList.remove("on"));
+  if(btn)btn.classList.add("on");
+  renderClients();
+}
+function filterClients(v){clientSearch=v;renderClients();}
+
+// ── PRICE EDITING ─────────────────────────────────────────────
+let editingPrice=null;
+function startEdit(id,current){
+  editingPrice=id;
+  document.querySelectorAll(".price-edit-row").forEach(r=>r.style.display="none");
+  document.querySelectorAll(".price-display").forEach(r=>r.style.display="flex");
+  const row=document.getElementById("edit-"+id);
+  const disp=document.getElementById("disp-"+id);
+  if(row){row.style.display="flex"; document.getElementById("inp-"+id).value=current;}
+  if(disp)disp.style.display="none";
+}
+function cancelEdit(){
+  document.querySelectorAll(".price-edit-row").forEach(r=>r.style.display="none");
+  document.querySelectorAll(".price-display").forEach(r=>r.style.display="flex");
+  editingPrice=null;
+}
+function savePrice(id,type,key){
+  const val=parseFloat(document.getElementById("inp-"+id).value);
+  if(isNaN(val)||val<0){showToast("Precio inválido","#ef4444");return;}
+  if(type==="plan")     PRICES.planes[key].precio=val;
+  if(type==="novedad")  PRICES.novedades[key].precio=val;
+  if(type==="penalidad")PRICES.penalidad=val;
+  if(type==="filtro_a") PRICES.filtro.alerta=Math.round(val);
+  if(type==="filtro_v") PRICES.filtro.vencido=Math.round(val);
+  showToast("Precio guardado — se actualiza en todos los flujos ✓");
+  cancelEdit();
+  renderAll();
+}
+function priceField(id,type,key,valor,label,color,desc,icon){
+  const iconHtml=icon?`<span style="font-size:18px;margin-right:6px">${icon}</span>`:"";
+  return `<div class="price-field" style="border:1px solid ${color||"var(--border)"}20">
+    <div class="price-display" id="disp-${id}" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div>${iconHtml}<span style="font-weight:700;font-size:14px">${label}</span></div>
+        ${desc?`<div style="font-size:12px;color:var(--muted);margin-top:3px">${desc}</div>`:""}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="price-val" style="color:${color||"var(--pool)"}">\$${valor}</span>
+        <button class="btn btn-ghost btn-sm" onclick="startEdit('${id}',${valor})">Editar</button>
+      </div>
+    </div>
+    <div class="price-edit-row" id="edit-${id}" style="display:none;gap:8px;align-items:center;margin-top:4px">
+      <span style="color:var(--muted)">$</span>
+      <input type="number" id="inp-${id}" value="${valor}" style="width:110px;font-size:17px;font-weight:700"/>
+      <button class="btn btn-primary btn-sm" onclick="savePrice('${id}','${type}','${key}')">Guardar</button>
+      <button class="btn btn-ghost btn-sm" onclick="cancelEdit()">Cancelar</button>
+    </div>
+  </div>`;
+}
+
+// ── RENDER FUNCTIONS ─────────────────────────────────────────
+function renderStats(){
+  const mrr=CLIENTS.filter(c=>c.status==="active").reduce((a,c)=>a+(PRICES.planes[c.plan]?.precio||0),0);
+  const actClients=CLIENTS.filter(c=>c.status==="active").length;
+  const actTechs=TECHS.filter(t=>t.status==="active").length;
+  const pendAlerts=alertasState.filter(a=>a.status==="pending").length;
+  const activePromos=PROMOS.filter(p=>p.active).length;
+  const pendTechs=TECHS.filter(t=>t.status==="pending"||Object.values(t.docs).some(v=>v!=="uploaded")).length;
+  document.getElementById("stats-grid").innerHTML=[
+    {label:"Ingresos Mensuales",val:`$${mrr.toLocaleString()}`,icon:"💵",color:"#0ea5e9"},
+    {label:"Clientes Activos",   val:actClients,icon:"👥",color:"#10b981"},
+    {label:"Técnicos Activos",   val:actTechs,  icon:"🔧",color:"#8b5cf6"},
+    {label:"Alertas Novedades",  val:pendAlerts,icon:"🔔",color:"#ef4444"},
+    {label:"Promos Activas",     val:activePromos,icon:"🏷",color:"#06b6d4"},
+    {label:"Requieren Atención", val:pendTechs, icon:"⚠️",color:"#f59e0b"},
+  ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-val" style="color:${s.color}">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join("");
+
+  // price snapshot
+  let snap=Object.entries(PRICES.planes).map(([k,v])=>`<div style="background:var(--surface2);border-radius:10px;padding:12px;border-left:3px solid ${v.color}"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">${k}</div><div style="font-size:18px;font-weight:800;color:${v.color}">$${v.precio}<span style="font-size:11px;font-weight:400;color:var(--muted)">/mes</span></div></div>`).join("");
+  snap+=`<div style="background:var(--surface2);border-radius:10px;padding:12px;border-left:3px solid #ef4444"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">Penalidad Cancelación</div><div style="font-size:18px;font-weight:800;color:#ef4444">$${PRICES.penalidad}</div></div>`;
+  document.getElementById("price-snapshot").innerHTML=snap;
+
+  // plan dist
+  document.getElementById("plan-dist").innerHTML=["Esencial","Premium","Elite"].map(plan=>{
+    const count=CLIENTS.filter(c=>c.plan===plan&&c.status==="active").length;
+    const color=PLAN_COLORS[plan]||"#0ea5e9";
+    return `<div style="background:var(--surface2);border-radius:10px;padding:16px;text-align:center;border:1px solid ${color}30"><div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:${color}">${count}</div><div style="font-size:13px;font-weight:600;margin-top:4px">${plan}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">$${PRICES.planes[plan]?.precio||0}/mes</div></div>`;
+  }).join("");
+}
+
+function renderPrecios(){
+  document.getElementById("plan-prices").innerHTML=Object.entries(PRICES.planes).map(([k,v])=>priceField("plan-"+k,"plan",k,v.precio,k,v.color,v.desc)).join("");
+  document.getElementById("nov-prices").innerHTML=Object.entries(PRICES.novedades).map(([k,v])=>{
+    const nm=NOV_META[k]||{label:"Desconocida",icon:"❓",color:"#64748b"};
+    const bloq=v.bloquea?`<span style="font-size:11px;color:#ef4444">⛔ Bloquea el servicio</span>`:`<span style="font-size:11px;color:#10b981">✅ No bloquea</span>`;
+    const pen=v.penalidad?`<span style="font-size:11px;color:#ef4444">Penalidad $${PRICES.penalidad} si no aprueba</span>`:`<span style="font-size:11px;color:var(--muted)">Sin penalidad</span>`;
+    return priceField("nov-"+k,"novedad",k,v.precio,v.label,nm?.color,"",v.icon)+`<div style="display:flex;gap:10px;margin-top:4px;padding-left:4px;margin-bottom:6px">${bloq}<span style="font-size:11px;color:var(--muted)">·</span>${pen}</div>`;
+  }).join("");
+  document.getElementById("penalty-price").innerHTML=priceField("penalidad","penalidad","",PRICES.penalidad,"Monto de penalidad","#ef4444","","🚫");
+  document.getElementById("promos-quick").innerHTML=PROMOS.filter(p=>p.active).map(p=>`<div style="background:var(--surface2);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><code style="background:#0ea5e915;color:var(--pool);padding:2px 7px;border-radius:5px;font-size:12px;font-weight:700">${p.code}</code><span style="font-size:13px;margin-left:10px">${p.label}</span></div><span style="font-size:12px;color:#10b981;font-weight:700">${discountLabel(p)}</span></div>`).join("");
+}
+
+function renderNovedades(){
+  // rules display
+  const ruleDisplay={directo:{label:"→ Enviar al cliente",color:"#10b981"},registrar:{label:"📋 Solo registrar",color:"#64748b"},admin:{label:"🛑 Esperar al admin",color:"#f59e0b"}};
+  const ruleItems=[
+    {key:"cliente_nuevo",     label:"Cliente nuevo",             icon:"🆕",desc:"Primera visita"},
+    {key:"recurrente_conocido",label:"Recurrente — condición conocida",icon:"🔁",desc:"Misma novedad de antes"},
+    {key:"recurrente_nuevo",  label:"Recurrente — condición nueva",icon:"🔔",desc:"Novedad nunca vista"},
+  ];
+  document.getElementById("alert-rules-display").innerHTML=ruleItems.map(r=>{
+    const rd=ruleDisplay[alertRules[r.key]]||{label:"Sin definir",color:"#64748b"};
+    return `<div style="background:var(--surface2);border-radius:10px;padding:14px;border:1px solid ${rd.color}30"><div style="font-size:18px;margin-bottom:6px">${r.icon}</div><div style="font-size:12px;font-weight:700;margin-bottom:4px">${r.label}</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">${r.desc}</div><div style="font-size:12px;font-weight:700;color:${rd.color}">${rd.label}</div></div>`;
+  }).join("");
+
+  // pending
+  const pending=alertasState.filter(a=>a.status==="pending");
+  document.getElementById("pending-alerts").innerHTML=pending.length===0?`<div style="color:var(--muted);font-size:13px;padding:14px 0">No hay alertas pendientes ✓</div>`:pending.map(a=>{
+    const nm=NOV_META[a.type]||{label:"Desconocida",icon:"❓",color:"#64748b"};
+    const newBadge=a.isNew?`<span style="background:#ef444420;color:#ef4444;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">CLIENTE NUEVO</span>`:"";
+    return `<div class="nov-card" style="border-left:3px solid ${nm.color}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:16px">${nm.icon}</span>
+            <span style="font-weight:700;font-size:15px">${nm.label}</span>
+            ${newBadge}
+          </div>
+          <div style="font-size:13px;color:var(--muted)">${a.client} · ${a.tech}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${a.date} a las ${a.time}</div>
+        </div>
+        <span style="font-size:11px;background:#10b98115;color:#10b981;padding:3px 8px;border-radius:6px">📸 Foto adjunta</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" style="flex:1;padding:8px" onclick="resolverAlerta(${a.id},'forwarded')">📤 Enviar al cliente</button>
+        <button class="btn btn-ghost" style="flex:1;padding:8px" onclick="resolverAlerta(${a.id},'logged')">📋 Solo registrar</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  // resolved
+  document.getElementById("resolved-alerts").innerHTML=alertasState.filter(a=>a.status!=="pending").map(a=>{
+    const nm=NOV_META[a.type]||{label:"Desconocida",icon:"❓",color:"#64748b"};
+    const res=a.status==="forwarded"?`<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:#0ea5e920;color:var(--pool)">📤 Enviado al cliente</span>`:`<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:#64748b20;color:var(--muted)">📋 Registrado</span>`;
+    return `<tr class><td style="font-size:13px;font-weight:600">${a.client}</td><td style="color:${nm.color};font-size:13px">${nm.icon} ${nm.label}</td><td style="font-size:13px;color:var(--muted)">${a.tech}</td><td style="font-size:12px;color:var(--muted)">${a.date}</td><td>${res}</td></tr>`;
+  }).join("");
+
+  // badge
+  const pendCount=alertasState.filter(a=>a.status==="pending").length;
+  document.getElementById("badge-nov").textContent=pendCount;
+  document.getElementById("badge-nov").style.display=pendCount>0?"":"none";
+}
+function resolverAlerta(id,status){
+  alertasState=alertasState.map(a=>a.id===id?{...a,status}:a);
+  showToast(status==="forwarded"?"📤 Novedad enviada al cliente":"📋 Registrado internamente");
+  renderNovedades();
+}
+
+function renderTechs(){
+  let list=TECHS.filter(t=>(techFilter==="all"||t.status===techFilter)&&(t.name.toLowerCase().includes(techSearch.toLowerCase())||t.loc.toLowerCase().includes(techSearch.toLowerCase())));
+  document.getElementById("techs-tbody").innerHTML=list.map(t=>{
+    const c=comp(t.docs);
+    const warn=Object.values(t.docs).some(v=>v!=="uploaded")?"⚠️":"";
+    const progColor=c===100?"linear-gradient(90deg,#10b981,#34d399)":"linear-gradient(90deg,#f59e0b,#fbbf24)";
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px">${avatar(t.name)}<div><div style="font-size:13px;font-weight:600">${t.name}</div><div style="font-size:11px;color:var(--muted)">${t.email}</div></div></div></td>
+      <td style="font-size:13px;color:var(--muted)">📍 ${t.loc}</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="progress" style="width:60px"><div class="progress-fill" style="width:${c}%;background:${progColor}"></div></div><span style="font-size:11px;font-weight:700;color:${c===100?"#10b981":"#f59e0b"}">${c}%</span><span>${warn}</span></div></td>
+      <td style="font-size:13px">⭐ ${t.rating}</td>
+      <td style="font-size:13px;font-weight:600">${t.jobs.toLocaleString()}</td>
+      <td style="font-size:13px;font-weight:700;color:#10b981">$${t.earn.toLocaleString()}</td>
+      <td>${badge(t.status)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openTechModal(${t.id})">Gestionar</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderClients(){
+  let list=CLIENTS.filter(c=>(clientFilter==="all"||c.status===clientFilter)&&(c.name.toLowerCase().includes(clientSearch.toLowerCase())||c.addr.toLowerCase().includes(clientSearch.toLowerCase())));
+  document.getElementById("clients-tbody").innerHTML=list.map(c=>{
+    const planColor=PLAN_COLORS[c.plan]||"#0ea5e9";
+    const newBadge=c.isNew?`<span style="background:#0ea5e920;color:var(--pool);font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px">NUEVO</span>`:"";
+    const promoHtml=c.promo?`<code style="background:#0ea5e915;color:var(--pool);padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">${c.promo}</code>`:`<span style="color:var(--muted);font-size:12px">—</span>`;
+    const techHtml=c.tech||`<span style="color:#ef4444;font-size:11px">Sin asignar</span>`;
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px">${avatar(c.name)}<div><div style="font-size:13px;font-weight:600">${c.name}${newBadge}</div><div style="font-size:11px;color:var(--muted)">${c.addr}</div></div></div></td>
+      <td><span class="badge" style="background:${planColor}20;color:${planColor};border:1px solid ${planColor}30">${c.plan}</span></td>
+      <td style="font-size:13px;color:var(--muted)">${techHtml}</td>
+      <td>${promoHtml}</td>
+      <td style="font-size:13px;font-weight:600;color:#10b981">${c.bill}</td>
+      <td>${badge(c.status)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openClientModal(${c.id})">Gestionar</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderPromos(){
+  document.getElementById("promos-tbody").innerHTML=PROMOS.map(p=>{
+    const toggle=`<button class="toggle ${p.active?"on":"off"}" onclick="togglePromo(${p.id})"></button>`;
+    const limit=p.limit?`/${p.limit}`:"";
+    return `<tr>
+      <td style="font-size:13px;font-weight:600">${p.label}</td>
+      <td><code style="background:#0ea5e915;color:var(--pool);padding:3px 8px;border-radius:5px;font-size:12px;font-weight:700">${p.code}</code></td>
+      <td style="font-size:13px;font-weight:700;color:#10b981">${discountLabel(p)}</td>
+      <td style="font-size:12px;color:var(--muted)">Todos los planes</td>
+      <td style="font-size:13px;font-weight:600">${p.uses}${limit}</td>
+      <td style="font-size:12px;color:var(--muted)">${p.expires||"Sin vencimiento"}</td>
+      <td>${toggle}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deletePromo(${p.id})">✕</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderPagos(){
+  document.getElementById("pagos-tbody").innerHTML=TECHS.filter(t=>t.status==="active").map(t=>{
+    const nivel=t.jobs<20?{label:"Starter",corte:70,color:"#64748b"}:t.jobs<60?{label:"Pro",corte:75,color:"#0ea5e9"}:{label:"Elite",corte:80,color:"#f59e0b"};
+    const stripeHtml=t.stripe?`<span style="font-size:11px;color:#10b981;font-weight:700">✅ Conectado</span>`:`<span style="font-size:11px;color:#ef4444;font-weight:700">⚠️ Sin conectar</span>`;
+    const pendHtml=t.pend>0?`<span style="font-weight:700;color:#f59e0b">$${t.pend}</span>`:`<span style="color:var(--muted)">—</span>`;
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px">${avatar(t.name,32)}<div style="font-size:13px;font-weight:600">${t.name}</div></div></td>
+      <td><span class="badge" style="background:${nivel.color}20;color:${nivel.color}">${nivel.label} ${nivel.corte}%</span></td>
+      <td style="font-size:13px">${t.jobs.toLocaleString()}</td>
+      <td style="font-size:13px;font-weight:700;color:#10b981">$${t.earn.toLocaleString()}</td>
+      <td style="font-size:13px">${pendHtml}</td>
+      <td>${stripeHtml}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="showToast('Acción registrada para ${t.name}')">Detalles</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderConfig(){
+  document.getElementById("filter-config").innerHTML=`
+    ${priceField("filt-a","filtro_a","",PRICES.filtro.alerta,"⚠️ Alerta ámbar en semana","#f59e0b","Técnico ve ámbar — filtro próximo")}
+    ${priceField("filt-v","filtro_v","",PRICES.filtro.vencido,"🔴 Alerta roja en semana","#ef4444","Técnico ve rojo — filtro vencido")}
+  `;
+  const opciones=[
+    {key:"cliente_nuevo",      label:"Cliente nuevo (primera visita)",               icon:"🆕", opts:[["directo","Enviar directo al cliente"],["admin","Retener en admin primero"],["registrar","Solo registrar"]]},
+    {key:"recurrente_conocido",label:"Recurrente — condición conocida (misma novedad)",icon:"🔁", opts:[["registrar","Solo registrar (no reenviar)"],["directo","Enviar al cliente"],["admin","Admin decide"]]},
+    {key:"recurrente_nuevo",   label:"Recurrente — condición nueva (nunca vista)",    icon:"🔔", opts:[["admin","Retener en admin primero"],["directo","Enviar directo al cliente"],["registrar","Solo registrar"]]},
+  ];
+  document.getElementById("alert-rules-config").innerHTML=opciones.map(r=>`
+    <div class="rule-row">
+      <div style="flex:1;padding-right:20px"><div style="font-size:14px;font-weight:600">${r.icon} ${r.label}</div></div>
+      <select style="width:240px" onchange="saveRule('${r.key}',this.value)">
+        ${r.opts.map(([v,l])=>`<option value="${v}"${alertRules[r.key]===v?" selected":""}>${l}</option>`).join("")}
+      </select>
+    </div>
+  `).join("");
+}
+
+function saveRule(key,val){
+  alertRules[key]=val;
+  showToast("Regla guardada ✓");
+  renderNovedades();
+}
+
+// ── PROMOS ACTIONS ────────────────────────────────────────────
+function togglePromo(id){
+  PROMOS=PROMOS.map(p=>p.id===id?{...p,active:!p.active}:p);
+  showToast("Estado actualizado");
+  renderPromos(); renderPrecios();
+}
+function deletePromo(id){
+  PROMOS=PROMOS.filter(p=>p.id!==id);
+  showToast("Eliminado","#ef4444");
+  renderPromos(); renderPrecios();
+}
+let editingPromoId=null;
+function openPromoModal(id){
+  editingPromoId=id;
+  document.getElementById("modal-promo-title").textContent=id?"Editar Promoción":"Nueva Promoción";
+  if(id){const p=PROMOS.find(x=>x.id===id);document.getElementById("pf-code").value=p.code;document.getElementById("pf-label").value=p.label;}
+  else{document.getElementById("pf-code").value="";document.getElementById("pf-label").value="";}
+  openModal("modal-promo");
+}
+function savePromo(){
+  const code=document.getElementById("pf-code").value.trim();
+  const label=document.getElementById("pf-label").value.trim();
+  const type=document.getElementById("pf-type").value;
+  const val=parseFloat(document.getElementById("pf-val").value)||50;
+  if(!code||!label){showToast("Completa código y nombre","#ef4444");return;}
+  if(editingPromoId) PROMOS=PROMOS.map(p=>p.id===editingPromoId?{...p,code,label,type,val}:p);
+  else PROMOS.push({id:Date.now(),code,label,type,val,uses:0,limit:null,active:true,expires:null});
+  showToast(editingPromoId?"Promoción actualizada ✓":"Promoción creada ✓");
+  closeModal("modal-promo");
+  renderPromos(); renderPrecios();
+}
+
+// ── TECH MODAL ────────────────────────────────────────────────
+function openTechModal(id){
+  const t=TECHS.find(x=>x.id===id);
+  document.getElementById("modal-tech-head").innerHTML=`${avatar(t.name,44)}<div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:17px">${t.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${t.email}</div></div>`;
+  const docHtml=Object.entries(t.docs).map(([doc,status])=>{
+    const m=DOC_META[status]||{icon:"—",color:"#64748b",label:"Desconocido"};
+    const docLabel={id:"ID / Documento",lic:"Licencia Contratista",ins:"Seguro"}[doc];
+    const btn=status!=="uploaded"?`<button class="btn btn-warning btn-sm" onclick="showToast('📧 Recordatorio enviado a ${t.name}')">Solicitar</button>`:"";
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--muted)">${docLabel}</span><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:${m.color};font-weight:600">${m.icon} ${m.label}</span>${btn}</div></div>`;
+  }).join("");
+  document.getElementById("modal-tech-body").innerHTML=`
+    <div class="grid-3">
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:12px;color:var(--muted);margin-bottom:6px">Estado</div><div>${badge(t.status)}</div></div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:12px;color:var(--muted);margin-bottom:6px">Rating</div><div style="font-size:14px;font-weight:700">⭐ ${t.rating}</div></div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px;text-align:center"><div style="font-size:12px;color:var(--muted);margin-bottom:6px">Servicios</div><div style="font-size:14px;font-weight:700">${t.jobs.toLocaleString()}</div></div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:16px"><div style="font-weight:700;font-size:13px;margin-bottom:12px">📋 Documentos</div>${docHtml}</div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px"><div style="font-size:12px;color:var(--muted);margin-bottom:4px">Stripe Connect</div><div style="font-size:13px;font-weight:600;color:${t.stripe?"#10b981":"#ef4444"}">${t.stripe?"✅ Conectado — "+t.stripe:"⚠️ Sin conectar — sin pagos automáticos"}</div></div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Notas Internas</div>
+      <textarea rows="3" placeholder="Notas internas..." style="width:100%"></textarea>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="showToast('Nota guardada')">Guardar nota</button>
+    </div>
+    <div style="display:flex;gap:10px;border-top:1px solid var(--border);padding-top:16px">
+      <button class="btn ${t.status==="suspended"?"btn-success":"btn-warning"}" style="flex:1" onclick="showToast('Estado actualizado');closeModal('modal-tech')">${t.status==="suspended"?"✓ Reactivar":"⏸ Suspender"}</button>
+      <button class="btn btn-danger" style="flex:1" onclick="showToast('Técnico eliminado','#ef4444');closeModal('modal-tech')">🗑 Eliminar</button>
+    </div>`;
+  openModal("modal-tech");
+}
+
+// ── CLIENT MODAL ──────────────────────────────────────────────
+function openClientModal(id){
+  const c=CLIENTS.find(x=>x.id===id);
+  const planColor=PLAN_COLORS[c.plan]||"#0ea5e9";
+  document.getElementById("modal-client-head").innerHTML=`${avatar(c.name,44)}<div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:17px">${c.name}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${c.addr}</div></div>`;
+  document.getElementById("modal-client-body").innerHTML=`
+    <div class="grid-2">
+      <div style="background:var(--surface2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Plan</div><div style="font-size:13px;font-weight:700;color:${planColor}">${c.plan}</div></div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Estado</div><div>${badge(c.status)}</div></div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Próx. Cobro</div><div style="font-size:13px;font-weight:700;color:#10b981">${c.bill}</div></div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Tipo</div><div style="font-size:13px;font-weight:700">${c.isNew?"🆕 Nuevo":"Recurrente"}</div></div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Notas Internas</div>
+      <textarea rows="3" placeholder="Notas internas..." style="width:100%">${c.notes}</textarea>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="showToast('Nota guardada')">Guardar nota</button>
+    </div>
+    <div style="display:flex;gap:10px;border-top:1px solid var(--border);padding-top:16px;flex-wrap:wrap">
+      ${c.status!=="active"?`<button class="btn btn-success" style="flex:1" onclick="showToast('Cliente activado');closeModal('modal-client')">✓ Activar</button>`:""}
+      ${c.status!=="paused"?`<button class="btn btn-warning" style="flex:1" onclick="showToast('Cliente pausado');closeModal('modal-client')">⏸ Pausar</button>`:""}
+      ${c.status!=="cancelled"?`<button class="btn btn-danger" style="flex:1" onclick="showToast('Cliente cancelado','#ef4444');closeModal('modal-client')">✕ Cancelar</button>`:""}
+    </div>`;
+  openModal("modal-client");
+}
+
+// ── APLICACIONES ──────────────────────────────────────────────
+let APPS = [
+  {id:1, fname:"Miguel",   lname:"Torres",    email:"miguel.torres@email.com",  phone:"(786) 555-1201", zone:"Weston",        exp:"3–5 años",     plate:"FLR-4421 · FL", status:"pending",  date:"19 Jun 2026",
+   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded",wc:"none"}, notes:""},
+  {id:2, fname:"Carolina", lname:"Méndez",    email:"carolina.m@email.com",     phone:"(954) 555-3302", zone:"Coral Springs",  exp:"6–10 años",    plate:"ABC-9932 · FL", status:"pending",  date:"18 Jun 2026",
+   docs:{id:"uploaded",lic:"missing",ins:"uploaded",wc:"uploaded"}, notes:""},
+  {id:3, fname:"Andrés",   lname:"Villareal", email:"andres.v@email.com",       phone:"(305) 555-7703", zone:"Doral",          exp:"1–2 años",     plate:"MIA-0012 · FL", status:"pending",  date:"17 Jun 2026",
+   docs:{id:"uploaded",lic:"uploaded",ins:"missing",wc:"none"}, notes:""},
+  {id:4, fname:"Patricia", lname:"Suárez",    email:"psuarez@email.com",        phone:"(786) 555-4404", zone:"Davie",          exp:"Más de 10 años",plate:"BRW-7731 · FL", status:"approved", date:"15 Jun 2026",
+   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded",wc:"none"}, notes:"Aprobada — experiencia excelente"},
+  {id:5, fname:"José",     lname:"Ramírez",   email:"jose.ram@email.com",       phone:"(954) 555-5505", zone:"Pembroke Pines", exp:"Menos de 1 año",plate:"PPB-2210 · FL", status:"rejected", date:"14 Jun 2026",
+   docs:{id:"uploaded",lic:"missing",ins:"missing",wc:"none"}, notes:"Rechazado — sin licencia ni seguro"},
+];
+let appFilter = "pending";
+
+const DOC_LABELS = {id:"ID / Documento",lic:"Licencia CPO",ins:"Seguro",wc:"Workers' Comp"};
+const APP_STATUS = {
+  pending: {label:"Pendiente", color:"#f59e0b", bg:"#f59e0b20"},
+  approved:{label:"Aprobada",  color:"#10b981", bg:"#10b98120"},
+  rejected:{label:"Rechazada", color:"#ef4444", bg:"#ef444420"},
+};
+
+function setAppFilter(f,btn){
+  appFilter=f;
+  document.querySelectorAll("#page-aplicaciones .tab-btn").forEach(b=>b.classList.remove("on"));
+  if(btn)btn.classList.add("on");
+  renderApps();
+}
+
+function aprobarApp(id){
+  APPS=APPS.map(a=>a.id===id?{...a,status:"approved"}:a);
+  showToast("✅ Aplicación aprobada — credenciales enviadas por correo");
+  updateAppBadge();
+  renderApps();
+}
+
+function rechazarApp(id){
+  const nota=prompt("Motivo del rechazo (se enviará al candidato):");
+  if(nota===null) return;
+  APPS=APPS.map(a=>a.id===id?{...a,status:"rejected",notes:nota||"Sin especificar"}:a);
+  showToast("❌ Aplicación rechazada — candidato notificado","#ef4444");
+  updateAppBadge();
+  renderApps();
+}
+
+function updateAppBadge(){
+  const n=APPS.filter(a=>a.status==="pending").length;
+  const badge=document.getElementById("badge-apps");
+  badge.textContent=n;
+  badge.style.display=n>0?"":"none";
+}
+
+function renderApps(){
+  const list=APPS.filter(a=>appFilter==="all"||a.status===appFilter);
+  const pendCount=APPS.filter(a=>a.status==="pending").length;
+  document.getElementById("apps-count").textContent=
+    appFilter==="pending"?`${pendCount} pendientes de revisión`:
+    appFilter==="approved"?`${APPS.filter(a=>a.status==="approved").length} aprobadas`:
+    appFilter==="rejected"?`${APPS.filter(a=>a.status==="rejected").length} rechazadas`:
+    `${APPS.length} en total`;
+
+  if(list.length===0){
+    document.getElementById("apps-list").innerHTML=
+      `<div style="color:var(--muted);font-size:13px;padding:20px 0">No hay aplicaciones en esta categoría.</div>`;
+    return;
+  }
+
+  document.getElementById("apps-list").innerHTML=list.map(a=>{
+    const sm=APP_STATUS[a.status]||{label:"Desconocido",color:"#64748b",bg:"#64748b20"};
+    const docsHtml=Object.entries(a.docs).filter(([k])=>k!=="wc"||a.docs.wc!=="none").map(([k,v])=>{
+      if(v==="none") return "";
+      const m=v==="uploaded"?{icon:"✅",color:"#10b981"}:v==="missing"?{icon:"⚠️",color:"#f59e0b"}:{icon:"—",color:"#4d6788"};
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid #ffffff08">
+        <span style="font-size:12px;color:var(--muted)">${DOC_LABELS[k]}</span>
+        <span style="font-size:12px;font-weight:600;color:${m.color}">${m.icon} ${v==="uploaded"?"Cargado":"Faltante"}</span>
+      </div>`;
+    }).join("");
+
+    const allDocsOk=["id","lic","ins"].every(k=>a.docs[k]==="uploaded");
+    const docsWarning=!allDocsOk?`<div style="background:#f59e0b10;border:1px solid #f59e0b30;border-radius:8px;padding:8px 12px;font-size:12px;color:#f59e0b;margin-top:8px">⚠️ Faltan documentos obligatorios — no se puede aprobar hasta completarlos.</div>`:"";
+
+    const actions=a.status==="pending"?`
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-danger" style="flex:1;padding:9px" onclick="rechazarApp(${a.id})">❌ Rechazar</button>
+        <button class="btn btn-success" style="flex:2;padding:9px" ${!allDocsOk?"disabled title='Faltan documentos'":""} onclick="aprobarApp(${a.id})">✅ Aprobar y crear credenciales</button>
+      </div>`:
+      a.status==="approved"?`<div style="margin-top:12px;font-size:12px;color:#10b981">✅ Aprobada · Credenciales enviadas por correo</div>`:
+      `<div style="margin-top:12px;font-size:12px;color:#ef4444">❌ Rechazada${a.notes?" — "+a.notes:""}</div>`;
+
+    return `<div class="card" style="padding:20px;margin-bottom:14px;border-left:3px solid ${sm.color}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:12px">
+          ${avatar(a.fname+" "+a.lname,40)}
+          <div>
+            <div style="font-size:15px;font-weight:700">${a.fname} ${a.lname}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${a.email} · ${a.phone}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:1px">📍 ${a.zone} · 🚗 ${a.plate}</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <span class="badge" style="background:${sm.bg};color:${sm.color}">${sm.label}</span>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">${a.date}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="background:var(--surface2);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Experiencia</div>
+          <div style="font-size:13px;font-weight:600">${a.exp}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Documentos</div>
+          <div style="font-size:13px;font-weight:600;color:${allDocsOk?"#10b981":"#f59e0b"}">${allDocsOk?"✅ Completos":"⚠️ Incompletos"}</div>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:12px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Documentos</div>
+        ${docsHtml}
+      </div>
+      ${docsWarning}
+      ${actions}
+    </div>`;
+  }).join("");
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+function renderAll(){
+  renderStats();
+  renderPrecios();
+  renderNovedades();
+  renderTechs();
+  renderClients();
+  renderPromos();
+  renderPagos();
+  renderConfig();
+  renderApps();
+  updateAppBadge();
+}
+renderAll();
+</script>
+</body>
+</html>
