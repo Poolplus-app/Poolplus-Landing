@@ -1,296 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PoolPlus — Client Portal</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PoolPlus — My Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0a1628;
-    min-height: 100vh;
-    padding: 1.5rem 1.25rem 3rem;
-  }
-  .wrap { max-width: 420px; margin: 0 auto; }
-  .topbar {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 1.5rem;
-  }
-  .topbar h1 { color: #fff; font-size: 18px; font-weight: 700; }
-  .state-switcher {
-    display: flex; flex-wrap: wrap; gap: 6px;
-    margin-bottom: 1.5rem;
-    padding: 10px;
-    background: #ffffff06;
-    border-radius: 12px;
-  }
-  .state-switcher button {
-    font-size: 11px; padding: 6px 10px; border-radius: 8px;
-    border: 0.5px solid #ffffff20; background: #ffffff0a; color: #7a9cc0;
-    cursor: pointer;
-  }
-  .state-switcher button.active { background: #1a73e8; color: #fff; border-color: #1a73e8; }
-
-  .card {
-    background: #ffffff08;
-    border: 0.5px solid #ffffff18;
-    border-radius: 18px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-  }
-  .status-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 12px; border-radius: 20px;
-    font-size: 12px; font-weight: 600; margin-bottom: 1rem;
-  }
-  .badge-blue { background: #1a73e818; color: #6cb2ff; }
-  .badge-amber { background: #f59e0b18; color: #f59e0b; }
-  .badge-green { background: #81c99518; color: #81c995; }
-  .badge-red { background: #f2898918; color: #f28b82; }
-
-  .pool-name { color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-  .pool-addr { color: #7a9cc0; font-size: 13px; margin-bottom: 1.25rem; }
-
-  .tech-row {
-    display: flex; align-items: center; gap: 12px;
-    background: #ffffff06; border-radius: 12px; padding: 12px;
-    margin-bottom: 1rem;
-  }
-  .tech-avatar {
-    width: 42px; height: 42px; border-radius: 50%;
-    background: linear-gradient(135deg, #1a73e8, #0d47a1);
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-weight: 700; font-size: 15px;
-  }
-  .tech-info h3 { color: #fff; font-size: 14px; font-weight: 600; }
-  .tech-info p { color: #7a9cc0; font-size: 12px; }
-
-  .btn {
-    width: 100%; padding: 13px; border-radius: 12px;
-    font-size: 14px; font-weight: 600; cursor: pointer; border: none;
-    margin-top: 8px;
-  }
-  .btn-primary { background: #1a73e8; color: #fff; }
-  .btn-primary:hover { background: #1864c4; }
-  .btn-danger { background: #f2898918; color: #f28b82; border: 1px solid #f2898940; }
-  .btn-ghost { background: #ffffff0a; color: #c5d6e8; border: 1px solid #ffffff20; }
-
-  .novedad-card {
-    background: #f59e0b10; border: 1px solid #f59e0b40;
-    border-radius: 14px; padding: 1.1rem; margin-bottom: 1rem;
-  }
-  .novedad-card h3 { color: #f59e0b; font-size: 14px; font-weight: 700; margin-bottom: 6px; display:flex; align-items:center; gap:6px; }
-  .novedad-card p { color: #c5d6e8; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
-  .novedad-photo {
-    width: 100%; height: 140px; border-radius: 10px;
-    background: #0008 url('https://i.imgur.com/8wlY3ES.jpeg') center/cover;
-    margin-bottom: 10px; position: relative;
-  }
-  .photo-meta {
-    position: absolute; bottom: 8px; left: 8px;
-    background: #000a; color: #fff; font-size: 10px;
-    padding: 3px 8px; border-radius: 6px;
-  }
-  .countdown {
-    text-align: center; color: #f59e0b; font-size: 13px; font-weight: 600;
-    margin-bottom: 10px;
-  }
-  .btn-row { display: flex; gap: 8px; }
-  .btn-row .btn { margin-top: 0; }
-  .btn-approve { background: #1a73e8; color: #fff; flex: 1; }
-  .btn-decline { background: #ffffff0a; color: #c5d6e8; border: 1px solid #ffffff20; flex: 1; }
-
-  .receipt-row {
-    display: flex; justify-content: space-between;
-    font-size: 13px; color: #c5d6e8; padding: 8px 0;
-    border-bottom: 0.5px solid #ffffff10;
-  }
-  .receipt-row:last-of-type { border-bottom: none; font-weight: 700; color: #fff; font-size: 15px; }
-
-  .no-card {
-    text-align: center; padding: 1rem 0;
-  }
-  .no-card i { font-size: 36px; color: #4d6788; margin-bottom: 10px; display: block; }
-  .no-card p { color: #7a9cc0; font-size: 13px; margin-bottom: 1rem; }
-
-  .cancel-link {
-    display: block; text-align: center; color: #5a7596;
-    font-size: 12px; margin-top: 1rem; cursor: pointer; text-decoration: underline;
-  }
-  .penalty-note {
-    background: #f2898910; border: 1px solid #f2898930;
-    border-radius: 10px; padding: 10px 12px;
-    font-size: 12px; color: #f28b82; margin-top: 10px;
-  }
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--dark:#0b1120;--dark2:#111827;--blue:#1e90c8;--blue2:#1578aa;--light:#f5f9fc;--white:#fff;--text:#0f172a;--muted:#6b7280;--border:#e5eaf2;--green:#16a34a;--yellow:#d97706;--red:#dc2626;}
+body{font-family:'Inter',sans-serif;color:var(--text);background:var(--light);min-height:100vh;-webkit-font-smoothing:antialiased;}
+nav{background:var(--dark);padding:0 6%;position:sticky;top:0;z-index:100;}
+.nav-inner{max-width:1200px;margin:0 auto;height:68px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{color:white;font-size:20px;font-weight:800;text-decoration:none;}
+.nav-logo span{color:#1e90c8;}
+.nav-right{display:flex;align-items:center;gap:16px;}
+.nav-user{color:rgba(255,255,255,.7);font-size:14px;}
+.btn-signout{background:transparent;border:1.5px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+.btn-signout:hover{border-color:rgba(255,255,255,.5);color:white;}
+.loading-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--dark);}
+.loading-screen p{color:rgba(255,255,255,.5);font-size:16px;}
+.main{max-width:900px;margin:0 auto;padding:40px 24px;}
+.welcome{margin-bottom:32px;}
+.welcome h1{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-.02em;margin-bottom:4px;}
+.welcome p{font-size:15px;color:var(--muted);}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:32px;}
+.stat-card{background:white;border-radius:16px;padding:24px;border:1px solid var(--border);}
+.stat-card-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.stat-card-value{font-size:28px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.stat-card-sub{font-size:13px;color:var(--muted);}
+.stat-card-icon{font-size:32px;margin-bottom:12px;}
+.next-service{background:var(--dark);border-radius:16px;padding:28px;margin-bottom:24px;color:white;}
+.next-service-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;}
+.next-service-date{font-size:22px;font-weight:800;margin-bottom:4px;}
+.next-service-tech{font-size:14px;color:rgba(255,255,255,.6);}
+.next-service-status{display:inline-flex;align-items:center;gap:6px;background:rgba(30,144,200,.2);color:#60c8f0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;margin-top:12px;}
+.section{background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden;margin-bottom:24px;}
+.section-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.section-title{font-size:16px;font-weight:700;color:var(--text);}
+.section-body{padding:24px;}
+.service-item{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid #f5f5f5;}
+.service-item:last-child{border-bottom:none;}
+.service-icon{width:40px;height:40px;border-radius:10px;background:#eff7fd;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.service-info{flex:1;}
+.service-date{font-size:14px;font-weight:600;color:var(--text);}
+.service-tech{font-size:13px;color:var(--muted);}
+.service-status{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.status-completed{background:#f0fdf4;color:var(--green);}
+.status-scheduled{background:#eff7fd;color:var(--blue);}
+.status-pending{background:#fffbeb;color:var(--yellow);}
+.price-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.price-tab{background:#f1f5f9;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--muted);transition:all .2s;}
+.price-tab.active{background:var(--blue);color:white;}
+.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.price-item{background:#f9fafb;border-radius:12px;padding:16px;text-align:center;}
+.price-item-size{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+.price-item-amount{font-size:22px;font-weight:800;color:var(--text);}
+.price-item-period{font-size:11px;color:var(--muted);margin-top:2px;}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty p{font-size:14px;}
+.btn-primary{background:var(--blue);color:white;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;text-decoration:none;display:inline-block;}
+.btn-primary:hover{background:var(--blue2);}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <div class="topbar">
-    <h1>🏊 My Service</h1>
+<div class="loading-screen" id="loadingScreen"><p>Loading your portal...</p></div>
+<div id="portalContent" style="display:none;">
+<nav>
+  <div class="nav-inner">
+    <a href="/index.html" class="nav-logo">Pool<span>Plus</span></a>
+    <div class="nav-right">
+      <span class="nav-user" id="navUserEmail"></span>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
+    </div>
   </div>
-
-  <div class="state-switcher">
-    <button class="active" onclick="setState('no-card', this)">1. No card</button>
-    <button onclick="setState('normal', this)">2. Scheduled</button>
-    <button onclick="setState('enroute', this)">3. En route</button>
-    <button onclick="setState('inprogress', this)">4. In progress</button>
-    <button onclick="setState('novedad', this)">5. Novedad</button>
-    <button onclick="setState('paid', this)">6. Paid</button>
+</nav>
+<div class="main">
+  <div class="welcome">
+    <h1 id="welcomeName">Welcome back! 👋</h1>
+    <p>Here's everything about your pool service.</p>
   </div>
-
-  <div id="content"></div>
-
+  <div class="cards-grid">
+    <div class="stat-card"><div class="stat-card-icon">🏊</div><div class="stat-card-label">Total Services</div><div class="stat-card-value" id="statTotal">—</div><div class="stat-card-sub">Since you joined</div></div>
+    <div class="stat-card"><div class="stat-card-icon">✅</div><div class="stat-card-label">Completed</div><div class="stat-card-value" id="statCompleted">—</div><div class="stat-card-sub">Services done</div></div>
+    <div class="stat-card"><div class="stat-card-icon">📅</div><div class="stat-card-label">Upcoming</div><div class="stat-card-value" id="statUpcoming">—</div><div class="stat-card-sub">Scheduled visits</div></div>
+  </div>
+  <div class="next-service" id="nextServiceCard" style="display:none;">
+    <div class="next-service-label">Next Service</div>
+    <div class="next-service-date" id="nextServiceDate">—</div>
+    <div class="next-service-tech" id="nextServiceTech">—</div>
+    <div class="next-service-status">● Scheduled</div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Service History</span><a href="#" class="btn-primary" style="font-size:13px;padding:8px 16px;">Request Service</a></div>
+    <div class="section-body" id="serviceHistory"><div class="empty"><div class="empty-icon">📋</div><p>No services yet. Your history will appear here.</p></div></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Service Pricing</span></div>
+    <div class="section-body">
+      <div class="price-tabs">
+        <button class="price-tab active" onclick="filterPrices('maintenance', this)">Maintenance</button>
+        <button class="price-tab" onclick="filterPrices('green_pool', this)">Green Pool</button>
+        <button class="price-tab" onclick="filterPrices('acid_wash', this)">Acid Wash</button>
+      </div>
+      <div class="price-grid" id="priceGrid"><div class="empty"><p>Loading prices...</p></div></div>
+    </div>
+  </div>
 </div>
-
+</div>
 <script>
-let currentState = 'no-card';
-let countdownInterval = null;
-
-function setState(state, btn) {
-  currentState = state;
-  document.querySelectorAll('.state-switcher button').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
-  render();
+const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co';
+const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
+const{createClient}=supabase;
+const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
+let allPrices=[];
+let currentUser=null;
+(async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='/poolplus-login.html';return;}
+  currentUser=session.user;
+  await loadPortal();
+})();
+async function loadPortal(){
+  document.getElementById('loadingScreen').style.display='none';
+  document.getElementById('portalContent').style.display='block';
+  const email=currentUser.email;
+  document.getElementById('navUserEmail').textContent=email;
+  const name=email.split('@')[0];
+  document.getElementById('welcomeName').textContent=`Welcome back, ${name}! 👋`;
+  await Promise.all([loadServices(),loadPrices()]);
 }
-
-function render() {
-  const el = document.getElementById('content');
-  el.innerHTML = renderers[currentState]();
-  if (currentState === 'novedad') startCountdown();
+async function loadServices(){
+  const{data,error}=await sb.from('services').select('*').eq('client_id',currentUser.id).order('service_date',{ascending:false});
+  if(error||!data)return;
+  document.getElementById('statTotal').textContent=data.length;
+  document.getElementById('statCompleted').textContent=data.filter(s=>s.status==='completed').length;
+  document.getElementById('statUpcoming').textContent=data.filter(s=>s.status==='scheduled').length;
+  const next=data.filter(s=>s.status==='scheduled').sort((a,b)=>new Date(a.service_date)-new Date(b.service_date))[0];
+  if(next){
+    document.getElementById('nextServiceCard').style.display='block';
+    document.getElementById('nextServiceDate').textContent=new Date(next.service_date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    document.getElementById('nextServiceTech').textContent=next.technician_name?`Technician: ${next.technician_name}`:'Technician to be assigned';
+  }
+  if(!data.length)return;
+  document.getElementById('serviceHistory').innerHTML=data.map(s=>{
+    const date=new Date(s.service_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const statusClass=s.status==='completed'?'status-completed':s.status==='scheduled'?'status-scheduled':'status-pending';
+    const statusLabel=s.status.charAt(0).toUpperCase()+s.status.slice(1);
+    return`<div class="service-item"><div class="service-icon">🏊</div><div class="service-info"><div class="service-date">${date}</div><div class="service-tech">${s.technician_name||'Technician TBD'}</div></div><span class="service-status ${statusClass}">${statusLabel}</span></div>`;
+  }).join('');
 }
-
-const renderers = {
-
-  'no-card': () => `
-    <div class="card no-card">
-      <i class="ti ti-credit-card-off" aria-hidden="true"></i>
-      <div class="pool-name">Add a payment method</div>
-      <p>You need a card on file before we can schedule your first service. You're only charged when the service is completed.</p>
-      <button class="btn btn-primary" onclick="alert('Connect Stripe Elements here')">Add card</button>
-    </div>
-  `,
-
-  'normal': () => `
-    <div class="card">
-      <span class="status-badge badge-blue"><i class="ti ti-calendar-event" aria-hidden="true"></i> Scheduled</span>
-      <div class="pool-name">Weekly Maintenance</div>
-      <div class="pool-addr">📍 1842 SW 145th Ave, Weston, FL</div>
-      <div class="tech-row">
-        <div class="tech-avatar">OC</div>
-        <div class="tech-info">
-          <h3>Oscar Carabaño</h3>
-          <p>Arriving Thursday, 9:00–11:00 AM</p>
-        </div>
-      </div>
-      <span class="cancel-link" onclick="setState('cancel-confirm')">Need to cancel or reschedule?</span>
-    </div>
-  `,
-
-  'cancel-confirm': () => `
-    <div class="card">
-      <span class="status-badge badge-amber"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Cancel service</span>
-      <div class="pool-name">Are you sure?</div>
-      <p style="color:#c5d6e8;font-size:13px;line-height:1.5;margin-bottom:10px;">Your technician is already assigned for this visit.</p>
-      <div class="penalty-note">⚠️ Canceling within 24h of your scheduled visit applies a $30 late cancellation fee.</div>
-      <button class="btn btn-danger" onclick="setState('normal')">Confirm cancellation ($30 fee)</button>
-      <button class="btn btn-ghost" onclick="setState('normal')">Never mind, keep my visit</button>
-    </div>
-  `,
-
-  'enroute': () => `
-    <div class="card">
-      <span class="status-badge badge-blue"><i class="ti ti-car" aria-hidden="true"></i> Technician en route</span>
-      <div class="pool-name">Oscar is on the way</div>
-      <div class="pool-addr">Estimated arrival: 12 minutes</div>
-      <div class="tech-row">
-        <div class="tech-avatar">OC</div>
-        <div class="tech-info">
-          <h3>Oscar Carabaño</h3>
-          <p>⭐ 4.9 · 1,200+ services</p>
-        </div>
-      </div>
-    </div>
-  `,
-
-  'inprogress': () => `
-    <div class="card">
-      <span class="status-badge badge-green"><i class="ti ti-tool" aria-hidden="true"></i> Service in progress</span>
-      <div class="pool-name">Oscar has arrived and started</div>
-      <div class="pool-addr">Maintenance started at 9:14 AM</div>
-      <p style="color:#7a9cc0;font-size:13px;line-height:1.5;">No action needed — your regular maintenance plan doesn't require approval to begin. We'll notify you here if anything outside your plan comes up.</p>
-    </div>
-  `,
-
-  'novedad': () => `
-    <div class="novedad-card">
-      <h3><i class="ti ti-alert-octagon" aria-hidden="true"></i> Action needed: Green pool detected</h3>
-      <p>Oscar found your pool has turned green — this is outside your regular maintenance plan and requires a separate treatment.</p>
-      <div class="novedad-photo"><span class="photo-meta">📍 Weston, FL · 9:22 AM</span></div>
-      <div class="countdown" id="countdown-text">Respond within 07:42</div>
-      <div class="btn-row">
-        <button class="btn-decline" onclick="setState('declined')">Decline</button>
-        <button class="btn-approve" onclick="setState('approved-novedad')">Approve — $85</button>
-      </div>
-    </div>
-    <div class="card">
-      <p style="color:#7a9cc0;font-size:12px;">If you don't respond within 8 minutes, this will be treated as declined and a $30 fee will apply since the technician is already on site.</p>
-    </div>
-  `,
-
-  'declined': () => `
-    <div class="card">
-      <span class="status-badge badge-red"><i class="ti ti-x" aria-hidden="true"></i> Declined</span>
-      <div class="pool-name">Green pool treatment declined</div>
-      <p style="color:#c5d6e8;font-size:13px;line-height:1.5;margin-bottom:10px;">No treatment will be performed today.</p>
-      <div class="penalty-note">A $30 fee applies since the technician was already on site.</div>
-    </div>
-  `,
-
-  'approved-novedad': () => `
-    <div class="card">
-      <span class="status-badge badge-green"><i class="ti ti-check" aria-hidden="true"></i> Approved</span>
-      <div class="pool-name">Treatment approved</div>
-      <p style="color:#c5d6e8;font-size:13px;line-height:1.5;">Oscar will begin the green pool treatment now. You'll be charged $85 in addition to your regular visit once it's complete.</p>
-    </div>
-  `,
-
-  'paid': () => `
-    <div class="card">
-      <span class="status-badge badge-green"><i class="ti ti-circle-check" aria-hidden="true"></i> Completed & paid</span>
-      <div class="pool-name">Service complete</div>
-      <div class="pool-addr">Thursday, June 18 · 9:46 AM</div>
-      <div class="novedad-photo" style="height:160px;margin-top:1rem;"><span class="photo-meta">📍 Weston, FL · 9:46 AM</span></div>
-      <div style="margin-top:1rem;">
-        <div class="receipt-row"><span>Weekly Maintenance</span><span>$27.00</span></div>
-        <div class="receipt-row"><span>Total charged</span><span>$27.00</span></div>
-      </div>
-      <button class="btn btn-ghost" onclick="alert('Leave a Google review')">⭐ Leave a review</button>
-    </div>
-  `
-};
-
-function startCountdown() {
-  let seconds = 7 * 60 + 42;
-  countdownInterval = setInterval(() => {
-    seconds--;
-    if (seconds <= 0) {
-      clearInterval(countdownInterval);
-      setState('declined');
-      return;
-    }
-    const m = String(Math.floor(seconds / 60)).padStart(2, '0');
-    const s = String(seconds % 60).padStart(2, '0');
-    const elText = document.getElementById('countdown-text');
-    if (elText) elText.textContent = `Respond within ${m}:${s}`;
-  }, 1000);
+async function loadPrices(){
+  const{data,error}=await sb.from('prices').select('*');
+  if(error||!data)return;
+  allPrices=data;
+  renderPrices('maintenance');
 }
-
-render();
+function filterPrices(type,btn){
+  document.querySelectorAll('.price-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderPrices(type);
+}
+function renderPrices(type){
+  const filtered=allPrices.filter(p=>p.service_type===type);
+  const sizeOrder=['small','medium','large'];
+  const sizeLabel={small:'Small Pool',medium:'Medium Pool',large:'Large Pool'};
+  const grid=document.getElementById('priceGrid');
+  if(!filtered.length){grid.innerHTML='<div class="empty"><p>No prices available.</p></div>';return;}
+  grid.innerHTML=sizeOrder.map(size=>{
+    const p=filtered.find(x=>x.pool_size===size);
+    if(!p)return'';
+    return`<div class="price-item"><div class="price-item-size">${sizeLabel[size]}</div><div class="price-item-amount">$${p.price}</div><div class="price-item-period">${p.is_recurring?'/ month':'one time'}</div></div>`;
+  }).join('');
+}
+async function signOut(){
+  await sb.auth.signOut();
+  window.location.href='/poolplus-login.html';
+}
 </script>
 </body>
 </html>
