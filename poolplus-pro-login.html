@@ -1,150 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>PoolPlus Pro — Technician Sign In</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0a1628;
-    min-height: 100vh;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 2rem 1.25rem;
-  }
-  .wrap { width: 100%; max-width: 360px; }
-  .header { text-align: center; margin-bottom: 2rem; }
-  .logo {
-    width: 56px; height: 56px;
-    background: linear-gradient(135deg, #1a73e8, #0d47a1);
-    border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 1rem; font-size: 26px;
-  }
-  .pro-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #1a73e818; border: 0.5px solid #1a73e840;
-    padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem;
-  }
-  .pro-badge i { font-size: 13px; color: #1a73e8; }
-  .pro-badge span { color: #1a73e8; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
-  .header p { color: #7a9cc0; font-size: 14px; }
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--dark:#0b1120;--dark2:#111827;--blue:#1e90c8;--blue2:#1578aa;--white:#fff;--text:#0f172a;--muted:#6b7280;--border:#e5eaf2;}
+body{font-family:'Inter',sans-serif;color:var(--text);background:var(--dark2);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;}
 
-  .card {
-    background: #ffffff08; border: 0.5px solid #ffffff18;
-    border-radius: 18px; padding: 1.75rem;
-  }
-  .field { margin-bottom: 14px; }
-  .field label {
-    display: block; font-size: 12px; color: #7a9cc0;
-    margin-bottom: 6px; font-weight: 600;
-  }
-  .field input {
-    width: 100%; background: #ffffff08; border: 1px solid #ffffff20;
-    border-radius: 12px; padding: 13px 14px; color: #fff; font-size: 14px; outline: none;
-  }
-  .field input:focus { border-color: #1a73e8; }
-  .field input::placeholder { color: #5a7596; }
-  .pass-wrap { position: relative; }
-  .eye-icon {
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-    color: #5a7596; cursor: pointer; font-size: 16px;
-  }
+/* NAV */
+nav{background:var(--dark);padding:0 6%;border-bottom:1px solid rgba(255,255,255,.06);}
+.nav-inner{max-width:1200px;margin:0 auto;height:68px;display:flex;align-items:center;justify-content:space-between;}
+.nav-back{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.5);font-size:14px;font-weight:500;text-decoration:none;transition:color .2s;}
+.nav-back:hover{color:white;}
 
-  .btn-login {
-    width: 100%; background: #1a73e8; color: #fff; border: none;
-    border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700;
-    cursor: pointer; margin-top: 6px;
-  }
-  .btn-login:hover { background: #1864c4; }
+/* PRO BADGE */
+.pro-badge{display:flex;align-items:center;gap:8px;}
+.pro-badge-logo{color:white;font-size:18px;font-weight:800;}
+.pro-badge-logo span{color:#1e90c8;}
+.pro-tag{background:#1e90c8;color:white;font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;letter-spacing:.06em;}
 
-  .msg { display: none; text-align: center; font-size: 13px; margin-top: 14px; padding: 10px; border-radius: 10px; }
+/* MAIN */
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px;}
 
-  .secure {
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    color: #4d6788; font-size: 12px; margin-top: 1.5rem;
-  }
-  .secure i { font-size: 14px; }
+/* CARD */
+.card{background:white;border-radius:20px;padding:40px;width:100%;max-width:420px;box-shadow:0 32px 80px rgba(0,0,0,.5);}
+.card-icon{text-align:center;margin-bottom:20px;font-size:40px;}
+.card-title{font-size:22px;font-weight:800;color:var(--text);text-align:center;margin-bottom:8px;letter-spacing:-.02em;}
+.card-sub{font-size:14px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:32px;}
+
+/* FORM */
+.field{margin-bottom:16px;}
+.field-label{font-size:12px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;display:block;}
+.field input{width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:13px 16px;font-size:15px;font-family:inherit;color:var(--text);outline:none;transition:border .2s;}
+.field input:focus{border-color:#1e90c8;background:white;}
+.field input::placeholder{color:#c4c9d4;}
+
+.field-password{position:relative;}
+.field-password input{padding-right:48px;}
+.toggle-pw{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:18px;padding:0;}
+
+.btn-login{width:100%;background:var(--dark);color:white;border:none;border-radius:12px;padding:16px 24px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:4px;}
+.btn-login:hover{background:#1a2540;}
+.btn-login:disabled{opacity:.6;cursor:not-allowed;}
+
+/* ERROR / SUCCESS */
+.error-msg{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;font-size:13px;color:#dc2626;margin-bottom:16px;display:none;}
+.success-msg{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;font-size:13px;color:#16a34a;margin-bottom:16px;display:none;}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;}
+.divider-line{flex:1;height:1px;background:#e5e7eb;}
+.divider-text{font-size:12px;color:#9ca3af;font-weight:500;}
+
+/* FORGOT */
+.forgot-link{display:block;text-align:center;font-size:13px;color:#1e90c8;text-decoration:none;margin-top:12px;cursor:pointer;}
+.forgot-link:hover{text-decoration:underline;}
+
+/* NOTE */
+.card-note{font-size:12px;color:#9ca3af;text-align:center;margin-top:20px;line-height:1.7;padding-top:20px;border-top:1px solid #f0f0f0;}
+.card-note a{color:#1e90c8;text-decoration:none;}
+
+/* PRO INFO */
+.pro-info{background:#eff7fd;border:1px solid #bae6fd;border-radius:12px;padding:14px 16px;margin-bottom:20px;}
+.pro-info p{font-size:12px;color:#0369a1;line-height:1.6;}
+.pro-info strong{font-weight:700;}
+
+/* FOOTER */
+footer{padding:20px;text-align:center;}
+footer p{font-size:12px;color:rgba(255,255,255,.3);}
+footer a{color:rgba(255,255,255,.3);text-decoration:none;}
+
+@media(max-width:480px){
+  .card{padding:28px 20px;}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <div class="header">
-    <div class="logo">🏊</div>
+<nav>
+  <div class="nav-inner">
     <div class="pro-badge">
-      <i class="ti ti-tool" aria-hidden="true"></i>
-      <span>POOLPLUS PRO</span>
+      <span class="pro-badge-logo">Pool<span>Plus</span></span>
+      <span class="pro-tag">PRO</span>
     </div>
-    <p>Technician sign in</p>
+    <a href="/index.html" class="nav-back">← Back to home</a>
   </div>
+</nav>
 
+<div class="main">
   <div class="card">
-    <div class="field">
-      <label for="tech-email">Email</label>
-      <input type="email" id="tech-email" placeholder="you@poolplus.app" />
+
+    <div class="card-icon">🔧</div>
+    <h1 class="card-title">Technician Sign In</h1>
+    <p class="card-sub">Access your PoolPlus Pro dashboard to manage your services and earnings.</p>
+
+    <div class="pro-info">
+      <p><strong>New technician?</strong> You need an approved account to sign in. <a href="/poolplus-tech-apply.html" style="color:#0369a1;font-weight:700;">Apply here →</a></p>
     </div>
-    <div class="field">
-      <label for="tech-pass">Password</label>
-      <div class="pass-wrap">
-        <input type="password" id="tech-pass" placeholder="••••••••" />
-        <i class="ti ti-eye eye-icon" id="eye-icon" onclick="togglePass()"></i>
+
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="success-msg" id="successMsg"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div class="field">
+        <label class="field-label">Email address</label>
+        <input type="email" id="emailInput" placeholder="your@email.com" autocomplete="email"/>
       </div>
+
+      <div class="field">
+        <label class="field-label">Password</label>
+        <div class="field-password">
+          <input type="password" id="passwordInput" placeholder="Your password" autocomplete="current-password"/>
+          <button class="toggle-pw" onclick="togglePassword()" type="button">👁</button>
+        </div>
+      </div>
+
+      <button class="btn-login" id="loginBtn" onclick="signIn()">
+        Sign In →
+      </button>
+
+      <a class="forgot-link" onclick="forgotPassword()">Forgot your password?</a>
+
+      <p class="card-note">
+        Having trouble signing in? Contact <a href="mailto:contact@poolplus.com">contact@poolplus.com</a><br/>
+        Are you a client? <a href="/poolplus-login.html">Sign in here →</a>
+      </p>
     </div>
 
-    <button class="btn-login" onclick="doLogin()">Sign in</button>
-    <div class="msg" id="login-msg"></div>
   </div>
-
-  <p style="text-align:center;color:#5a7596;font-size:12px;margin-top:1rem;">
-    Don't have an account yet? Apply to join PoolPlus Pro.
-  </p>
-
-  <div class="secure">
-    <i class="ti ti-shield-check" aria-hidden="true"></i>
-    <span>Technician access only</span>
-  </div>
-
 </div>
 
+<footer>
+  <p>© 2026 Pool Plus Pro. <a href="/index.html">Back to home</a></p>
+</footer>
+
 <script>
-function togglePass() {
-  var inp = document.getElementById('tech-pass');
-  var icon = document.getElementById('eye-icon');
-  if (inp.type === 'password') {
-    inp.type = 'text';
-    icon.className = 'ti ti-eye-off eye-icon';
-  } else {
-    inp.type = 'password';
-    icon.className = 'ti ti-eye eye-icon';
+// ── Supabase config ──────────────────────────────────────────
+const SUPABASE_URL = 'https://sshbhmfsjyddynfwerpk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── Check if already logged in ───────────────────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    window.location.href = '/poolplus-tech-dashboard.html';
   }
-}
+})();
 
-function doLogin() {
-  var email = document.getElementById('tech-email').value.trim();
-  var pass = document.getElementById('tech-pass').value;
-  var msg = document.getElementById('login-msg');
-  msg.style.display = 'block';
+// ── Sign In ──────────────────────────────────────────────────
+async function signIn() {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  const btn = document.getElementById('loginBtn');
+  const errEl = document.getElementById('errorMsg');
+  const sucEl = document.getElementById('successMsg');
 
-  if (!email || !pass) {
-    msg.style.background = '#f2898918';
-    msg.style.color = '#f28b82';
-    msg.textContent = 'Please enter your email and password.';
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!email || !password) {
+    errEl.textContent = 'Please enter your email and password.';
+    errEl.style.display = 'block';
     return;
   }
 
-  // TODO: connect to real auth (Supabase) and redirect to
-  // https://poolplus-tech-dashboard.vercel.app
-  msg.style.background = '#81c99518';
-  msg.style.color = '#81c995';
-  msg.textContent = 'Signing in...';
-  setTimeout(function () {
-    window.location.href = 'https://poolplus-tech-dashboard.vercel.app';
+  btn.disabled = true;
+  btn.textContent = 'Signing in...';
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    errEl.textContent = error.message === 'Invalid login credentials'
+      ? 'Incorrect email or password. Please try again.'
+      : error.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Sign In →';
+    return;
+  }
+
+  btn.textContent = 'Welcome back! Redirecting...';
+  setTimeout(() => {
+    window.location.href = '/poolplus-tech-dashboard.html';
   }, 800);
 }
+
+// ── Forgot Password ──────────────────────────────────────────
+async function forgotPassword() {
+  const email = document.getElementById('emailInput').value.trim();
+  const errEl = document.getElementById('errorMsg');
+  const sucEl = document.getElementById('successMsg');
+
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!email) {
+    errEl.textContent = 'Enter your email address above first.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/poolplus-tech-dashboard.html'
+  });
+
+  if (error) {
+    errEl.textContent = error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  sucEl.textContent = 'Password reset email sent! Check your inbox.';
+  sucEl.style.display = 'block';
+}
+
+// ── Toggle password visibility ───────────────────────────────
+function togglePassword() {
+  const input = document.getElementById('passwordInput');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+// ── Enter key ────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') signIn();
+});
 </script>
+
 </body>
 </html>
