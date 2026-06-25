@@ -703,11 +703,11 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ── Precios base (fallback si Supabase no carga) ──
 var PRICES={
   maintenance:{small:110,medium:135,large:160,xl:220},
-  
-  
   green:{small:299,medium:350,large:399,xl:449},
   chemical:{small:80,medium:90,large:110,xl:130},
   filter:{small:99,medium:120,large:140,xl:160},
@@ -716,6 +716,23 @@ var PRICES={
   party:{small:199,medium:219,large:249,xl:279},
   remodel:{small:150,medium:150,large:150,xl:150}
 };
+
+// ── Cargar precios desde Supabase ──
+(async function(){
+  try {
+    const sb = supabase.createClient(
+      'https://sshbhmfsjyddynfwerpk.supabase.co',
+      'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'
+    );
+    const {data} = await sb.from('prices').select('*');
+    if(data && data.length){
+      data.forEach(function(p){
+        if(!PRICES[p.service_type]) PRICES[p.service_type]={};
+        PRICES[p.service_type][p.pool_size] = Number(p.price);
+      });
+    }
+  } catch(e){ /* usa precios fallback */ }
+})();
 var RECURRING=["maintenance"];
 var LABELS={
   maintenance:"Weekly Maintenance Plan",
