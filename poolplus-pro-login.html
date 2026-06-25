@@ -1,215 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pool Plus — Client Login</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PoolPlus Pro — Technician Sign In</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css" />
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{--dark:#0b1120;--dark2:#111827;--blue:#1e90c8;--blue2:#1578aa;--light:#f5f9fc;--white:#fff;--text:#0f172a;--muted:#6b7280;--border:#e5eaf2;}
-html{scroll-behavior:smooth;}
-body{font-family:'Inter',sans-serif;color:var(--text);background:var(--dark);min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a1628;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 2rem 1.25rem;
+  }
+  .wrap { width: 100%; max-width: 360px; }
+  .header { text-align: center; margin-bottom: 2rem; }
+  .logo {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #1a73e8, #0d47a1);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1rem; font-size: 26px;
+  }
+  .pro-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #1a73e818; border: 0.5px solid #1a73e840;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem;
+  }
+  .pro-badge i { font-size: 13px; color: #1a73e8; }
+  .pro-badge span { color: #1a73e8; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+  .header p { color: #7a9cc0; font-size: 14px; }
 
-/* NAV */
-nav{background:var(--dark);padding:0 6%;border-bottom:1px solid rgba(255,255,255,.06);}
-.nav-inner{max-width:1200px;margin:0 auto;height:68px;display:flex;align-items:center;justify-content:space-between;}
-.nav-logo{height:34px;display:block;}
-.nav-back{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.5);font-size:14px;font-weight:500;text-decoration:none;transition:color .2s;}
-.nav-back:hover{color:white;}
+  .card {
+    background: #ffffff08; border: 0.5px solid #ffffff18;
+    border-radius: 18px; padding: 1.75rem;
+  }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block; font-size: 12px; color: #7a9cc0;
+    margin-bottom: 6px; font-weight: 600;
+  }
+  .field input {
+    width: 100%; background: #ffffff08; border: 1px solid #ffffff20;
+    border-radius: 12px; padding: 13px 14px; color: #fff; font-size: 14px; outline: none;
+  }
+  .field input:focus { border-color: #1a73e8; }
+  .field input::placeholder { color: #5a7596; }
+  .pass-wrap { position: relative; }
+  .eye-icon {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: #5a7596; cursor: pointer; font-size: 16px;
+  }
 
-/* MAIN */
-.main{flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px;}
+  .btn-login {
+    width: 100%; background: #1a73e8; color: #fff; border: none;
+    border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-top: 6px;
+  }
+  .btn-login:hover { background: #1864c4; }
 
-/* CARD */
-.card{background:white;border-radius:20px;padding:40px;width:100%;max-width:420px;box-shadow:0 32px 80px rgba(0,0,0,.4);}
-.card-logo{display:flex;justify-content:center;margin-bottom:28px;}
-.card-logo img{height:36px;}
-.card-title{font-size:22px;font-weight:800;color:var(--text);text-align:center;margin-bottom:8px;letter-spacing:-.02em;}
-.card-sub{font-size:14px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:32px;}
+  .msg { display: none; text-align: center; font-size: 13px; margin-top: 14px; padding: 10px; border-radius: 10px; }
 
-/* FORM */
-.field{margin-bottom:16px;}
-.field-label{font-size:12px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;display:block;}
-.field input{width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:13px 16px;font-size:15px;font-family:inherit;color:var(--text);outline:none;transition:border .2s;}
-.field input:focus{border-color:var(--blue);background:white;}
-.field input::placeholder{color:#c4c9d4;}
-
-.btn-magic{width:100%;background:var(--dark);color:white;border:none;border-radius:12px;padding:16px 24px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:4px;}
-.btn-magic:hover{background:#1a2540;}
-.btn-magic:disabled{opacity:.6;cursor:not-allowed;}
-
-.divider{display:flex;align-items:center;gap:12px;margin:20px 0;}
-.divider-line{flex:1;height:1px;background:#e5e7eb;}
-.divider-text{font-size:12px;color:#9ca3af;font-weight:500;}
-
-.btn-google{width:100%;background:white;color:var(--text);border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 24px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;}
-.btn-google:hover{border-color:#94a3b8;background:#f9fafb;}
-
-/* SUCCESS STATE */
-.success{display:none;text-align:center;padding:8px 0;}
-.success-icon{font-size:48px;margin-bottom:16px;}
-.success-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px;}
-.success-sub{font-size:14px;color:var(--muted);line-height:1.6;}
-.success-email{font-weight:700;color:var(--blue);}
-
-/* ERROR */
-.error-msg{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;font-size:13px;color:#dc2626;margin-bottom:16px;display:none;}
-
-/* NOTE */
-.card-note{font-size:12px;color:#9ca3af;text-align:center;margin-top:20px;line-height:1.6;}
-.card-note a{color:var(--blue);text-decoration:none;}
-
-/* FOOTER */
-footer{padding:20px;text-align:center;}
-footer p{font-size:12px;color:rgba(255,255,255,.3);}
-footer a{color:rgba(255,255,255,.3);text-decoration:none;}
-
-@media(max-width:480px){
-  .card{padding:28px 20px;}
-}
+  .secure {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    color: #4d6788; font-size: 12px; margin-top: 1.5rem;
+  }
+  .secure i { font-size: 14px; }
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<nav>
-  <div class="nav-inner">
-    <a href="/index.html">
-      <img src="https://poolplus.app/forms/images/poolplus-logo-white.svg" class="nav-logo" onerror="this.src='https://i.imgur.com/placeholder.png';this.style.display='none';this.nextSibling.style.display='block'"/>
-      <span style="display:none;color:white;font-size:20px;font-weight:800;">Pool<span style="color:#1e90c8;">Plus</span></span>
-    </a>
-    <a href="/index.html" class="nav-back">← Back to home</a>
+  <div class="header">
+    <div class="logo">🏊</div>
+    <div class="pro-badge">
+      <i class="ti ti-tool" aria-hidden="true"></i>
+      <span>POOLPLUS PRO</span>
+    </div>
+    <p>Technician sign in</p>
   </div>
-</nav>
 
-<div class="main">
   <div class="card">
-
-    <div class="card-logo">
-      <img src="https://poolplus.app/forms/images/poolplus-logo-dark.svg" onerror="this.style.display='none';this.nextSibling.style.display='block'"/>
-      <span style="display:none;font-size:24px;font-weight:800;color:var(--text);">Pool<span style="color:#1e90c8;">Plus</span></span>
+    <div class="field">
+      <label for="tech-email">Email</label>
+      <input type="email" id="tech-email" placeholder="you@poolplus.app" />
     </div>
-
-    <!-- LOGIN FORM -->
-    <div id="loginForm">
-      <h1 class="card-title">Welcome back</h1>
-      <p class="card-sub">Enter your email and we'll send you a secure link to sign in — no password needed.</p>
-
-      <div class="error-msg" id="errorMsg"></div>
-
-      <div class="field">
-        <label class="field-label">Email address</label>
-        <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email"/>
+    <div class="field">
+      <label for="tech-pass">Password</label>
+      <div class="pass-wrap">
+        <input type="password" id="tech-pass" placeholder="••••••••" />
+        <i class="ti ti-eye eye-icon" id="eye-icon" onclick="togglePass()"></i>
       </div>
-
-      <button class="btn-magic" id="magicBtn" onclick="sendMagicLink()">
-        Send me a login link →
-      </button>
-
-      <div class="divider">
-        <div class="divider-line"></div>
-        <span class="divider-text">or</span>
-        <div class="divider-line"></div>
-      </div>
-
-      <button class="btn-google" onclick="signInWithGoogle()">
-        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
-        Continue with Google
-      </button>
-
-      <p class="card-note">
-        Don't have an account? <a href="#">Sign up is automatic</a> on first login.<br/>
-        Are you a technician? <a href="/poolplus-pro-login.html">Sign in here →</a>
-      </p>
     </div>
 
-    <!-- SUCCESS STATE -->
-    <div class="success" id="successState">
-      <div class="success-icon">📬</div>
-      <h2 class="success-title">Check your email</h2>
-      <p class="success-sub">We sent a login link to<br/><span class="success-email" id="successEmail"></span><br/><br/>Click the link in the email to sign in. You can close this tab.</p>
-    </div>
-
+    <button class="btn-login" onclick="doLogin()">Sign in</button>
+    <div class="msg" id="login-msg"></div>
   </div>
+
+  <p style="text-align:center;color:#5a7596;font-size:12px;margin-top:1rem;">
+    Don't have an account yet? Apply to join PoolPlus Pro.
+  </p>
+
+  <div class="secure">
+    <i class="ti ti-shield-check" aria-hidden="true"></i>
+    <span>Technician access only</span>
+  </div>
+
 </div>
 
-<footer>
-  <p>© 2026 Pool Plus. <a href="/index.html">Back to home</a></p>
-</footer>
-
 <script>
-// ── Supabase config ──────────────────────────────────────────
-const SUPABASE_URL = 'https://sshbhmfsjyddynfwerpk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ── Check if user already logged in ─────────────────────────
-(async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    window.location.href = '/poolplus-portal.html';
-  }
-})();
-
-// ── Magic Link ───────────────────────────────────────────────
-async function sendMagicLink() {
-  const email = document.getElementById('emailInput').value.trim();
-  const btn = document.getElementById('magicBtn');
-  const errEl = document.getElementById('errorMsg');
-
-  errEl.style.display = 'none';
-
-  if (!email || !email.includes('@')) {
-    errEl.textContent = 'Please enter a valid email address.';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: window.location.origin + '/poolplus-portal.html'
-    }
-  });
-
-  if (error) {
-    errEl.textContent = error.message;
-    errEl.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Send me a login link →';
-    return;
-  }
-
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('successState').style.display = 'block';
-  document.getElementById('successEmail').textContent = email;
-}
-
-// ── Google OAuth ─────────────────────────────────────────────
-async function signInWithGoogle() {
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin + '/poolplus-portal.html'
-    }
-  });
-  if (error) {
-    const errEl = document.getElementById('errorMsg');
-    errEl.textContent = 'Google sign-in is not configured yet. Please use the email link above.';
-    errEl.style.display = 'block';
+function togglePass() {
+  var inp = document.getElementById('tech-pass');
+  var icon = document.getElementById('eye-icon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.className = 'ti ti-eye-off eye-icon';
+  } else {
+    inp.type = 'password';
+    icon.className = 'ti ti-eye eye-icon';
   }
 }
 
-// ── Enter key on email input ─────────────────────────────────
-document.getElementById('emailInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') sendMagicLink();
-});
+function doLogin() {
+  var email = document.getElementById('tech-email').value.trim();
+  var pass = document.getElementById('tech-pass').value;
+  var msg = document.getElementById('login-msg');
+  msg.style.display = 'block';
+
+  if (!email || !pass) {
+    msg.style.background = '#f2898918';
+    msg.style.color = '#f28b82';
+    msg.textContent = 'Please enter your email and password.';
+    return;
+  }
+
+  // TODO: connect to real auth (Supabase) and redirect to
+  // https://poolplus-tech-dashboard.vercel.app
+  msg.style.background = '#81c99518';
+  msg.style.color = '#81c995';
+  msg.textContent = 'Signing in...';
+  setTimeout(function () {
+    window.location.href = 'https://poolplus-tech-dashboard.vercel.app';
+  }, 800);
+}
 </script>
-
 </body>
 </html>
