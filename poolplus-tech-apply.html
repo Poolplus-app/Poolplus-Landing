@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>PoolPlus Pro — Únete al equipo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -394,7 +395,7 @@ function fakeUpload(boxId, fileId, labelId) {
   };
 }
 
-function submitApp() {
+async function submitApp() {
   const terms   = document.getElementById('chk-terms').checked;
   const info    = document.getElementById('chk-info').checked;
   const contact = document.getElementById('chk-contact').checked;
@@ -418,6 +419,7 @@ function submitApp() {
   document.getElementById('line-1').classList.add('done');
   document.getElementById('line-2').classList.add('done');
   window.scrollTo(0, 0);
+ try { const sb=supabase.createClient('https://sshbhmfsjyddynfwerpk.supabase.co','sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'); await sb.from('technician_applications').insert({full_name:document.getElementById('fname').value+' '+document.getElementById('lname').value,email:document.getElementById('email').value,phone:document.getElementById('phone').value,city:document.getElementById('zone').value,status:'pending'}); } catch(e){} 
 }
 </script>
 </body>
