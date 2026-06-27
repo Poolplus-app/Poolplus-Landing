@@ -420,6 +420,39 @@ select option{background:#1a2235;}
 <div class="toast" id="toast"></div>
 
 <script>
+// ── SUPABASE ──────────────────────────────────────────────────
+const SUPABASE_URL = 'https://sshbhmfsjyddynfwerpk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function loadPreciosDB() {
+  const { data, error } = await sb.from('prices').select('*');
+  if (error || !data) return;
+  data.forEach(p => {
+    if (!p.key) return;
+    const k = p.key;
+    if (k.startsWith('maintenance_')) {
+      const size = k.replace('maintenance_','');
+      const planMap = {small:'Esencial', medium:'Premium', large:'Elite'};
+      const planName = planMap[size];
+      if (planName && PRICES.planes[planName]) PRICES.planes[planName].precio = Number(p.price);
+    } else if (PRICES.novedades[k]) {
+      PRICES.novedades[k].precio = Number(p.price);
+    } else if (k === 'cancellation_penalty') {
+      PRICES.penalidad = Number(p.price);
+    }
+  });
+  renderPrecios();
+  renderStats();
+}
+
+async function savePrecioDB(key, price) {
+  const { error } = await sb.from('prices')
+    .update({ price: Number(price), updated_at: new Date().toISOString() })
+    .eq('key', key);
+  if (error) { showToast('Error guardando en Supabase', '#ef4444'); return false; }
+  return true;
+}  
 // ── AUTH ──────────────────────────────────────────────────────
 function togglePass(){
   const inp = document.getElementById('login-pass');
@@ -591,37 +624,27 @@ function cancelEdit(){
 function savePrice(id,type,key){
   const val=parseFloat(document.getElementById("inp-"+id).value);
   if(isNaN(val)||val<0){showToast("Precio inválido","#ef4444");return;}
-  if(type==="plan")     PRICES.planes[key].precio=val;
-  if(type==="novedad")  PRICES.novedades[key].precio=val;
-  if(type==="penalidad")PRICES.penalidad=val;
-  if(type==="filtro_a") PRICES.filtro.alerta=Math.round(val);
-  if(type==="filtro_v") PRICES.filtro.vencido=Math.round(val);
-  showToast("Precio guardado — se actualiza en todos los flujos ✓");
+  
+  let dbKey = null;
+  if(type==="plan"){
+    PRICES.planes[key].precio=val;
+    const keyMap={Esencial:'maintenance_small',Premium:'maintenance_medium',Elite:'maintenance_large'};
+    dbKey = keyMap[key];
+  }
+  if(type==="novedad"){PRICES.novedades[key].precio=val; dbKey=key;}
+  if(type==="penalidad"){PRICES.penalidad=val; dbKey='cancellation_penalty';}
+  if(type==="filtro_a"){PRICES.filtro.alerta=Math.round(val);}
+  if(type==="filtro_v"){PRICES.filtro.vencido=Math.round(val);}
+  
+  if(dbKey) savePrecioDB(dbKey, val).then(ok => {
+    if(ok) showToast("Precio guardado en Supabase ✓");
+  });
+  else showToast("Precio actualizado ✓");
+  
   cancelEdit();
-  // ── SUPABASE PRECIOS ────────────────────────────────────── const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co'; const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'; const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);  // Cargar precios desde Supabase al iniciar async function loadPreciosDB(){   const{data,error}=await sb.from('prices').select('*');   if(error||!data)return;   data.forEach(p=>{     const key=p.service_type+'_'+p.pool_size;     STATE.precios[key]=Number(p.price);   });   renderPrecios(); }  // Guardar precio en Supabase async function savePrecioDB(service_type,pool_size,price){   await sb.from('prices').upsert({service_type,pool_size,price:Number(price)},{onConflict:'service_type,pool_size'});   showToast('Precio guardado en Supabase ✓','#10b981'); }  // ── SUPABASE PRECIOS ────────────────────────────────────── const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co'; const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'; const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);  // Cargar precios desde Supabase al iniciar async function loadPreciosDB(){   const{data,error}=await sb.from('prices').select('*');   if(error||!data)return;   data.forEach(p=>{     const key=p.service_type+'_'+p.pool_size;     STATE.precios[key]=Number(p.price);   });   renderPrecios(); }  // Guardar precio en Supabase async function savePrecioDB(service_type,pool_size,price){   await sb.from('prices').upsert({service_type,pool_size,price:Number(price)},{onConflict:'service_type,pool_size'});   showToast('Precio guardado en Supabase ✓','#10b981'); }  // ── SUPABASE PRECIOS ────────────────────────────────────── const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co'; const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'; const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);  // Cargar precios desde Supabase al iniciar async function loadPreciosDB(){   const{data,error}=await sb.from('prices').select('*');   if(error||!data)return;   data.forEach(p=>{     const key=p.service_type+'_'+p.pool_size;     STATE.precios[key]=Number(p.price);   });   renderPrecios(); }  // Guardar precio en Supabase async function savePrecioDB(service_type,pool_size,price){   await sb.from('prices').upsert({service_type,pool_size,price:Number(price)},{onConflict:'service_type,pool_size'});   showToast('Precio guardado en Supabase ✓','#10b981'); }  // ── SUPABASE PRECIOS ────────────────────────────────────── const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co'; const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'; const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);  // Cargar precios desde Supabase al iniciar async function loadPreciosDB(){   const{data,error}=await sb.from('prices').select('*');   if(error||!data)return;   data.forEach(p=>{     const key=p.service_type+'_'+p.pool_size;     STATE.precios[key]=Number(p.price);   });   renderPrecios(); }  // Guardar precio en Supabase async function savePrecioDB(service_type,pool_size,price){   await sb.from('prices').upsert({service_type,pool_size,price:Number(price)},{onConflict:'service_type,pool_size'});   showToast('Precio guardado en Supabase ✓','#10b981'); }  // ── SUPABASE PRECIOS ────────────────────────────────────── const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co'; const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'; const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);  // Cargar precios desde Supabase al iniciar async function loadPreciosDB(){   const{data,error}=await sb.from('prices').select('*');   if(error||!data)return;   data.forEach(p=>{     const key=p.service_type+'_'+p.pool_size;     STATE.precios[key]=Number(p.price);   });   renderPrecios(); }  // Guardar precio en Supabase async function savePrecioDB(service_type,pool_size,price){   await sb.from('prices').upsert({service_type,pool_size,price:Number(price)},{onConflict:'service_type,pool_size'});   showToast('Precio guardado en Supabase ✓','#10b981'); }  renderAll(); loadPreciosDB(); loadPreciosDB(); loadPreciosDB(); loadPreciosDB(); loadPreciosDB();
+  renderPrecios();
+  renderStats();
 }
-function priceField(id,type,key,valor,label,color,desc,icon){
-  const iconHtml=icon?`<span style="font-size:18px;margin-right:6px">${icon}</span>`:"";
-  return `<div class="price-field" style="border:1px solid ${color||"var(--border)"}20">
-    <div class="price-display" id="disp-${id}" style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div>${iconHtml}<span style="font-weight:700;font-size:14px">${label}</span></div>
-        ${desc?`<div style="font-size:12px;color:var(--muted);margin-top:3px">${desc}</div>`:""}
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="price-val" style="color:${color||"var(--pool)"}">\$${valor}</span>
-        <button class="btn btn-ghost btn-sm" onclick="startEdit('${id}',${valor})">Editar</button>
-      </div>
-    </div>
-    <div class="price-edit-row" id="edit-${id}" style="display:none;gap:8px;align-items:center;margin-top:4px">
-      <span style="color:var(--muted)">$</span>
-      <input type="number" id="inp-${id}" value="${valor}" style="width:110px;font-size:17px;font-weight:700"/>
-      <button class="btn btn-primary btn-sm" onclick="savePrice('${id}','${type}','${key}')">Guardar</button>
-      <button class="btn btn-ghost btn-sm" onclick="cancelEdit()">Cancelar</button>
-    </div>
-  </div>`;
-}
-
 // ── RENDER FUNCTIONS ─────────────────────────────────────────
 function renderStats(){
   const mrr=CLIENTS.filter(c=>c.status==="active").reduce((a,c)=>a+(PRICES.planes[c.plan]?.precio||0),0);
@@ -1042,7 +1065,7 @@ function renderAll(){
   renderApps();
   updateAppBadge();
 }
-// ── SUPABASE PRECIOS ────────────────────────────────────── const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co'; const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'; const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);  // Cargar precios desde Supabase al iniciar async function loadPreciosDB(){   const{data,error}=await sb.from('prices').select('*');   if(error||!data)return;   data.forEach(p=>{     const key=p.service_type+'_'+p.pool_size;     STATE.precios[key]=Number(p.price);   });   renderPrecios(); }  // Guardar precio en Supabase async function savePrecioDB(service_type,pool_size,price){   await sb.from('prices').upsert({service_type,pool_size,price:Number(price)},{onConflict:'service_type,pool_size'});   showToast('Precio guardado en Supabase ✓','#10b981'); }  // ── SUPABASE PRECIOS ────────────────────────────────────── const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co'; const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'; const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);  // Cargar precios desde Supabase al iniciar async function loadPreciosDB(){   const{data,error}=await sb.from('prices').select('*');   if(error||!data)return;   data.forEach(p=>{     const key=p.service_type+'_'+p.pool_size;     STATE.precios[key]=Number(p.price);   });   renderPrecios(); }  // Guardar precio en Supabase async function savePrecioDB(service_type,pool_size,price){   await sb.from('prices').upsert({service_type,pool_size,price:Number(price)},{onConflict:'service_type,pool_size'});   showToast('Precio guardado en Supabase ✓','#10b981'); }  // ── SUPABASE PRECIOS ────────────────────────────────────── const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co'; const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'; const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);  // Cargar precios desde Supabase al iniciar async function loadPreciosDB(){   const{data,error}=await sb.from('prices').select('*');   if(error||!data)return;   data.forEach(p=>{     const key=p.service_type+'_'+p.pool_size;     STATE.precios[key]=Number(p.price);   });   renderPrecios(); }  // Guardar precio en Supabase async function savePrecioDB(service_type,pool_size,price){   await sb.from('prices').upsert({service_type,pool_size,price:Number(price)},{onConflict:'service_type,pool_size'});   showToast('Precio guardado en Supabase ✓','#10b981'); }  // ── SUPABASE PRECIOS ────────────────────────────────────── const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co'; const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'; const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);  // Cargar precios desde Supabase al iniciar async function loadPreciosDB(){   const{data,error}=await sb.from('prices').select('*');   if(error||!data)return;   data.forEach(p=>{     const key=p.service_type+'_'+p.pool_size;     STATE.precios[key]=Number(p.price);   });   renderPrecios(); }  // Guardar precio en Supabase async function savePrecioDB(service_type,pool_size,price){   await sb.from('prices').upsert({service_type,pool_size,price:Number(price)},{onConflict:'service_type,pool_size'});   showToast('Precio guardado en Supabase ✓','#10b981'); }  // ── SUPABASE PRECIOS ────────────────────────────────────── const SUPABASE_URL='https://sshbhmfsjyddynfwerpk.supabase.co'; const SUPABASE_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'; const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);  // Cargar precios desde Supabase al iniciar async function loadPreciosDB(){   const{data,error}=await sb.from('prices').select('*');   if(error||!data)return;   data.forEach(p=>{     const key=p.service_type+'_'+p.pool_size;     STATE.precios[key]=Number(p.price);   });   renderPrecios(); }  // Guardar precio en Supabase async function savePrecioDB(service_type,pool_size,price){   await sb.from('prices').upsert({service_type,pool_size,price:Number(price)},{onConflict:'service_type,pool_size'});   showToast('Precio guardado en Supabase ✓','#10b981'); }  renderAll(); loadPreciosDB(); loadPreciosDB(); loadPreciosDB(); loadPreciosDB(); loadPreciosDB();
-</script>
+renderAll();
+loadPreciosDB();
 </body>
 </html>
