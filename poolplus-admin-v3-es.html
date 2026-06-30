@@ -957,11 +957,70 @@ function setAppFilter(f,btn){
   renderApps();
 }
 
-function aprobarApp(id){
+async function aprobarApp(id){
+  const app = APPS.find(a=>a.id===id);
+  if(!app) return;
+
+  // 1. Actualizar en Supabase
+  const{error} = await sb.from('technician_applications')
+    .update({status:'approved', approved_at: new Date().toISOString()})
+    .eq('id', id);
+
+  if(error){ showToast('Error actualizando Supabase','#ef4444'); return; }
+
+  // 2. Crear cuenta en Supabase Auth para el técnico
+  const tempPassword = Math.random().toString(36).slice(-8)+'A1!';
+  const{data:authData, error:authError} = await sb.auth.admin?.createUser?.({
+    email: app.email,
+    password: tempPassword,
+    email_confirm: true
+  }) || {};
+
+  // 3. Generar link de onboarding de Stripe Connect
+  // (requiere backend — mostramos el link manual por ahora)
+  const stripeOnboardUrl = `https://connect.stripe.com/setup/e/acct_placeholder/onboard`;
+
+  // 4. Actualizar estado local
   APPS=APPS.map(a=>a.id===id?{...a,status:"approved"}:a);
-  showToast("✅ Aplicación aprobada — credenciales enviadas por correo");
+
+  // 5. Mostrar modal con info para enviar al técnico
+  showApprovalModal(app, tempPassword);
   updateAppBadge();
   renderApps();
+}
+
+function showApprovalModal(app, tempPass){
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML=`
+    <div style="background:white;border-radius:20px;padding:28px;max-width:460px;width:100%;">
+      <div style="font-size:24px;margin-bottom:8px;">✅ Técnico Aprobado</div>
+      <div style="font-size:14px;color:#6b7280;margin-bottom:20px;">${app.fname} ${app.lname} — ${app.email}</div>
+      <div style="background:#f0fdf4;border-radius:12px;padding:16px;margin-bottom:16px;font-size:13px;">
+        <div style="font-weight:700;margin-bottom:8px;">📱 Enviar por WhatsApp al técnico:</div>
+        <div id="wpMsg" style="color:#374151;line-height:1.6;">
+Hola ${app.fname}! 🎉 Tu solicitud para unirte a PoolPlus ha sido aprobada.
+
+🔐 Tus credenciales de acceso:
+• Portal: https://poolplus-landing-flax.vercel.app/poolplus-pro-login.html
+• Email: ${app.email}
+• Contraseña temporal: ${tempPass}
+
+Por favor cambia tu contraseña al entrar por primera vez.
+
+¡Bienvenido al equipo! 🏊</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="copyApprovalMsg()" style="flex:1;background:#0b1120;color:white;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;">📋 Copiar mensaje</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;background:#f1f5f9;color:#0f172a;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;">Cerrar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function copyApprovalMsg(){
+  const txt=document.getElementById('wpMsg').innerText;
+  navigator.clipboard.writeText(txt).then(()=>showToast('✅ Mensaje copiado — pégalo en WhatsApp'));
 }
 
 function rechazarApp(id){
