@@ -164,7 +164,70 @@ const notes=document.getElementById('novedadNotes').value;
 if(!type){alert('Please select the type of issue.');return;}
 await sb.from('services').update({notes:`[${type}] ${notes}`}).eq('id',activeServiceId);
 closeModal('novedadModal');await loadServices();}
-async function confirmComplete(){await sb.from('services').update({status:'completed'}).eq('id',activeServiceId);closeModal('completeModal');await loadServices();}
+async function confirmComplete(){
+  const btn=document.querySelector('#completeModal .btn-confirm-modal');
+  btn.disabled=true;
+  btn.textContent='Processing...';
+  try {
+    // 1. Get service details
+    const{data:service,error:sErr}=await sb.from('services').select('*').eq('id',activeServiceId).single();
+    if(sErr||!service) throw new Error('Service not found');
+
+    // 2. Get technician profile (needs stripe_account_id)
+    const{data:profile,error:pErr}=await sb.from('profiles').select('stripe_account_id,full_name').eq('id',currentUser.id).single();
+    if(pErr||!profile?.stripe_account_id) throw new Error('No Stripe account linked. Contact admin.');
+
+    // 3. Calculate amount (use service price or default $120)
+    const amount_cents=Math.round((service.price||120)*100);
+    const tech_cut=Math.floor(amount_cents*0.70);
+    const platform_fee=amount_cents-tech_cut;
+
+    // 4. Call Supabase Edge Function for Stripe split
+    const{data:{session}}=await sb.auth.getSession();
+    const resp=await fetch(`${SUPABASE_URL}/functions/v1/process-payment`,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':`Bearer ${session.access_token}`
+      },
+      body:JSON.stringify({
+        job_id:activeServiceId,
+        amount_cents,
+        technician_id:currentUser.id
+      })
+    });
+    const result=await resp.json();
+    if(!result.success) throw new Error(result.error||'Payment failed');
+
+    // 5. Show success summary
+    closeModal('completeModal');
+    showPaymentSuccess(result.tech_payout_usd, result.platform_fee_usd);
+    await loadServices();
+
+  } catch(err){
+    alert('Error: '+err.message);
+    btn.disabled=false;
+    btn.textContent='✓ Confirm & Charge';
+  }
+}
+
+function showPaymentSuccess(techPay, platformFee){
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay open';
+  overlay.innerHTML=`<div class="modal" style="text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">✅</div>
+    <div class="modal-title">Service Completed!</div>
+    <div class="modal-sub">Payment processed successfully.</div>
+    <div style="background:#f0fdf4;border-radius:12px;padding:16px;margin:16px 0;">
+      <div style="font-size:13px;color:#6b7280;margin-bottom:4px;">Your earnings (70%)</div>
+      <div style="font-size:28px;font-weight:800;color:#16a34a;">$${techPay}</div>
+      <div style="font-size:12px;color:#9ca3af;margin-top:8px;">PoolPlus platform fee: $${platformFee}</div>
+    </div>
+    <button class="btn-confirm-modal" style="width:100%;" onclick="this.closest('.modal-overlay').remove()">Done</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
 async function signOut(){await sb.auth.signOut();window.location.href='/poolplus-pro-login.html';}
 </script>
 </body>
