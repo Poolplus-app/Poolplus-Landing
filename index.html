@@ -477,19 +477,19 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
           <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
             <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">Small</div>
-            <div style="font-size:16px;font-weight:800;color:#1e90c8;">$110<span style="font-size:11px;font-weight:500;">/mo</span></div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;"><span id="tile-maintenance-small">$110</span><span style="font-size:11px;font-weight:500;">/mo</span></div>
           </div>
           <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
             <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">Medium</div>
-            <div style="font-size:16px;font-weight:800;color:#1e90c8;">$135<span style="font-size:11px;font-weight:500;">/mo</span></div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;"><span id="tile-maintenance-medium">$135</span><span style="font-size:11px;font-weight:500;">/mo</span></div>
           </div>
           <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
             <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">Large</div>
-            <div style="font-size:16px;font-weight:800;color:#1e90c8;">$160<span style="font-size:11px;font-weight:500;">/mo</span></div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;"><span id="tile-maintenance-large">$160</span><span style="font-size:11px;font-weight:500;">/mo</span></div>
           </div>
           <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
             <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">XL</div>
-            <div style="font-size:16px;font-weight:800;color:#1e90c8;">$220<span style="font-size:11px;font-weight:500;">/mo</span></div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;"><span id="tile-maintenance-xl">$220</span><span style="font-size:11px;font-weight:500;">/mo</span></div>
           </div>
         </div>
       </div>
@@ -499,7 +499,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="service-ico">🌿</div>
         <div class="service-name">Green Pool Rescue</div>
         <div class="service-desc">Algae shock treatment, brush &amp; full chemical restore. Back to blue in 48h.</div>
-        <div class="service-price">$350</div>
+        <div class="service-price" id="tile-green-price">$350</div>
       </div>
 
       <div class="service-tile">
@@ -507,7 +507,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="service-ico">💧</div>
         <div class="service-name">Leak Detection</div>
         <div class="service-desc">Multi-method detection (pressure, dye, camera). Includes minor epoxy repairs.</div>
-        <div class="service-price">$390</div>
+        <div class="service-price" id="tile-leak-price">$390</div>
       </div>
 
       <div class="service-tile">
@@ -515,7 +515,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="service-ico">⚙️</div>
         <div class="service-name">Equipment Repair</div>
         <div class="service-desc">Pump, motor, filter, heater. $99 diagnostic fee — fully deductible from repair cost.</div>
-        <div class="service-price">$99+</div>
+        <div class="service-price" id="tile-repair-price">$99+</div>
       </div>
 
       <div class="service-tile">
@@ -523,7 +523,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="service-ico">🎉</div>
         <div class="service-name">Pre-Party Cleanup</div>
         <div class="service-desc">Deep clean so your pool is ready for guests. Book at least 24h in advance.</div>
-        <div class="service-price">$199</div>
+        <div class="service-price" id="tile-party-price">$199</div>
       </div>
 
       <div class="service-tile">
@@ -531,7 +531,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="service-ico">🏗</div>
         <div class="service-name">Remodeling Consult</div>
         <div class="service-desc">On-site consultation for resurfacing, tile &amp; automation. Fee fully deductible from project cost.</div>
-        <div class="service-price">$150</div>
+        <div class="service-price" id="tile-remodel-price">$150</div>
       </div>
 
       <div class="service-tile">
@@ -539,7 +539,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="service-ico">🔧</div>
         <div class="service-name">Filter Service</div>
         <div class="service-desc">Full filter clean, backwash, cartridge inspection &amp; pressure optimization.</div>
-        <div class="service-price">$120</div>
+        <div class="service-price" id="tile-filter-price">$120</div>
       </div>
 
     </div>
@@ -732,6 +732,30 @@ var PRICES={
       data.forEach(function(p){
         if(!PRICES[p.service_type]) PRICES[p.service_type]={};
         PRICES[p.service_type][p.pool_size] = Number(p.price);
+      });
+      // Actualizar tiles visuales de mantenimiento
+      var sizes = ['small','medium','large','xl'];
+      sizes.forEach(function(s){
+        var el = document.getElementById('tile-maintenance-'+s);
+        if(el && PRICES.maintenance && PRICES.maintenance[s]){
+          el.textContent = '$'+PRICES.maintenance[s];
+        }
+      });
+      // Actualizar tiles de servicios one-time (usar precio de pool "small" como referencia)
+      var tileMap = {
+        'tile-green-price':  {svc:'green',   size:'small', suffix:''},
+        'tile-leak-price':   {svc:'leak',    size:'small', suffix:''},
+        'tile-repair-price': {svc:'repair',  size:'small', suffix:'+'},
+        'tile-party-price':  {svc:'party',   size:'small', suffix:''},
+        'tile-remodel-price':{svc:'remodel', size:'small', suffix:''},
+        'tile-filter-price': {svc:'filter',  size:'small', suffix:''}
+      };
+      Object.keys(tileMap).forEach(function(id){
+        var t = tileMap[id];
+        var el = document.getElementById(id);
+        if(el && PRICES[t.svc] && PRICES[t.svc][t.size]){
+          el.textContent = '$'+PRICES[t.svc][t.size]+t.suffix;
+        }
       });
     }
   } catch(e){ /* usa precios fallback */ }
