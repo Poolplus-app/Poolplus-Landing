@@ -12,7 +12,7 @@ html{scroll-behavior:smooth;}
 body{font-family:'Inter',sans-serif;color:var(--text);background:var(--white);-webkit-font-smoothing:antialiased;}
 
 /* NAV */
-nav{background:var(--dark);padding:0 6%;position:sticky;top:0;z-index:100;}
+nav{background:rgba(11,17,32,.92);backdrop-filter:blur(12px);padding:0 6%;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.06);}
 .nav-inner{max-width:1200px;margin:0 auto;height:68px;display:flex;align-items:center;justify-content:space-between;}
 .nav-logo{height:34px;display:block;}
 .nav-contact{display:flex;align-items:center;gap:8px;background:transparent;border:1.5px solid rgba(255,255,255,.2);border-radius:50px;padding:9px 20px;color:white;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;}
@@ -20,15 +20,15 @@ nav{background:var(--dark);padding:0 6%;position:sticky;top:0;z-index:100;}
 .nav-contact-arrow{width:16px;filter:brightness(10);}
 
 /* HERO */
-.hero{background:var(--dark);position:relative;overflow:hidden;min-height:640px;}
-.hero-bg{position:absolute;inset:0;background-image:url('https://i.imgur.com/QsjzVik.jpeg');background-size:cover;background-position:center 40%;opacity:.3;}
-.hero-grad{position:absolute;inset:0;background:linear-gradient(to right,rgba(11,17,32,.97) 40%,rgba(11,17,32,.5) 70%,rgba(11,17,32,.2) 100%);}
+.hero{background:var(--dark);position:relative;overflow:hidden;min-height:700px;}
+.hero-bg{position:absolute;inset:0;background-image:url('https://i.imgur.com/QsjzVik.jpeg');background-size:cover;background-position:center 30%;opacity:.55;}
+.hero-grad{position:absolute;inset:0;background:linear-gradient(to right,rgba(11,17,32,.92) 35%,rgba(11,17,32,.4) 65%,rgba(11,17,32,.1) 100%);}
 .hero-inner{max-width:1200px;margin:0 auto;padding:80px 6% 0;display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:flex-start;position:relative;z-index:2;}
-.hero-tag{display:inline-block;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;margin-bottom:20px;letter-spacing:.02em;}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(30,144,200,.15);border:1px solid rgba(30,144,200,.3);border-radius:50px;padding:6px 16px;color:#60b8e8;font-size:13px;font-weight:600;margin-bottom:24px;letter-spacing:.02em;}
 .hero h1{font-size:clamp(2rem,4.5vw,3.4rem);font-weight:800;color:white;line-height:1.08;letter-spacing:-.02em;margin-bottom:20px;}
 .hero-sub{font-size:16px;color:rgba(255,255,255,.6);line-height:1.75;margin-bottom:32px;max-width:460px;}
 .hero-pills{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:48px;}
-.hero-pill{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.75);} .hero-pill-dot{width:6px;height:6px;border-radius:50%;background:#1e90c8;display:inline-block;flex-shrink:0;}
+.hero-pill{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:rgba(255,255,255,.9);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:50px;padding:6px 14px;} .hero-pill-dot{width:6px;height:6px;border-radius:50%;background:#1e90c8;display:inline-block;flex-shrink:0;}
 .hero-pill-star{width:14px;filter:brightness(10) saturate(.5);}
 
 /* WIDGET */
@@ -204,7 +204,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
 <nav>
   <div class="nav-inner">
     <a href="#">
-      <img src="https://poolplus.app/forms/images/logo.png" alt="Pool Plus" class="nav-logo" onerror="this.outerHTML='<span style=&quot;font-family:Inter;font-weight:800;font-size:20px;color:white;&quot;>Pool<span style=&quot;color:#1e90c8;&quot;>plus</span></span>'"/>
+      <span style="font-family:Inter,sans-serif;font-weight:800;font-size:22px;color:white;letter-spacing:-.03em;">Pool<span style="color:#29b6f6;">Plus</span></span>
     </a>
     <a href="tel:7542034376" class="nav-contact">
       Contact Us
@@ -402,29 +402,64 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
 <!-- CARDS SECTION -->
 <section class="section" style="background:#fff;">
   <div class="section-inner">
-    <h2 class="section-title">We are reinventing<br/>Pool Cleaning Services</h2>
+    <div style="text-align:center;margin-bottom:48px;">
+      <h2 class="section-title">We are reinventing<br/>Pool Cleaning Services</h2>
+      <p style="font-size:16px;color:var(--muted);margin-top:12px;max-width:500px;margin-left:auto;margin-right:auto;line-height:1.7;">South Florida's first on-demand pool service marketplace — fast, transparent, and always professional.</p>
+    </div>
     <div class="cards-grid">
 
       <div class="pool-card">
-        <img src="https://i.imgur.com/QsjzVik.jpeg" class="pool-card-img" alt="Same Day Service"/>
+        <div style="position:relative;overflow:hidden;border-radius:14px;">
+          <img src="https://i.imgur.com/QsjzVik.jpeg" class="pool-card-img" style="height:240px;" alt="Same Day Service"/>
+          <div style="position:absolute;top:14px;left:14px;background:#1e90c8;color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:50px;">⚡ Same Day</div>
+        </div>
         <div class="pool-card-title">Request Service Online</div>
         <div class="pool-card-desc">Get your pool cleaned within hours. Book emergency cleaning services when you need them most.</div>
       </div>
 
       <div class="pool-card">
-        <img src="https://i.imgur.com/8wlY3ES.jpeg" class="pool-card-img" alt="Scheduled Services"/>
+        <div style="position:relative;overflow:hidden;border-radius:14px;">
+          <img src="https://i.imgur.com/8wlY3ES.jpeg" class="pool-card-img" style="height:240px;" alt="Scheduled Services"/>
+          <div style="position:absolute;top:14px;left:14px;background:#10b981;color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:50px;">🔄 Recurring</div>
+        </div>
         <div class="pool-card-title">Scheduled Services</div>
-        <div class="pool-card-desc">Set up recurring cleanings that continue automatically until you cancel. Weekly, bi-weekly, or monthly — you choose.</div>
+        <div class="pool-card-desc">Set up recurring cleanings that continue automatically until you cancel. Weekly or bi-weekly — you choose.</div>
       </div>
 
       <div class="pool-card">
-        <img src="https://i.imgur.com/n0aV3JT.jpeg" class="pool-card-img" alt="Experienced PoolTechs"/>
+        <div style="position:relative;overflow:hidden;border-radius:14px;">
+          <img src="https://i.imgur.com/n0aV3JT.jpeg" class="pool-card-img" style="height:240px;" alt="Experienced PoolTechs"/>
+          <div style="position:absolute;top:14px;left:14px;background:#0b1120;color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:50px;">✓ Verified Pros</div>
+        </div>
         <div class="pool-card-title">Experienced PoolTechs</div>
         <div class="pool-card-desc">All our technicians are background-checked and have proven experience in pool maintenance.</div>
       </div>
 
+    </div>
+  </div>
+</section>
 
-
+<!-- PARTNERS / TRUST -->
+<section style="background:#f8fafc;padding:48px 6%;border-top:1px solid #e5eaf2;border-bottom:1px solid #e5eaf2;">
+  <div style="max-width:1200px;margin:0 auto;text-align:center;">
+    <p style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;margin-bottom:28px;">Trusted by Industry Leaders</p>
+    <div style="display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:10px;opacity:.6;">
+        <div style="width:36px;height:36px;background:#0b1120;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:14px;">IP</div>
+        <span style="font-size:15px;font-weight:700;color:#374151;">IPSSA</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;opacity:.6;">
+        <div style="width:36px;height:36px;background:#1e90c8;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;">TP</div>
+        <span style="font-size:15px;font-weight:700;color:#374151;">TotalPlan</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;opacity:.6;">
+        <div style="width:36px;height:36px;background:#e31837;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;">P</div>
+        <span style="font-size:15px;font-weight:700;color:#374151;">Pentair</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;opacity:.6;">
+        <div style="width:36px;height:36px;background:#00843d;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;">H</div>
+        <span style="font-size:15px;font-weight:700;color:#374151;">Hayward</span>
+      </div>
     </div>
   </div>
 </section>
@@ -683,15 +718,21 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
       </div>
     </div>
     <div class="footer-bottom">
-      <span class="footer-copy">© 2026 Pool Plus. All rights reserved.</span>
+      <div>
+  <span class="footer-copy">© 2026 Pool Plus. All rights reserved.</span>
+  <div style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+    <span style="font-size:11px;color:rgba(255,255,255,.3);">A service by</span>
+    <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.02em;">TotalPlan Services LLC</span>
+  </div>
+</div>
       <div style="margin-top:8px;text-align:center;width:100%;"><a href="/poolplus-tech-apply.html" style="color:#64748b;font-size:12px;text-decoration:none;">¿Eres técnico? Únete a PoolPlus</a></div>
       <div class="footer-contact">
         <a href="tel:7542034376">
-          <img src="https://poolplus.app/forms/images/phone-icon.svg" class="footer-contact-icon" onerror="this.remove()"/>
+          <span style="font-size:13px;">📞</span>
           (754) 203-4376
         </a>
         <a href="mailto:contact@poolplus.com">
-          <img src="https://poolplus.app/forms/images/email-icon.svg" class="footer-contact-icon" onerror="this.remove()"/>
+          <span style="font-size:13px;">✉️</span>
           contact@poolplus.com
         </a>
       </div>
