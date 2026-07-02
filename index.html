@@ -852,4 +852,13 @@ function goStep1(){
 function goStep3(){
   document.getElementById("step1").style.display="none";
   document.getElementById("step2").classList.remove("active");
-  document.getElementById("step3").classList
+  document.getElementById("step3").classList.add("active");
+}
+function setSched(el){
+  var tabs=document.querySelectorAll(".sched-tab");
+  for(var i=0;i<tabs.length;i++){tabs[i].classList.remove("on");}
+  el.classList.add("on");
+}
+</script>
+</body>
+</html>
