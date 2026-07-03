@@ -272,10 +272,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
                 </optgroup>
                 <optgroup label="── One-Time Services">
                   <option value="green">Green Pool Rescue ⚡</option>
-                  <option value="chemical">Chemical Balance</option>
-                  <option value="filter">Filter Service</option>
                   <option value="repair">Equipment Repair</option>
-                  <option value="repair">Equipment Repair (Diagnostic)</option>
                   <option value="party">Pre-Party Cleanup ⚡</option>
                   <option value="remodel">Remodeling Consult</option>
                 </optgroup>
@@ -315,33 +312,33 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="input-row">
           <div class="input-field">
             
-            <input type="text" placeholder="Full name"/>
+            <input type="text" id="bkName" placeholder="Full name"/>
           </div>
           <div class="input-field">
             
-            <input type="email" placeholder="Email"/>
+            <input type="email" id="bkEmail" placeholder="Email"/>
           </div>
         </div>
         <div class="input-row">
           <div class="input-field">
             
-            <input type="text" placeholder="Phone"/>
+            <input type="text" id="bkPhone" placeholder="Phone"/>
           </div>
           <div class="input-field">
             
-            <input type="text" placeholder="Zip code"/>
+            <input type="text" id="bkZip" placeholder="Zip code"/>
           </div>
         </div>
         <div style="margin-bottom:12px;">
           <div class="input-field">
             
-            <input type="text" placeholder="Address"/>
+            <input type="text" id="bkAddress" placeholder="Address"/>
           </div>
         </div>
         <div class="input-row" style="margin-bottom:16px;">
           <div class="input-field">
             
-            <input type="text" placeholder="City"/>
+            <input type="text" id="bkCity" placeholder="City"/>
           </div>
           <div class="input-field">
             
@@ -353,15 +350,15 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         </div>
         <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">Schedule your service</div>
         <div class="schedule-tabs">
-          <div class="sched-tab on" onclick="setSched(this)">Same-day service</div>
-          <div class="sched-tab" onclick="setSched(this)">Schedule for later</div>
+          <div class="sched-tab on" onclick="setSched(this,'same-day')">Same-day service</div>
+          <div class="sched-tab" onclick="setSched(this,'scheduled')">Schedule for later</div>
         </div>
         <div class="input-field" style="margin-bottom:16px;">
           
-          <input type="date"/>
+          <input type="date" id="bkDate"/>
         </div>
         <div style="font-size:13px;font-weight:500;color:var(--muted);margin-bottom:10px;">Tell us about your request</div>
-        <textarea style="width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:13px;font-family:inherit;color:var(--text);outline:none;resize:none;height:72px;" placeholder="Any notes for the technician..."></textarea>
+        <textarea style="width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:13px;font-family:inherit;color:var(--text);outline:none;resize:none;height:72px;" placeholder="Any notes for the technician..." id="bkNotes"></textarea>
         <div style="margin:14px 0 0;">
           <div class="consent-row">
             <input type="checkbox" id="c1"/>
@@ -372,7 +369,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
             <label for="c2">By checking this box, I consent to receive marketing and promotional messages from <strong>PoolPlus LLC</strong>. Text STOP to opt out.</label>
           </div>
         </div>
-        <button class="send-btn" onclick="goStep3()">
+        <button class="send-btn" id="bkSendBtn" onclick="submitBooking()">
           Send request
           <span style="font-size:18px;">→</span>
         </button>
@@ -432,7 +429,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
           <div style="position:absolute;top:14px;left:14px;background:#0b1120;color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:50px;">✓ Verified Pros</div>
         </div>
         <div class="pool-card-title">Experienced PoolTechs</div>
-        <div class="pool-card-desc">All our technicians are background-checked and have proven experience in pool maintenance.</div>
+        <div class="pool-card-desc">PoolPlus is backed by TotalPlan Services, a fully insured pool maintenance company and a proud member of the Independent Pool &amp; Spa Service Association (IPSSA). Every technician on our platform has verified hands-on experience in pool maintenance.</div>
       </div>
 
     </div>
@@ -537,13 +534,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="service-price" id="tile-green-price">$350</div>
       </div>
 
-      <div class="service-tile">
-        <div class="tag-spacer"></div>
-        <div class="service-ico">💧</div>
-        <div class="service-name">Leak Detection</div>
-        <div class="service-desc">Multi-method detection (pressure, dye, camera). Includes minor epoxy repairs.</div>
-        <div class="service-price" id="tile-leak-price">$390</div>
-      </div>
+
 
       <div class="service-tile">
         <div class="tag-spacer"></div>
@@ -569,13 +560,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="service-price" id="tile-remodel-price">$150</div>
       </div>
 
-      <div class="service-tile">
-        <div class="tag-spacer"></div>
-        <div class="service-ico">🔧</div>
-        <div class="service-name">Filter Service</div>
-        <div class="service-desc">Full filter clean, backwash, cartridge inspection &amp; pressure optimization.</div>
-        <div class="service-price" id="tile-filter-price">$120</div>
-      </div>
+
 
     </div>
   </div>
@@ -785,11 +770,9 @@ var PRICES={
       // Actualizar tiles de servicios one-time (usar precio de pool "small" como referencia)
       var tileMap = {
         'tile-green-price':  {svc:'green',   size:'small', suffix:''},
-        'tile-leak-price':   {svc:'leak',    size:'small', suffix:''},
         'tile-repair-price': {svc:'repair',  size:'small', suffix:'+'},
         'tile-party-price':  {svc:'party',   size:'small', suffix:''},
-        'tile-remodel-price':{svc:'remodel', size:'small', suffix:''},
-        'tile-filter-price': {svc:'filter',  size:'small', suffix:''}
+        'tile-remodel-price':{svc:'remodel', size:'small', suffix:''}
       };
       Object.keys(tileMap).forEach(function(id){
         var t = tileMap[id];
@@ -854,10 +837,111 @@ function goStep3(){
   document.getElementById("step2").classList.remove("active");
   document.getElementById("step3").classList.add("active");
 }
-function setSched(el){
+var SCHED_TYPE="same-day";
+function setSched(el,type){
   var tabs=document.querySelectorAll(".sched-tab");
   for(var i=0;i<tabs.length;i++){tabs[i].classList.remove("on");}
   el.classList.add("on");
+  if(type){SCHED_TYPE=type;}
+}
+
+// ── Envío real de la reserva: Supabase + GHL ──
+var GHL_WEBHOOK="https://services.leadconnectorhq.com/hooks/Q9902WErnxzPxpByDd3j/webhook-trigger/15debeac-cae8-4789-b8eb-920bb0e7e79e";
+
+async function submitBooking(){
+  var name=document.getElementById("bkName").value.trim();
+  var email=document.getElementById("bkEmail").value.trim();
+  var phone=document.getElementById("bkPhone").value.trim();
+  var zip=document.getElementById("bkZip").value.trim();
+  var address=document.getElementById("bkAddress").value.trim();
+  var city=document.getElementById("bkCity").value.trim();
+  var dateVal=document.getElementById("bkDate").value;
+  var notes=document.getElementById("bkNotes").value.trim();
+  var consentSms=document.getElementById("c1").checked;
+  var consentMkt=document.getElementById("c2").checked;
+  var size=document.getElementById("poolSize").value;
+  var svc=document.getElementById("serviceType").value;
+
+  // Validación mínima
+  if(!name||!email||!phone){
+    alert("Please enter your name, email and phone so we can confirm your service.");
+    return;
+  }
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+    alert("Please enter a valid email address.");
+    return;
+  }
+  if(SCHED_TYPE==="scheduled" && !dateVal){
+    alert("Please choose a date for your service.");
+    return;
+  }
+
+  var price=(PRICES[svc]&&PRICES[svc][size])?PRICES[svc][size]:null;
+  var label=LABELS[svc]||svc;
+  var parts=name.split(/\s+/);
+  var firstName=parts.shift()||name;
+  var lastName=parts.join(" ");
+
+  var btn=document.getElementById("bkSendBtn");
+  btn.disabled=true;
+  btn.firstChild.textContent="Sending... ";
+
+  var savedDB=false, sentGHL=false;
+
+  // 1) Guardar en Supabase (booking_requests)
+  try{
+    var sb=supabase.createClient(
+      "https://sshbhmfsjyddynfwerpk.supabase.co",
+      "sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi"
+    );
+    var {error}=await sb.from("booking_requests").insert({
+      full_name:name, email:email, phone:phone,
+      zip:zip, address:address, city:city, state:"Florida",
+      pool_size:size, service_type:svc, service_label:label,
+      price:price, schedule_type:SCHED_TYPE,
+      service_date:dateVal||null, notes:notes,
+      consent_sms:consentSms, consent_marketing:consentMkt,
+      status:"new"
+    });
+    if(!error){savedDB=true;}else{console.error("Supabase:",error);}
+  }catch(e){console.error("Supabase:",e);}
+
+  // 2) Disparar webhook GHL (email de confirmación)
+  var payload={
+    first_name:firstName, last_name:lastName,
+    email:email, phone:phone,
+    service:label, pool_size:size,
+    address:address, city:city, zip:zip,
+    service_date:dateVal||"same-day",
+    schedule_type:SCHED_TYPE,
+    price:price!==null?String(price):"",
+    notes:notes,
+    consent_sms:consentSms?"yes":"no",
+    consent_marketing:consentMkt?"yes":"no"
+  };
+  try{
+    var r=await fetch(GHL_WEBHOOK,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    if(r.ok){sentGHL=true;}
+  }catch(e){
+    // Reintento sin preflight CORS
+    try{
+      await fetch(GHL_WEBHOOK,{method:"POST",mode:"no-cors",body:JSON.stringify(payload)});
+      sentGHL=true;
+    }catch(e2){console.error("GHL:",e2);}
+  }
+
+  btn.disabled=false;
+  btn.firstChild.textContent="Send request ";
+
+  if(savedDB||sentGHL){
+    goStep3();
+  }else{
+    alert("Something went wrong sending your request. Please try again or call (754) 203-4376.");
+  }
 }
 </script>
 </body>
