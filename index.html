@@ -885,7 +885,7 @@ async function submitBooking(){
   btn.disabled=true;
   btn.firstChild.textContent="Sending... ";
 
-  var savedDB=false, sentGHL=false;
+  var savedDB=false, sentGHL=false, dbErrorMsg="";
 
   // 1) Guardar en Supabase (booking_requests)
   try{
@@ -902,8 +902,16 @@ async function submitBooking(){
       consent_sms:consentSms, consent_marketing:consentMkt,
       status:"new"
     });
-    if(!error){savedDB=true;}else{console.error("Supabase:",error);}
-  }catch(e){console.error("Supabase:",e);}
+    if(!error){
+      savedDB=true;
+    }else{
+      dbErrorMsg=(error.code?error.code+": ":"")+(error.message||"unknown error");
+      console.error("Supabase:",error);
+    }
+  }catch(e){
+    dbErrorMsg=(e&&e.message)?e.message:"unknown exception";
+    console.error("Supabase:",e);
+  }
 
   // 2) Disparar webhook GHL (email de confirmación)
   var payload={
@@ -916,7 +924,9 @@ async function submitBooking(){
     price:price!==null?String(price):"",
     notes:notes,
     consent_sms:consentSms?"yes":"no",
-    consent_marketing:consentMkt?"yes":"no"
+    consent_marketing:consentMkt?"yes":"no",
+    db_saved:savedDB?"yes":"no",
+    db_error:dbErrorMsg
   };
   try{
     var r=await fetch(GHL_WEBHOOK,{
