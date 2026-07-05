@@ -885,7 +885,7 @@ async function submitBooking(){
   btn.disabled=true;
   btn.firstChild.textContent="Sending... ";
 
-  var savedDB=false, sentGHL=false, dbErrorMsg="";
+  var savedDB=false, sentGHL=false, dbErrorMsg="", bookingId=null;
 
   // 1) Guardar en Supabase (booking_requests)
   try{
@@ -893,7 +893,7 @@ async function submitBooking(){
       "https://sshbhmfsjyddynfwerpk.supabase.co",
       "sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi"
     );
-    var {error}=await sb.from("booking_requests").insert({
+    var {data:bkRow, error}=await sb.from("booking_requests").insert({
       full_name:name, email:email, phone:phone,
       zip:zip, address:address, city:city, state:"Florida",
       pool_size:size, service_type:svc, service_label:label,
@@ -901,9 +901,10 @@ async function submitBooking(){
       service_date:dateVal||null, notes:notes,
       consent_sms:consentSms, consent_marketing:consentMkt,
       status:"new"
-    });
+    }).select("id").single();
     if(!error){
       savedDB=true;
+      bookingId=bkRow?bkRow.id:null;
     }else{
       dbErrorMsg=(error.code?error.code+": ":"")+(error.message||"unknown error");
       console.error("Supabase:",error);
@@ -943,6 +944,27 @@ async function submitBooking(){
     }catch(e2){console.error("GHL:",e2);}
   }
 
+  // 3) Guardar tarjeta en Stripe (Checkout modo setup — NO cobra nada)
+  if(savedDB && bookingId){
+    try{
+      btn.firstChild.textContent="Redirecting to secure payment... ";
+      var ck=await fetch("https://sshbhmfsjyddynfwerpk.supabase.co/functions/v1/create-checkout",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":"Bearer sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi"
+        },
+        body:JSON.stringify({booking_id:bookingId,email:email,name:name})
+      });
+      var ckData=await ck.json();
+      if(ck.ok && ckData.url){
+        window.location.href=ckData.url; // el cliente guarda su tarjeta en Stripe
+        return;
+      }
+      console.error("Checkout:",ckData);
+    }catch(e){console.error("Checkout:",e);}
+  }
+
   btn.disabled=false;
   btn.firstChild.textContent="Send request ";
 
@@ -952,6 +974,22 @@ async function submitBooking(){
     alert("Something went wrong sending your request. Please try again or call (754) 203-4376.");
   }
 }
+
+// Retorno desde Stripe (success_url / cancel_url)
+(function(){
+  var p=new URLSearchParams(window.location.search);
+  var bk=p.get("booking");
+  if(!bk)return;
+  var w=document.getElementById("widgetWrap");
+  if(bk==="confirmed"){
+    goStep3();
+    if(w)w.scrollIntoView({behavior:"smooth",block:"start"});
+  }else if(bk==="cancelled"){
+    if(w)w.scrollIntoView({behavior:"smooth",block:"start"});
+    alert("Your card wasn't saved, but we received your request. Our team will contact you to arrange payment.");
+  }
+  history.replaceState({},"","/");
+})();
 </script>
 </body>
 </html>
