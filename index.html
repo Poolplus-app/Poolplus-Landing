@@ -885,7 +885,8 @@ async function submitBooking(){
   btn.disabled=true;
   btn.firstChild.textContent="Sending... ";
 
-  var savedDB=false, sentGHL=false, dbErrorMsg="", bookingId=null;
+  var savedDB=false, sentGHL=false, dbErrorMsg="";
+  var bookingId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():null;
 
   // 1) Guardar en Supabase (booking_requests)
   try{
@@ -893,7 +894,7 @@ async function submitBooking(){
       "https://sshbhmfsjyddynfwerpk.supabase.co",
       "sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi"
     );
-    var {data:bkRow, error}=await sb.from("booking_requests").insert({
+    var insertRow={
       full_name:name, email:email, phone:phone,
       zip:zip, address:address, city:city, state:"Florida",
       pool_size:size, service_type:svc, service_label:label,
@@ -901,10 +902,11 @@ async function submitBooking(){
       service_date:dateVal||null, notes:notes,
       consent_sms:consentSms, consent_marketing:consentMkt,
       status:"new"
-    }).select("id").single();
+    };
+    if(bookingId){insertRow.id=bookingId;}
+    var {error}=await sb.from("booking_requests").insert(insertRow);
     if(!error){
       savedDB=true;
-      bookingId=bkRow?bkRow.id:null;
     }else{
       dbErrorMsg=(error.code?error.code+": ":"")+(error.message||"unknown error");
       console.error("Supabase:",error);
