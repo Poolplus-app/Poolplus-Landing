@@ -115,31 +115,7 @@ select option{background:#1a2235;}
 </div>
 
 <!-- LOGIN SCREEN -->
-<div id="login-screen" style="position:fixed;inset:0;background:#0a0f1e;display:flex;align-items:center;justify-content:center;padding:1.5rem;z-index:999;">
-  <div style="width:100%;max-width:360px;">
-    <div style="text-align:center;margin-bottom:2rem;">
-      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#0ea5e9,#0369a1);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 1rem;">💧</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:4px;">Pool<span style="color:#0ea5e9">plus</span> Admin</div>
-      <div style="color:#64748b;font-size:13px;">Acceso restringido</div>
-    </div>
-    <div style="background:#ffffff08;border:0.5px solid #ffffff18;border-radius:16px;padding:1.75rem;">
-      <div style="margin-bottom:14px;">
-        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Usuario</div>
-        <input type="email" id="login-user" placeholder="usuario@poolplus.app" style="width:100%;background:#ffffff08;border:1px solid #ffffff20;border-radius:10px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;" onfocus="this.style.borderColor='#0ea5e9'" onblur="this.style.borderColor='#ffffff20'"/>
-      </div>
-      <div style="margin-bottom:18px;">
-        <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Contraseña</div>
-        <div style="position:relative;">
-          <input id="login-pass" type="password" placeholder="••••••••••" style="width:100%;background:#ffffff08;border:1px solid #ffffff20;border-radius:10px;padding:12px 42px 12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;" onkeydown="if(event.key==='Enter')doLogin()"/>
-          <span id="eye-icon" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;color:#64748b;user-select:none;" onclick="var i=document.getElementById('login-pass');var e=document.getElementById('eye-icon');if(i.type=='password'){i.type='text';e.textContent='🙈';}else{i.type='password';e.textContent='👁';}">👁</span>
-        </div>
-      </div>
-      <button onclick="doLogin()" style="width:100%;background:#0ea5e9;color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Entrar</button>
-      <div id="login-error" style="display:none;margin-top:12px;background:#ef444418;border:1px solid #ef444430;border-radius:8px;padding:10px;font-size:13px;color:#ef4444;text-align:center;">Usuario o contraseña incorrectos.</div>
-    </div>
-    <div style="text-align:center;color:#334155;font-size:11px;margin-top:1.25rem;">🔒 Acceso exclusivo para administradores de PoolPlus</div>
-  </div>
-</div>
+<!-- puerta vieja eliminada: la seguridad real es Magic Link + RLS -->
 <div id="sidebar">
   <div class="logo-row">
     <div class="logo-icon">💧</div>
@@ -210,14 +186,9 @@ select option{background:#1a2235;}
     <div class="page-title">Precios y Promociones</div>
     <div class="page-sub">Config central — cualquier cambio aquí se refleja en el portal del cliente, el flujo del técnico y los recibos</div>
     <div class="card card-p" style="margin-bottom:20px">
-      <div style="font-weight:700;font-size:15px;margin-bottom:6px">📋 Planes de Servicio Recurrente</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Estos precios aparecen en el landing, el portal del cliente y los comprobantes de cobro.</p>
-      <div id="plan-prices"></div>
-    </div>
-    <div class="card card-p" style="margin-bottom:20px">
-      <div style="font-weight:700;font-size:15px;margin-bottom:6px">⚠️ Precios de Novedades</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Se muestran al cliente cuando se solicita aprobación. Solo se cobran si el cliente aprueba (o si aplica penalidad).</p>
-      <div id="nov-prices"></div>
+      <div style="font-weight:700;font-size:15px;margin-bottom:6px">💲 Precios del Catálogo (tabla real de Supabase)</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Cada precio que edites aquí es el que el cliente ve en poolplus.app al reservar. Servicios y tamaños de piscina.</p>
+      <div id="precios-real"><p style="color:var(--muted);font-size:13px">Cargando precios…</p></div>
     </div>
     <div class="card card-p" style="margin-bottom:20px">
       <div style="font-weight:700;font-size:15px;margin-bottom:6px">🚫 Penalidad por Cancelación / Sin Respuesta</div>
@@ -453,23 +424,55 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function loadPreciosDB() {
   const { data, error } = await sb.from('prices').select('*');
-  if (error || !data) return;
-  data.forEach(p => {
-    if (!p.key) return;
-    const k = p.key;
-    if (k.startsWith('maintenance_')) {
-      const size = k.replace('maintenance_','');
-      const planMap = {small:'Esencial', medium:'Premium', large:'Elite'};
-      const planName = planMap[size];
-      if (planName && PRICES.planes[planName]) PRICES.planes[planName].precio = Number(p.price);
-    } else if (PRICES.novedades[k]) {
-      PRICES.novedades[k].precio = Number(p.price);
-    } else if (k === 'cancellation_penalty') {
-      PRICES.penalidad = Number(p.price);
-    }
-  });
-  renderPrecios();
-  renderStats();
+  const cont = document.getElementById('precios-real');
+  if (error) { if(cont) cont.innerHTML = '<p style="color:#ef4444;font-size:13px">Error cargando precios: '+error.message+'</p>'; return; }
+  window.PRICE_ROWS = data || [];
+  renderPreciosReal();
+}
+const SVC_META = {
+  maintenance:{label:"Weekly Maintenance Plan",icon:"🔄",color:"#0ea5e9"},
+  green:{label:"Green Pool Rescue",icon:"🟢",color:"#10b981"},
+  chemical:{label:"Chemical Balance",icon:"🧪",color:"#8b5cf6"},
+  filter:{label:"Filter Clean",icon:"🌀",color:"#06b6d4"},
+  leak:{label:"Leak Detection",icon:"💧",color:"#3b82f6"},
+  repair:{label:"Equipment Repair",icon:"🔧",color:"#f59e0b"},
+  party:{label:"Pre-Party Cleanup",icon:"🎉",color:"#ec4899"},
+  remodel:{label:"Remodeling Consult",icon:"🏗️",color:"#6b7280"}
+};
+const SIZE_LABEL = {small:"Small",medium:"Medium",large:"Large",xl:"XL"};
+function renderPreciosReal(){
+  const cont = document.getElementById('precios-real');
+  if(!cont) return;
+  const rows = window.PRICE_ROWS || [];
+  if(!rows.length){ cont.innerHTML='<p style="color:var(--muted);font-size:13px">No hay precios en la base de datos.</p>'; return; }
+  const groups = {};
+  rows.forEach(r=>{ (groups[r.service_type]=groups[r.service_type]||[]).push(r); });
+  const sizeOrder = {small:0,medium:1,large:2,xl:3};
+  cont.innerHTML = Object.keys(groups).map(svc=>{
+    const meta = SVC_META[svc]||{label:svc,icon:"💲",color:"#64748b"};
+    const items = groups[svc].sort((a,b)=>(sizeOrder[a.pool_size]??9)-(sizeOrder[b.pool_size]??9));
+    return `<div style="border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:10px">${meta.icon} ${meta.label} <span style="font-size:11px;color:var(--muted);font-weight:500">(${svc})</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${items.map(r=>`
+          <div style="display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 10px">
+            <span style="font-size:12px;color:var(--muted);min-width:52px">${SIZE_LABEL[r.pool_size]||r.pool_size||"—"}</span>
+            <span style="font-size:13px;color:${meta.color};font-weight:700">$</span>
+            <input id="price-${r.id}" type="number" min="0" step="1" value="${r.price}" style="width:70px;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit">
+            <button class="btn btn-sm btn-primary" onclick="savePriceRow('${r.id}')">💾</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('') + `<p style="font-size:12px;color:var(--muted);margin-top:8px">💡 Estos precios alimentan directamente el landing (poolplus.app) y el widget de reserva. Los cambios son inmediatos al guardar.</p>`;
+}
+async function savePriceRow(id){
+  const inp = document.getElementById('price-'+id);
+  const val = parseFloat(inp.value);
+  if(isNaN(val)||val<0){ showToast('Precio inválido','#ef4444'); return; }
+  const { error } = await sb.from('prices').update({ price: val }).eq('id', id);
+  if(error){ showToast('Error: '+error.message,'#ef4444'); return; }
+  showToast('💾 Precio actualizado: $'+val);
+  const row = (window.PRICE_ROWS||[]).find(r=>r.id===id); if(row) row.price = val;
 }
 
 async function savePrecioDB(key, price) {
@@ -487,19 +490,7 @@ function togglePass(){
   else { inp.type = 'password'; eye.textContent = '👁'; }
 }
 
-function doLogin(){
-  const user = document.getElementById('login-user').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const err  = document.getElementById('login-error');
-  if(user === 'totalplan22@gmail.com' && pass === 'Totalplan22@'){
-    document.getElementById('login-screen').style.display = 'none';
-    err.style.display = 'none';
-  } else {
-    err.style.display = 'block';
-    document.getElementById('login-pass').value = '';
-    document.getElementById('login-pass').focus();
-  }
-}
+function doLogin(){/* eliminado */}
 
 // ── DATA ──────────────────────────────────────────────────────
 const TECHS = [
@@ -701,17 +692,16 @@ function renderStats(){
   }).join("");
 }
 
-function renderPrecios(){
-  document.getElementById("plan-prices").innerHTML=Object.entries(PRICES.planes).map(([k,v])=>priceField("plan-"+k,"plan",k,v.precio,k,v.color,v.desc)).join("");
-  document.getElementById("nov-prices").innerHTML=Object.entries(PRICES.novedades).map(([k,v])=>{
-    const nm=NOV_META[k]||{label:"Desconocida",icon:"❓",color:"#64748b"};
-    const bloq=v.bloquea?`<span style="font-size:11px;color:#ef4444">⛔ Bloquea el servicio</span>`:`<span style="font-size:11px;color:#10b981">✅ No bloquea</span>`;
-    const pen=v.penalidad?`<span style="font-size:11px;color:#ef4444">Penalidad $${PRICES.penalidad} si no aprueba</span>`:`<span style="font-size:11px;color:var(--muted)">Sin penalidad</span>`;
-    return priceField("nov-"+k,"novedad",k,v.precio,v.label,nm?.color,"",v.icon)+`<div style="display:flex;gap:10px;margin-top:4px;padding-left:4px;margin-bottom:6px">${bloq}<span style="font-size:11px;color:var(--muted)">·</span>${pen}</div>`;
-  }).join("");
-  document.getElementById("penalty-price").innerHTML=priceField("penalidad","penalidad","",PRICES.penalidad,"Monto de penalidad","#ef4444","","🚫");
-  document.getElementById("promos-quick").innerHTML=PROMOS.filter(p=>p.active).map(p=>`<div style="background:var(--surface2);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><code style="background:#0ea5e915;color:var(--pool);padding:2px 7px;border-radius:5px;font-size:12px;font-weight:700">${p.code}</code><span style="font-size:13px;margin-left:10px">${p.label}</span></div><span style="font-size:12px;color:#10b981;font-weight:700">${discountLabel(p)}</span></div>`).join("");
+function renderPrecios(){ /* reemplazada por renderPreciosReal */ }
+function priceField(id,type,key,val,label,color,desc,icon){
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+    <span style="font-size:13px;min-width:220px">${icon?icon+' ':''}${label}</span>
+    <input id="inp-${id}" type="number" min="0" value="${val}" style="width:80px;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:inherit">
+    <button class="btn btn-sm btn-primary" onclick="savePrice('${id}','${type}','${key}')">💾</button>
+    ${desc?`<span style="font-size:11px;color:var(--muted)">${desc}</span>`:''}
+  </div>`;
 }
+function renderPreciosLegacy(){}
 
 function renderNovedades(){
   // rules display
