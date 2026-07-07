@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request Confirmed — PoolPlus</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f9fc;color:#0b1120;min-height:100vh;display:flex;flex-direction:column}
+
+/* Top bar */
+.topbar{background:linear-gradient(135deg,#0b1120,#1e3a5f);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.brand{color:#fff;font-weight:800;font-size:20px;text-decoration:none;letter-spacing:-.02em}
+.brand span{color:#1e90c8}
+.topbar a.phone{color:#93c5fd;text-decoration:none;font-size:14px;font-weight:600}
+
+/* Card */
+.wrap{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px 48px}
+.card{background:#fff;border-radius:20px;box-shadow:0 10px 40px rgba(11,17,32,.10);max-width:560px;width:100%;overflow:hidden}
+
+/* Header of card */
+.card-head{text-align:center;padding:36px 28px 8px}
+.check{width:72px;height:72px;border-radius:50%;background:#ecfdf5;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;animation:pop .45s ease}
+.check svg{width:40px;height:40px}
+@keyframes pop{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.check{animation:none}}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.sub{color:#6b7280;font-size:15px;line-height:1.55;max-width:420px;margin:0 auto}
+
+/* No-charge banner */
+.nocharge{margin:24px 24px 0;background:#eff7fd;border:2px solid #1e90c8;border-radius:14px;padding:18px 20px;text-align:center}
+.nocharge strong{display:block;color:#0b1120;font-size:17px;font-weight:800;margin-bottom:4px}
+.nocharge span{color:#374151;font-size:14px;line-height:1.5}
+
+/* Same-day promise */
+.promise{margin:16px 24px 0;background:#ecfdf5;border-radius:14px;padding:16px 20px;display:flex;gap:12px;align-items:flex-start}
+.promise .ico{font-size:22px;line-height:1}
+.promise strong{display:block;font-size:15px;font-weight:700;color:#065f46;margin-bottom:2px}
+.promise span{font-size:14px;color:#374151;line-height:1.5}
+
+/* Steps */
+.steps{padding:28px 24px 8px}
+.steps h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:18px}
+.step{display:flex;gap:14px;padding-bottom:22px;position:relative}
+.step:not(:last-child)::before{content:"";position:absolute;left:15px;top:34px;bottom:-4px;width:2px;background:#dde8f4}
+.dot{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;z-index:1}
+.dot.done{background:#10b981;color:#fff}
+.dot.now{background:#1e90c8;color:#fff;box-shadow:0 0 0 5px rgba(30,144,200,.18)}
+.dot.next{background:#e5eaf2;color:#6b7280}
+.step-body strong{display:block;font-size:15px;font-weight:700;margin-bottom:2px}
+.step-body span{font-size:14px;color:#6b7280;line-height:1.5}
+.badge{display:inline-block;background:#eff7fd;color:#1e90c8;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle;text-transform:uppercase;letter-spacing:.04em}
+
+/* Footer of card */
+.card-foot{border-top:1px solid #e5e7eb;padding:20px 24px;text-align:center}
+.card-foot p{font-size:14px;color:#6b7280;margin-bottom:14px}
+.card-foot a.contact{color:#1e90c8;font-weight:600;text-decoration:none}
+.btn-home{display:inline-block;background:#1e90c8;color:#fff;font-weight:700;font-size:15px;padding:13px 32px;border-radius:10px;text-decoration:none;transition:background .15s}
+.btn-home:hover{background:#177bb0}
+
+.legal{text-align:center;font-size:12px;color:#9ca3af;padding:0 16px 28px}
+.legal a{color:#9ca3af}
+
+@media (max-width:480px){
+  h1{font-size:22px}
+  .wrap{padding:20px 12px 36px}
+  .card-head{padding:28px 20px 4px}
+  .nocharge,.promise{margin-left:16px;margin-right:16px}
+  .steps{padding:24px 16px 4px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="brand" href="https://poolplus.app">Pool<span>Plus</span></a>
+  <a class="phone" href="tel:7542034376">📞 (754) 203-4376</a>
+</div>
+
+<div class="wrap">
+  <div class="card">
+
+    <div class="card-head">
+      <div class="check">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#10b981"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h1>Your request is confirmed!</h1>
+      <p class="sub">We've received your booking and your card was securely saved. Here's exactly what happens next.</p>
+    </div>
+
+    <div class="nocharge">
+      <strong>💳 You will NOT be charged today.</strong>
+      <span>Payment is only processed <b>after your service is completed</b> and you give the GO.</span>
+    </div>
+
+    <div class="promise">
+      <div class="ico">⚡</div>
+      <div>
+        <strong>Same-day assignment</strong>
+        <span>Your technician will be assigned as soon as possible — today. You'll get their name by email and text before the visit.</span>
+      </div>
+    </div>
+
+    <div class="steps">
+      <h2>What happens next</h2>
+
+      <div class="step">
+        <div class="dot done">✓</div>
+        <div class="step-body">
+          <strong>Request received</strong>
+          <span>Your booking is in our system and our team has been notified.</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="dot now">2</div>
+        <div class="step-body">
+          <strong>Technician assigned <span class="badge">Today</span></strong>
+          <span>We match you with the best available pool pro in your area, ASAP.</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="dot next">3</div>
+        <div class="step-body">
+          <strong>You give the GO</strong>
+          <span>Your tech arrives, evaluates your pool, and you approve before any work begins.</span>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="dot next">4</div>
+        <div class="step-body">
+          <strong>Service completed — then you pay</strong>
+          <span>Payment is processed only after the job is done, with photo proof of the work.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-foot">
+      <p>Questions? Call us at <a class="contact" href="tel:7542034376">(754) 203-4376</a> or email <a class="contact" href="mailto:contact@poolplus.com">contact@poolplus.com</a></p>
+      <a class="btn-home" href="https://poolplus.app">Back to home</a>
+    </div>
+
+  </div>
+</div>
+
+<div class="legal">PoolPlus — a service by TotalPlan Services LLC · Fully insured · IPSSA member</div>
+
+</body>
+</html>
