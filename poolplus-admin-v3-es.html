@@ -1225,6 +1225,7 @@ function renderBookings(){
       ${b.notes?`<div style="font-size:12px;color:var(--muted);margin-top:8px;border-top:1px solid var(--border);padding-top:8px">📝 ${b.notes}</div>`:''}
     </div>`).join('');
 }
+const GHL_WEBHOOK_TECH_ASSIGNED='https://services.leadconnectorhq.com/hooks/Q9902WErnxzPxpByDd3j/webhook-trigger/61830d4c-196a-4fdf-adb3-6899ae3f5daa';
 async function assignTech(id){
   const sel=document.getElementById('tech-'+id);
   const tech=sel?sel.value:'';
@@ -1232,7 +1233,29 @@ async function assignTech(id){
   if(!confirm('¿Asignar a '+tech+' a esta reserva?'))return;
   const {error}=await sb.from('booking_requests').update({assigned_technician:tech,assigned_at:new Date().toISOString(),status:'assigned'}).eq('id',id);
   if(error){alert('Error al asignar: '+error.message);return;}
-  showToast('👷 '+tech+' asignado');
+  // Notificar al cliente por email vía GHL (workflow "Tecnico asignado")
+  const bk=(typeof BOOKINGS!=='undefined'&&BOOKINGS||[]).find(b=>b.id===id);
+  if(bk&&bk.email){
+    try{
+      await fetch(GHL_WEBHOOK_TECH_ASSIGNED,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          customer_name:bk.full_name||'PoolPlus Customer',
+          customer_email:bk.email,
+          technician_name:tech,
+          service_name:bk.service_label||bk.service_type||'Pool Service',
+          service_address:[bk.address,bk.city,bk.zip].filter(Boolean).join(', ')||'On file',
+          scheduled_date:bk.service_date||'Same-day'
+        })
+      });
+      showToast('👷 '+tech+' asignado · 📧 Cliente notificado');
+    }catch(e){
+      showToast('👷 '+tech+' asignado · ⚠️ Email no enviado');
+    }
+  }else{
+    showToast('👷 '+tech+' asignado (sin email de cliente)');
+  }
   loadBookings();
 }
 </script>
