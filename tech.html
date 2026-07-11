@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PoolPlus · Técnicos</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{
+    --navy:#0B2545;
+    --aqua:#19A7CE;
+    --aqua-deep:#146C94;
+    --foam:#EAF6FB;
+    --white:#FFFFFF;
+    --ink:#12263A;
+    --gray:#5E7185;
+    --line:#D7E6EF;
+    --green:#1F9D55;
+    --red:#D64545;
+    --amber:#B7791F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--foam);
+    color:var(--ink);
+    font-size:16px;
+  }
+  .hidden{display:none!important}
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{
+    min-height:100vh;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    padding:24px;
+    background:linear-gradient(180deg,var(--navy) 0%,var(--aqua-deep) 100%);
+  }
+  .login-card{
+    background:var(--white);
+    width:100%;max-width:400px;
+    border-radius:16px;
+    padding:32px 24px;
+    box-shadow:0 12px 32px rgba(11,37,69,.35);
+  }
+  .brand{
+    text-align:center;margin-bottom:24px;
+  }
+  .brand h1{
+    font-size:28px;font-weight:800;color:var(--navy);letter-spacing:-.5px;
+  }
+  .brand h1 span{color:var(--aqua)}
+  .brand p{color:var(--gray);font-size:14px;margin-top:4px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--gray);margin:14px 0 6px}
+  input[type=email],input[type=password]{
+    width:100%;padding:14px;font-size:16px;
+    border:1.5px solid var(--line);border-radius:10px;
+    outline:none;background:#FBFDFE;
+  }
+  input:focus{border-color:var(--aqua)}
+  .btn{
+    display:block;width:100%;
+    padding:16px;margin-top:22px;
+    font-size:16px;font-weight:700;
+    border:none;border-radius:12px;cursor:pointer;
+    background:var(--aqua);color:var(--white);
+  }
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.55}
+  .btn-secondary{background:transparent;color:var(--gray);font-weight:600;padding:12px;margin-top:8px}
+  .error-msg{
+    background:#FDECEC;color:var(--red);
+    border:1px solid #F5C6C6;border-radius:10px;
+    padding:12px;font-size:14px;margin-top:16px;text-align:center;
+  }
+
+  /* ---------- APP ---------- */
+  #appScreen{min-height:100vh;display:flex;flex-direction:column}
+  header{
+    background:var(--navy);color:var(--white);
+    padding:16px 20px;
+    display:flex;justify-content:space-between;align-items:center;
+    position:sticky;top:0;z-index:10;
+  }
+  header .logo{font-weight:800;font-size:18px}
+  header .logo span{color:var(--aqua)}
+  header .who{font-size:13px;opacity:.85;text-align:right}
+  header .who b{display:block;font-size:15px;opacity:1}
+  main{flex:1;padding:16px;max-width:560px;margin:0 auto;width:100%}
+  .section-title{
+    font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--aqua-deep);margin:18px 4px 10px;
+  }
+  .empty{
+    text-align:center;color:var(--gray);font-size:15px;
+    padding:36px 16px;background:var(--white);
+    border:1.5px dashed var(--line);border-radius:14px;
+  }
+  .card{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;margin-bottom:12px;
+    box-shadow:0 2px 8px rgba(11,37,69,.06);
+  }
+  .card .service{
+    font-size:17px;font-weight:800;color:var(--navy);
+  }
+  .badge{
+    display:inline-block;font-size:11px;font-weight:700;
+    padding:3px 10px;border-radius:999px;margin-bottom:8px;
+  }
+  .badge.today{background:#FFF4DE;color:var(--amber)}
+  .badge.date{background:var(--foam);color:var(--aqua-deep)}
+  .badge.done{background:#E6F7EC;color:var(--green)}
+  .row{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:14.5px;color:var(--ink)}
+  .row .ic{width:20px;flex:none;text-align:center}
+  .row a{color:var(--aqua-deep);text-decoration:none;font-weight:600}
+  .notes{
+    margin-top:10px;background:var(--foam);
+    border-radius:10px;padding:10px 12px;
+    font-size:13.5px;color:var(--gray);
+  }
+  .btn-complete{
+    margin-top:14px;background:var(--green);
+  }
+  .done-photo{
+    margin-top:10px;width:100%;border-radius:10px;display:block;
+  }
+  .loading{
+    text-align:center;padding:40px;color:var(--gray);font-size:15px;
+  }
+
+  /* ---------- MODAL ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(11,37,69,.6);
+    display:flex;align-items:flex-end;justify-content:center;z-index:50;
+  }
+  @media(min-width:480px){.overlay{align-items:center}}
+  .modal{
+    background:var(--white);width:100%;max-width:440px;
+    border-radius:20px 20px 0 0;padding:24px 20px 28px;
+  }
+  @media(min-width:480px){.modal{border-radius:20px}}
+  .modal h3{font-size:19px;color:var(--navy);margin-bottom:6px}
+  .modal p{font-size:14.5px;color:var(--gray);line-height:1.5}
+  .photo-slot{
+    margin-top:16px;
+    border:2px dashed var(--aqua);
+    border-radius:14px;
+    background:var(--foam);
+    padding:26px 16px;
+    text-align:center;color:var(--aqua-deep);
+    font-weight:700;font-size:15px;cursor:pointer;
+  }
+  .photo-slot small{display:block;font-weight:500;color:var(--gray);margin-top:4px;font-size:12.5px}
+  #photoPreview{width:100%;border-radius:14px;margin-top:16px;display:block}
+  .confirm-box{
+    margin-top:16px;background:#FFF9E8;border:1px solid #F3DFA6;
+    border-radius:12px;padding:14px;font-size:14px;color:#7A5C12;
+  }
+  .modal .btn{margin-top:16px}
+  .progress{
+    text-align:center;font-size:14px;color:var(--aqua-deep);
+    font-weight:600;margin-top:14px;
+  }
+
+  /* ---------- TOAST ---------- */
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--navy);color:var(--white);
+    padding:14px 22px;border-radius:999px;
+    font-size:14.5px;font-weight:600;
+    box-shadow:0 8px 24px rgba(11,37,69,.4);
+    z-index:99;max-width:90vw;text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand">
+      <h1>POOL<span>PLUS</span></h1>
+      <p>Portal de técnicos</p>
+    </div>
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="username" placeholder="tu@email.com">
+    <label for="password">Contraseña</label>
+    <input type="password" id="password" autocomplete="current-password" placeholder="••••••••">
+    <div id="loginError" class="error-msg hidden"></div>
+    <button class="btn" id="loginBtn" onclick="login()">Entrar</button>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="appScreen" class="hidden">
+  <header>
+    <div class="logo">POOL<span>PLUS</span></div>
+    <div class="who">
+      <b id="techName">—</b>
+      <a href="#" onclick="logout();return false" style="color:#9DCFE3;font-size:12px">Cerrar sesión</a>
+    </div>
+  </header>
+  <main>
+    <div id="listLoading" class="loading">Cargando tus servicios…</div>
+
+    <div id="pendingWrap" class="hidden">
+      <div class="section-title">📋 Servicios pendientes</div>
+      <div id="pendingList"></div>
+    </div>
+
+    <div id="doneWrap" class="hidden">
+      <div class="section-title">✅ Completados recientes</div>
+      <div id="doneList"></div>
+    </div>
+  </main>
+</div>
+
+<!-- ================= MODAL COMPLETAR ================= -->
+<div id="completeOverlay" class="overlay hidden">
+  <div class="modal">
+    <div id="modalStep1">
+      <h3>Completar servicio</h3>
+      <p id="modalServiceInfo"></p>
+      <div class="photo-slot" onclick="document.getElementById('photoInput').click()">
+        📸 Tomar foto de la piscina terminada
+        <small>Obligatoria. Sin foto no se puede completar el servicio.</small>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" onchange="photoSelected(event)">
+      <img id="photoPreview" class="hidden" alt="Foto del servicio">
+      <button class="btn btn-complete hidden" id="toConfirmBtn" onclick="showConfirm()">Continuar</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>
+
+    <div id="modalStep2" class="hidden">
+      <h3>¿Confirmas que el servicio está completo?</h3>
+      <div class="confirm-box">
+        ⚠️ Al confirmar, se le cobrará al cliente y se le enviará esta foto.
+        Esta acción <b>no se puede deshacer</b>. Revisa que la foto muestre
+        claramente la piscina limpia.
+      </div>
+      <button class="btn btn-complete" id="confirmBtn" onclick="submitComplete()">Sí, completar y cobrar</button>
+      <button class="btn btn-secondary" id="backBtn" onclick="backToStep1()">Volver</button>
+      <div id="submitProgress" class="progress hidden"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<script>
+const SUPABASE_URL = 'https://sshbhmfsjyddynfwerpk.supabase.co';
+const ANON_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
+
+let session = null;      // {access_token, expires_at}
+let techName = null;
+let currentBooking = null;   // booking being completed
+let compressedBase64 = null; // photo ready to send
+
+/* ---------------- SESSION ---------------- */
+function saveSession(s){
+  try{ localStorage.setItem('pp_tech_session', JSON.stringify(s)); }catch(e){}
+}
+function loadSession(){
+  try{
+    const raw = localStorage.getItem('pp_tech_session');
+    if(!raw) return null;
+    const s = JSON.parse(raw);
+    if(!s.access_token || !s.expires_at) return null;
+    if(Date.now()/1000 > s.expires_at - 60) return null; // expirada
+    return s;
+  }catch(e){ return null; }
+}
+function logout(){
+  try{ localStorage.removeItem('pp_tech_session'); }catch(e){}
+  session = null;
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+/* ---------------- LOGIN ---------------- */
+async function login(){
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const errBox = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  errBox.classList.add('hidden');
+
+  if(!email || !password){
+    errBox.textContent = 'Escribe tu email y contraseña.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  try{
+    const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':ANON_KEY},
+      body: JSON.stringify({email, password})
+    });
+    const data = await res.json();
+    if(!res.ok || !data.access_token){
+      errBox.textContent = 'Email o contraseña incorrectos.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+    session = {
+      access_token: data.access_token,
+      expires_at: Math.floor(Date.now()/1000) + (data.expires_in || 3600)
+    };
+    saveSession(session);
+    await enterApp();
+  }catch(e){
+    errBox.textContent = 'Error de conexión. Intenta de nuevo.';
+    errBox.classList.remove('hidden');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+}
+
+/* ---------------- APP ---------------- */
+async function enterApp(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('appScreen').classList.remove('hidden');
+
+  // Nombre del técnico (RLS: solo ve su propia fila)
+  try{
+    const res = await fetch(SUPABASE_URL + '/rest/v1/technicians?select=name',{
+      headers: authHeaders()
+    });
+    const rows = await res.json();
+    if(Array.isArray(rows) && rows.length){
+      techName = rows[0].name;
+      document.getElementById('techName').textContent = '👷 ' + techName;
+    }else{
+      document.getElementById('techName').textContent = 'Sin registro';
+      showToast('⚠️ Tu usuario no está registrado como técnico. Contacta al administrador.');
+    }
+  }catch(e){}
+
+  await loadBookings();
+}
+
+function authHeaders(){
+  return {
+    'apikey': ANON_KEY,
+    'Authorization': 'Bearer ' + session.access_token,
+    'Content-Type': 'application/json'
+  };
+}
+
+async function loadBookings(){
+  const loading = document.getElementById('listLoading');
+  loading.classList.remove('hidden');
+  try{
+    const url = SUPABASE_URL + '/rest/v1/booking_requests'
+      + '?select=id,full_name,phone,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at'
+      + '&order=service_date.asc.nullslast';
+    const res = await fetch(url,{headers: authHeaders()});
+    if(res.status === 401){ logout(); return; }
+    const rows = await res.json();
+    renderBookings(Array.isArray(rows) ? rows : []);
+  }catch(e){
+    showToast('Error cargando servicios. Desliza para reintentar.');
+  }finally{
+    loading.classList.add('hidden');
+  }
+}
+
+function fmtDate(d){
+  if(!d) return 'Fecha por confirmar';
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('es-US',{weekday:'short', month:'short', day:'numeric'});
+}
+function isToday(d){
+  if(!d) return false;
+  const today = new Date();
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toDateString() === today.toDateString();
+}
+function esc(t){
+  return (t||'').toString().replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+}
+function mapsLink(b){
+  const q = encodeURIComponent([b.address, b.city, b.zip || b.zip_code].filter(Boolean).join(', '));
+  return 'https://maps.google.com/?q=' + q;
+}
+
+function renderBookings(rows){
+  const pending = rows.filter(r => !r.completed_at);
+  const done = rows.filter(r => r.completed_at)
+                   .sort((a,b)=> new Date(b.completed_at) - new Date(a.completed_at))
+                   .slice(0,5);
+
+  const pWrap = document.getElementById('pendingWrap');
+  const dWrap = document.getElementById('doneWrap');
+  const pList = document.getElementById('pendingList');
+  const dList = document.getElementById('doneList');
+  pList.innerHTML = ''; dList.innerHTML = '';
+
+  pWrap.classList.remove('hidden');
+  if(!pending.length){
+    pList.innerHTML = '<div class="empty">No tienes servicios pendientes.<br>Cuando te asignen uno, aparecerá aquí. 💧</div>';
+  }else{
+    pending.forEach(b=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML =
+        (isToday(b.service_date)
+          ? '<span class="badge today">HOY</span>'
+          : '<span class="badge date">'+esc(fmtDate(b.service_date))+'</span>')
+        + '<div class="service">'+esc(b.service_label || b.service || 'Servicio')+'</div>'
+        + '<div class="row"><span class="ic">👤</span><span>'+esc(b.full_name)+'</span></div>'
+        + '<div class="row"><span class="ic">📍</span><a href="'+mapsLink(b)+'" target="_blank" rel="noopener">'
+            + esc([b.address,b.city].filter(Boolean).join(', ')) + '</a></div>'
+        + (b.phone ? '<div class="row"><span class="ic">📞</span><a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a></div>' : '')
+        + (b.notes ? '<div class="notes">📝 '+esc(b.notes)+'</div>' : '');
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-complete';
+      btn.textContent = '✅ Servicio completado';
+      btn.onclick = ()=> openComplete(b);
+      card.appendChild(btn);
+      pList.appendChild(card);
+    });
+  }
+
+  if(done.length){
+    dWrap.classList.remove('hidden');
+    done.forEach(b=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML =
+        '<span class="badge done">COMPLETADO</span>'
+        + '<div class="service">'+esc(b.service_label || b.service || 'Servicio')+'</div>'
+        + '<div class="row"><span class="ic">👤</span><span>'+esc(b.full_name)+'</span></div>'
+        + '<div class="row"><span class="ic">📍</span><span>'+esc([b.address,b.city].filter(Boolean).join(', '))+'</span></div>'
+        + (b.photo_url ? '<img class="done-photo" src="'+esc(b.photo_url)+'" alt="Foto del servicio">' : '');
+      dList.appendChild(card);
+    });
+  }else{
+    dWrap.classList.add('hidden');
+  }
+}
+
+/* ---------------- COMPLETAR SERVICIO ---------------- */
+function openComplete(b){
+  currentBooking = b;
+  compressedBase64 = null;
+  document.getElementById('modalServiceInfo').textContent =
+    (b.service_label || b.service || 'Servicio') + ' · ' + (b.full_name || '') + ' · ' + [b.address, b.city].filter(Boolean).join(', ');
+  document.getElementById('photoPreview').classList.add('hidden');
+  document.getElementById('toConfirmBtn').classList.add('hidden');
+  document.getElementById('photoInput').value = '';
+  document.getElementById('modalStep1').classList.remove('hidden');
+  document.getElementById('modalStep2').classList.add('hidden');
+  document.getElementById('completeOverlay').classList.remove('hidden');
+}
+function closeModal(){
+  document.getElementById('completeOverlay').classList.add('hidden');
+  currentBooking = null; compressedBase64 = null;
+}
+function backToStep1(){
+  document.getElementById('modalStep2').classList.add('hidden');
+  document.getElementById('modalStep1').classList.remove('hidden');
+}
+function showConfirm(){
+  if(!compressedBase64){ showToast('Primero toma la foto. 📸'); return; }
+  document.getElementById('modalStep1').classList.add('hidden');
+  document.getElementById('modalStep2').classList.remove('hidden');
+  document.getElementById('submitProgress').classList.add('hidden');
+  document.getElementById('confirmBtn').disabled = false;
+}
+
+function photoSelected(ev){
+  const file = ev.target.files && ev.target.files[0];
+  if(!file) return;
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = e => { img.src = e.target.result; };
+  img.onload = () => {
+    // Comprimir a máx 1280px lado mayor, JPEG 80%
+    const MAX = 1280;
+    let w = img.width, h = img.height;
+    if(w > h && w > MAX){ h = Math.round(h * MAX / w); w = MAX; }
+    else if(h >= w && h > MAX){ w = Math.round(w * MAX / h); h = MAX; }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    compressedBase64 = dataUrl.split(',')[1]; // solo el base64, sin prefijo
+    const prev = document.getElementById('photoPreview');
+    prev.src = dataUrl;
+    prev.classList.remove('hidden');
+    document.getElementById('toConfirmBtn').classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitComplete(){
+  if(!currentBooking || !compressedBase64) return;
+  const btn = document.getElementById('confirmBtn');
+  const back = document.getElementById('backBtn');
+  const prog = document.getElementById('submitProgress');
+  btn.disabled = true; back.disabled = true;
+  prog.textContent = '⏳ Enviando foto y procesando cobro…';
+  prog.classList.remove('hidden');
+
+  try{
+    const res = await fetch(SUPABASE_URL + '/functions/v1/complete-service',{
+      method:'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        booking_id: currentBooking.id,
+        photo_base64: compressedBase64
+      })
+    });
+    const data = await res.json().catch(()=> ({}));
+    if(res.ok){
+      closeModal();
+      showToast('✅ Servicio completado. El cliente fue notificado.');
+      await loadBookings();
+    }else{
+      prog.textContent = '❌ ' + (data.error || 'No se pudo completar. Intenta de nuevo o avisa al administrador.');
+      btn.disabled = false; back.disabled = false;
+    }
+  }catch(e){
+    prog.textContent = '❌ Error de conexión. Revisa tu señal e intenta de nuevo.';
+    btn.disabled = false; back.disabled = false;
+  }
+}
+
+/* ---------------- TOAST ---------------- */
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.add('hidden'), 4500);
+}
+
+/* ---------------- INIT ---------------- */
+(function init(){
+  const s = loadSession();
+  if(s){ session = s; enterApp(); }
+})();
+
+// Enter para login
+document.getElementById('password').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') login();
+});
+</script>
+</body>
+</html>
