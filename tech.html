@@ -124,6 +124,27 @@
   .btn-complete{
     margin-top:14px;background:var(--green);
   }
+  .row.pay span{color:var(--green);font-size:15px}
+  .row.pay b{font-size:16px}
+  .quick{
+    display:flex;gap:8px;margin-top:8px;
+  }
+  .quick-select{
+    flex:1;padding:12px;font-size:14px;
+    border:1.5px solid var(--line);border-radius:10px;
+    background:var(--foam);color:var(--aqua-deep);
+    font-weight:600;outline:none;min-width:0;
+  }
+  .btn-quick{
+    width:auto;flex:none;margin-top:0;
+    padding:12px 18px;font-size:14px;
+    background:var(--aqua-deep);
+  }
+  .btn-reject{
+    background:transparent;color:var(--red);
+    font-weight:600;font-size:13.5px;
+    padding:10px;margin-top:6px;
+  }
   .done-photo{
     margin-top:10px;width:100%;border-radius:10px;display:block;
   }
@@ -356,7 +377,7 @@ async function loadBookings(){
   loading.classList.remove('hidden');
   try{
     const url = SUPABASE_URL + '/rest/v1/booking_requests'
-      + '?select=id,full_name,phone,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at'
+      + '?select=id,full_name,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at,price'
       + '&order=service_date.asc.nullslast';
     const res = await fetch(url,{headers: authHeaders()});
     if(res.status === 401){ logout(); return; }
@@ -415,13 +436,45 @@ function renderBookings(rows){
         + '<div class="row"><span class="ic">👤</span><span>'+esc(b.full_name)+'</span></div>'
         + '<div class="row"><span class="ic">📍</span><a href="'+mapsLink(b)+'" target="_blank" rel="noopener">'
             + esc([b.address,b.city].filter(Boolean).join(', ')) + '</a></div>'
-        + (b.phone ? '<div class="row"><span class="ic">📞</span><a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a></div>' : '')
+        + (b.price ? '<div class="row pay"><span class="ic">💵</span><span>Tu pago: <b>$'+(Number(b.price)*0.70).toFixed(2)+'</b> <small>(70%)</small></span></div>' : '')
         + (b.notes ? '<div class="notes">📝 '+esc(b.notes)+'</div>' : '');
       const btn = document.createElement('button');
       btn.className = 'btn btn-complete';
       btn.textContent = '✅ Servicio completado';
       btn.onclick = ()=> openComplete(b);
       card.appendChild(btn);
+
+      // --- Reportar novedad (dropdown) ---
+      const quick = document.createElement('div');
+      quick.className = 'quick';
+      const sel = document.createElement('select');
+      sel.className = 'quick-select';
+      [
+        ['','📣 Reportar novedad…'],
+        ['💧 Recomiendo rellenar agua de la piscina','💧 Rellenar agua de la piscina'],
+        ['🔧 El equipo necesita revisión','🔧 Equipo necesita revisión'],
+        ['🔄 El filtro necesita ser reemplazado','🔄 Filtro necesita ser reemplazado'],
+        ['🧪 Química desbalanceada, apliqué tratamiento','🧪 Química desbalanceada, apliqué tratamiento'],
+        ['🔒 No pude entrar: puerta bloqueada / con candado','🔒 Puerta bloqueada, no pude entrar'],
+        ['OTRO','✍️ Otro (escribir a PoolPlus)']
+      ].forEach(([val,label])=>{
+        const o = document.createElement('option');
+        o.value = val; o.textContent = label;
+        sel.appendChild(o);
+      });
+      const sendBtn = document.createElement('button');
+      sendBtn.className = 'btn btn-quick';
+      sendBtn.textContent = 'Enviar';
+      sendBtn.onclick = ()=> sendQuickMessage(b, sel.value);
+      quick.appendChild(sel);
+      quick.appendChild(sendBtn);
+      card.appendChild(quick);
+
+      const rej = document.createElement('button');
+      rej.className = 'btn btn-reject';
+      rej.textContent = '⚠️ No puedo tomar este servicio';
+      rej.onclick = ()=> rejectService(b);
+      card.appendChild(rej);
       pList.appendChild(card);
     });
   }
@@ -442,6 +495,31 @@ function renderBookings(rows){
   }else{
     dWrap.classList.add('hidden');
   }
+}
+
+/* ---------------- RECHAZAR SERVICIO (v1: WhatsApp al admin) ---------------- */
+const ADMIN_WHATSAPP = '19548174832'; // número del admin PoolPlus
+function sendQuickMessage(b, novedad){
+  if(!novedad){ showToast('Selecciona una novedad primero. 📣'); return; }
+  const base = '📣 POOLPLUS - Novedad en servicio:\n'
+    + '• Servicio: ' + (b.service_label || b.service || '') + '\n'
+    + '• Cliente: ' + (b.full_name || '') + '\n'
+    + '• Dirección: ' + [b.address, b.city].filter(Boolean).join(', ') + '\n'
+    + '• Técnico: ' + (techName || '') + '\n';
+  const msg = novedad === 'OTRO'
+    ? base + 'Mensaje: '
+    : base + '• Novedad: ' + novedad;
+  window.open('https://wa.me/' + ADMIN_WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
+}
+function rejectService(b){
+  const msg = '⚠️ POOLPLUS - No puedo tomar este servicio:\n'
+    + '• Servicio: ' + (b.service_label || b.service || '') + '\n'
+    + '• Cliente: ' + (b.full_name || '') + '\n'
+    + '• Dirección: ' + [b.address, b.city].filter(Boolean).join(', ') + '\n'
+    + '• Fecha: ' + (b.service_date || 'por confirmar') + '\n'
+    + '• Técnico: ' + (techName || '') + '\n'
+    + 'Motivo: ';
+  window.open('https://wa.me/' + ADMIN_WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
 }
 
 /* ---------------- COMPLETAR SERVICIO ---------------- */
