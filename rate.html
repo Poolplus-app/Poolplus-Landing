@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rate your service · PoolPlus</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--pool:#0ea5e9;--deep:#0369a1;--bg:#0a0f1e;--surface:#111827;--border:#1f2b45;--text:#e2e8f0;--muted:#94a3b8;--gold:#fbbf24}
+body{background:radial-gradient(1200px 600px at 50% -10%,#0d2036 0%,var(--bg) 60%);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px 28px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.logo{font-weight:800;font-size:22px;letter-spacing:-.5px;margin-bottom:6px}
+.logo .p1{color:#fff}.logo .p2{color:var(--pool)}
+.drop{font-size:34px;line-height:1;margin-bottom:10px}
+h1{font-size:22px;font-weight:700;margin:10px 0 6px}
+p.sub{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:26px}
+.stars{display:flex;justify-content:center;gap:10px;margin-bottom:26px}
+.star{font-size:44px;line-height:1;cursor:pointer;background:none;border:none;color:#334155;transition:transform .12s ease,color .12s ease;padding:4px}
+.star.lit{color:var(--gold)}
+.star:active{transform:scale(1.15)}
+.star:focus-visible{outline:2px solid var(--pool);outline-offset:4px;border-radius:8px}
+.hint{color:var(--muted);font-size:13px;min-height:18px;margin-bottom:22px}
+.btn{width:100%;padding:15px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--pool),var(--deep));color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;opacity:.4;pointer-events:none;transition:opacity .15s ease}
+.btn.ready{opacity:1;pointer-events:auto}
+.btn:disabled{opacity:.4;pointer-events:none}
+.state{display:none}
+.state.show{display:block}
+.big{font-size:56px;margin-bottom:14px}
+.err{color:#fca5a5;font-size:14px;margin-top:14px;display:none}
+@media(prefers-reduced-motion:reduce){.star{transition:none}}
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div id="view-rate" class="state show">
+    <div class="drop">💧</div>
+    <div class="logo"><span class="p1">Pool</span><span class="p2">plus</span></div>
+    <h1>How did we do?</h1>
+    <p class="sub">Your feedback keeps our service sparkling. Tap a star to rate your pool service.</p>
+    <div class="stars" role="radiogroup" aria-label="Rate from 1 to 5 stars">
+      <button class="star" data-v="1" aria-label="1 star">★</button>
+      <button class="star" data-v="2" aria-label="2 stars">★</button>
+      <button class="star" data-v="3" aria-label="3 stars">★</button>
+      <button class="star" data-v="4" aria-label="4 stars">★</button>
+      <button class="star" data-v="5" aria-label="5 stars">★</button>
+    </div>
+    <div class="hint" id="hint">&nbsp;</div>
+    <button class="btn" id="send">Send rating</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div id="view-done" class="state">
+    <div class="big">🙌</div>
+    <h1>Thank you!</h1>
+    <p class="sub" id="done-msg">Your rating has been received. We appreciate you trusting PoolPlus with your pool!</p>
+  </div>
+
+  <div id="view-invalid" class="state">
+    <div class="big">🔍</div>
+    <h1>Link not valid</h1>
+    <p class="sub">This rating link is missing its booking reference. Please use the link from your service email, or reply to that email and we'll help you out.</p>
+  </div>
+
+</div>
+<script>
+const SUPA_URL='https://sshbhmfsjyddynfwerpk.supabase.co';
+const SUPA_KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
+const labels={1:'😞 Not good — we want to make it right',2:'😕 Below expectations',3:'🙂 It was okay',4:'😃 Great service!',5:'🤩 Excellent — sparkling clean!'};
+const params=new URLSearchParams(location.search);
+const booking=params.get('booking');
+let chosen=0;
+
+function show(id){document.querySelectorAll('.state').forEach(s=>s.classList.remove('show'));document.getElementById(id).classList.add('show');}
+
+if(!booking){show('view-invalid');}
+
+const stars=[...document.querySelectorAll('.star')];
+const sendBtn=document.getElementById('send');
+stars.forEach(st=>{
+  st.addEventListener('click',()=>{
+    chosen=parseInt(st.dataset.v,10);
+    stars.forEach(s=>s.classList.toggle('lit',parseInt(s.dataset.v,10)<=chosen));
+    document.getElementById('hint').textContent=labels[chosen];
+    sendBtn.classList.add('ready');
+  });
+});
+
+sendBtn.addEventListener('click',async()=>{
+  if(!chosen||!booking)return;
+  sendBtn.disabled=true;sendBtn.textContent='Sending…';
+  document.getElementById('err').style.display='none';
+  try{
+    const res=await fetch(SUPA_URL+'/rest/v1/ratings',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'},
+      body:JSON.stringify({booking_id:booking,rating:chosen})
+    });
+    if(res.status===201){
+      if(chosen<=3){document.getElementById('done-msg').textContent='Thank you for your honesty. Our team will review your service and reach out to make things right.';}
+      show('view-done');
+    }else if(res.status===409){
+      document.getElementById('done-msg').textContent='This service was already rated — thank you! Your original rating is safely recorded.';
+      show('view-done');
+    }else{
+      throw new Error('HTTP '+res.status);
+    }
+  }catch(e){
+    sendBtn.disabled=false;sendBtn.textContent='Send rating';
+    const err=document.getElementById('err');
+    err.textContent='Something went wrong sending your rating. Please try again.';
+    err.style.display='block';
+  }
+});
+</script>
+</body>
+</html>
