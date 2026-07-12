@@ -355,7 +355,8 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         </div>
         <div class="input-field" style="margin-bottom:16px;">
           
-          <input type="date" id="bkDate"/>
+          <input type="date" id="bkDate" onchange="validateServiceDate(this)"/>
+          <div id="bkDateNote" style="font-size:11.5px;color:#9ca3af;margin-top:4px;">Service days: Monday – Saturday</div>
         </div>
         <div style="font-size:13px;font-weight:500;color:var(--muted);margin-bottom:10px;">Tell us about your request</div>
         <textarea style="width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:13px;font-family:inherit;color:var(--text);outline:none;resize:none;height:72px;" placeholder="Any notes for the technician..." id="bkNotes"></textarea>
@@ -513,15 +514,15 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
           </div>
           <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
             <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">Medium</div>
-            <div style="font-size:16px;font-weight:800;color:#1e90c8;"><span id="tile-maintenance-medium">$135</span><span style="font-size:11px;font-weight:500;">/mo</span></div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;"><span id="tile-maintenance-medium">$125</span><span style="font-size:11px;font-weight:500;">/mo</span></div>
           </div>
           <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
             <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">Large</div>
-            <div style="font-size:16px;font-weight:800;color:#1e90c8;"><span id="tile-maintenance-large">$160</span><span style="font-size:11px;font-weight:500;">/mo</span></div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;"><span id="tile-maintenance-large">$165</span><span style="font-size:11px;font-weight:500;">/mo</span></div>
           </div>
           <div style="background:white;border-radius:8px;padding:10px;text-align:center;border:1px solid #dde8f4;">
             <div style="font-size:10px;color:#9ca3af;margin-bottom:2px;">XL</div>
-            <div style="font-size:16px;font-weight:800;color:#1e90c8;"><span id="tile-maintenance-xl">$220</span><span style="font-size:11px;font-weight:500;">/mo</span></div>
+            <div style="font-size:16px;font-weight:800;color:#1e90c8;"><span id="tile-maintenance-xl">Quote</span><span style="font-size:11px;font-weight:500;">/mo</span></div>
           </div>
         </div>
       </div>
@@ -567,48 +568,59 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
 </section>
 
 <!-- PLANS -->
-<section class="section" style="background:#fff;">
+<section class="section" id="plans" style="background:#fff;">
   <div class="section-inner">
     <h2 class="section-title">Weekly Maintenance Plan</h2>
-    <p style="font-size:15px;color:var(--muted);margin-top:8px;">One simple plan · Weekly visits · Monthly billing · Cancel anytime</p>
+    <p style="font-size:15px;color:var(--muted);margin-top:8px;">Weekly visits · 50 weeks/year · Basic chemicals included · Photo proof after every visit</p>
 
-    <!-- PROMO BANNER -->
-    <div style="background:linear-gradient(135deg,#0b1120,#1e3a5f);border-radius:14px;padding:20px 28px;margin:24px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-      <div>
-        <div style="font-size:11px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">🎉 Launch Offer</div>
-        <div style="font-size:20px;font-weight:800;color:white;">First month 50% off</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:4px;">No contracts · No commitment · Cancel anytime</div>
-      </div>
-      <a href="#" onclick="document.querySelector('.hero').scrollIntoView({behavior:'smooth'});return false;" style="background:#1e90c8;color:white;padding:13px 28px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap;">Claim Offer →</a>
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;">
-      <div style="background:white;border:1.5px solid #dde8f4;border-radius:14px;padding:20px;text-align:center;">
-        <div style="font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:10px;">Small Pool</div>
-        <div style="font-size:11px;color:#10b981;font-weight:700;margin-bottom:6px;">First month $55</div>
-        <div style="font-size:32px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;">$110</div>
-        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">/month after</div>
-      </div>
-      <div style="background:white;border:1.5px solid #dde8f4;border-radius:14px;padding:20px;text-align:center;">
-        <div style="font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:10px;">Medium Pool</div>
-        <div style="font-size:11px;color:#10b981;font-weight:700;margin-bottom:6px;">First month $67</div>
-        <div style="font-size:32px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;">$135</div>
-        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">/month after</div>
-      </div>
-      <div style="background:#0b1120;border:1.5px solid #1e90c8;border-radius:14px;padding:20px;text-align:center;">
-        <div style="font-size:11px;font-weight:700;color:#1e90c8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Most Common</div>
-        <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.5);margin-bottom:10px;">Large Pool</div>
-        <div style="font-size:11px;color:#34d399;font-weight:700;margin-bottom:6px;">First month $80</div>
-        <div style="font-size:32px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;">$160</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">/month after</div>
-      </div>
-      <div style="background:white;border:1.5px solid #dde8f4;border-radius:14px;padding:20px;text-align:center;">
-        <div style="font-size:13px;font-weight:600;color:#9ca3af;margin-bottom:10px;">XL Pool</div>
-        <div style="font-size:11px;color:#10b981;font-weight:700;margin-bottom:6px;">First month $110</div>
-        <div style="font-size:32px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;">$220</div>
-        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">/month after</div>
+    <!-- Toggle Monthly / Annual -->
+    <div style="display:flex;justify-content:center;margin:26px 0 6px;">
+      <div style="background:#eef4fa;border-radius:50px;padding:5px;display:inline-flex;gap:4px;">
+        <button id="togMonthly" onclick="setPlanMode('regular')" style="border:none;cursor:pointer;padding:10px 22px;border-radius:50px;font-size:13.5px;font-weight:700;background:transparent;color:#64748b;">Month to month</button>
+        <button id="togAnnual" onclick="setPlanMode('annual')" style="border:none;cursor:pointer;padding:10px 22px;border-radius:50px;font-size:13.5px;font-weight:700;background:#1e90c8;color:#fff;">Annual price <span style="font-weight:600;opacity:.85;">· save up to $288/yr</span></button>
       </div>
     </div>
+    <p id="planModeNote" style="text-align:center;font-size:12.5px;color:#10b981;font-weight:600;margin-bottom:22px;">🎉 Annual commitment price — pay month to month, keep the discount all year</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px;">
+
+      <div style="background:white;border:1.5px solid #dde8f4;border-radius:14px;padding:22px 20px;text-align:center;">
+        <div style="font-size:14px;font-weight:700;color:#0b1120;">Small Pool</div>
+        <div style="font-size:11.5px;color:#9ca3af;margin:2px 0 12px;">up to 12,000 gallons</div>
+        <div class="plan-anchor" data-size="small" style="font-size:14px;color:#9ca3af;text-decoration:line-through;height:18px;">$125</div>
+        <div style="font-size:34px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;"><span class="plan-price" data-size="small">$110</span></div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">/month</div>
+        <button onclick="openSubscribe('small')" style="margin-top:14px;width:100%;background:#1e90c8;color:#fff;border:none;border-radius:50px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">Subscribe</button>
+      </div>
+
+      <div style="background:#0b1120;border:1.5px solid #1e90c8;border-radius:14px;padding:22px 20px;text-align:center;position:relative;">
+        <div style="font-size:10.5px;font-weight:700;color:#1e90c8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Most Common</div>
+        <div style="font-size:14px;font-weight:700;color:#fff;">Medium Pool</div>
+        <div style="font-size:11.5px;color:rgba(255,255,255,.45);margin:2px 0 12px;">12,000 – 20,000 gallons</div>
+        <div class="plan-anchor" data-size="medium" style="font-size:14px;color:rgba(255,255,255,.4);text-decoration:line-through;height:18px;">$149</div>
+        <div style="font-size:34px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;"><span class="plan-price" data-size="medium">$125</span></div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;">/month</div>
+        <button onclick="openSubscribe('medium')" style="margin-top:14px;width:100%;background:#1e90c8;color:#fff;border:none;border-radius:50px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">Subscribe</button>
+      </div>
+
+      <div style="background:white;border:1.5px solid #dde8f4;border-radius:14px;padding:22px 20px;text-align:center;">
+        <div style="font-size:14px;font-weight:700;color:#0b1120;">Large Pool</div>
+        <div style="font-size:11.5px;color:#9ca3af;margin:2px 0 12px;">20,000 – 30,000 gallons</div>
+        <div class="plan-anchor" data-size="large" style="font-size:14px;color:#9ca3af;text-decoration:line-through;height:18px;">$185</div>
+        <div style="font-size:34px;font-weight:800;color:#1e90c8;letter-spacing:-.02em;"><span class="plan-price" data-size="large">$165</span></div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">/month</div>
+        <button onclick="openSubscribe('large')" style="margin-top:14px;width:100%;background:#1e90c8;color:#fff;border:none;border-radius:50px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;">Subscribe</button>
+      </div>
+
+      <div style="background:#f8fafc;border:1.5px dashed #cbd8e6;border-radius:14px;padding:22px 20px;text-align:center;display:flex;flex-direction:column;justify-content:center;">
+        <div style="font-size:14px;font-weight:700;color:#0b1120;">XL &amp; Commercial</div>
+        <div style="font-size:11.5px;color:#9ca3af;margin:2px 0 12px;">30,000+ gallons · HOAs · Hotels</div>
+        <div style="font-size:22px;font-weight:800;color:#0b1120;">Custom quote</div>
+        <a href="https://wa.me/19548174832?text=Hi%20PoolPlus!%20I%27d%20like%20a%20quote%20for%20an%20XL%20or%20commercial%20pool." target="_blank" rel="noopener" style="margin-top:14px;display:block;background:#0b1120;color:#fff;border-radius:50px;padding:12px;font-size:14px;font-weight:700;text-decoration:none;">Contact us</a>
+      </div>
+    </div>
+
+    <p style="font-size:11.5px;color:#9ca3af;line-height:1.6;margin-bottom:26px;">Annual price requires a 12-month commitment, billed monthly. Cancel anytime with 30-day notice, directly from your account — no calls needed; annual plans canceled early simply continue at the regular monthly rate. Need to pause temporarily (remodeling, travel)? Just contact us — we'll suspend your plan and hold your spot. Salt, calcium, stabilizer and specialty treatments billed separately when needed. Service provided 50 of 52 weeks per year.</p>
 
     <div style="background:white;border:1.5px solid #dde8f4;border-radius:14px;padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Weekly visit by experienced tech</div>
@@ -616,12 +628,127 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
       <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Chemical testing &amp; balance</div>
       <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Filter check &amp; equipment inspection</div>
       <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Photo proof after every visit</div>
-      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Digital service report</div>
-      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Real-time tracking via app</div>
-      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Cancel anytime — no contracts</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Rate your technician every time</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Automatic billing — no invoices, no late fees</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:10px;"><span style="font-weight:800;color:#1e90c8;">✓</span> Flexible — cancel with 30-day notice</div>
     </div>
   </div>
 </section>
+
+<!-- MODAL SUSCRIPCIÓN -->
+<div id="subOverlay" style="display:none;position:fixed;inset:0;background:rgba(11,17,32,.65);z-index:200;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:18px;max-width:440px;width:100%;padding:26px 22px;max-height:92vh;overflow:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#0b1120;" id="subPlanTitle">Subscribe</div>
+        <div style="font-size:13px;color:#64748b;margin-top:2px;" id="subPlanDetail"></div>
+      </div>
+      <button onclick="closeSubscribe()" style="border:none;background:#f1f5f9;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer;">✕</button>
+    </div>
+    <div style="margin-top:16px;display:grid;gap:10px;">
+      <input id="subName" placeholder="Full name *" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
+      <input id="subEmail" type="email" placeholder="Email *" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
+      <input id="subPhone" type="tel" placeholder="Phone" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
+      <input id="subAddress" placeholder="Pool address *" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:10px;">
+        <input id="subCity" placeholder="City" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
+        <input id="subZip" placeholder="ZIP *" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
+      </div>
+      <textarea id="subNotes" placeholder="Notes (gate code, dogs, spa, etc.)" rows="2" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;resize:vertical;"></textarea>
+      <div style="background:#EAF6FB;border-radius:10px;padding:11px 13px;font-size:12.5px;color:#146C94;line-height:1.5;">📅 Weekly service runs <b>Monday – Friday</b>. We'll call you within 24 hours to schedule your service day.</div>
+    </div>
+    <div id="subError" style="display:none;background:#fdecec;color:#d64545;border:1px solid #f5c6c6;border-radius:10px;padding:11px;font-size:13.5px;margin-top:12px;"></div>
+    <button id="subGoBtn" onclick="submitSubscription()" style="margin-top:16px;width:100%;background:#1e90c8;color:#fff;border:none;border-radius:50px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;">Continue to secure payment →</button>
+    <p style="font-size:11px;color:#9ca3af;text-align:center;margin-top:10px;">Your first month is charged today. Renews monthly, automatically. Powered by Stripe 🔒</p>
+  </div>
+</div>
+
+<script>
+// ── Suscripciones: precios y flujo ──
+var SUB_PRICES={
+  regular:{small:125,medium:149,large:185},
+  annual:{small:110,medium:125,large:165}
+};
+var PLAN_MODE='annual';
+var SUB_SIZE=null;
+
+function setPlanMode(mode){
+  PLAN_MODE=mode;
+  var tM=document.getElementById('togMonthly'), tA=document.getElementById('togAnnual');
+  var note=document.getElementById('planModeNote');
+  if(mode==='annual'){
+    tA.style.background='#1e90c8'; tA.style.color='#fff';
+    tM.style.background='transparent'; tM.style.color='#64748b';
+    note.style.visibility='visible';
+  }else{
+    tM.style.background='#1e90c8'; tM.style.color='#fff';
+    tA.style.background='transparent'; tA.style.color='#64748b';
+    note.style.visibility='hidden';
+  }
+  ['small','medium','large'].forEach(function(s){
+    var p=document.querySelector('.plan-price[data-size="'+s+'"]');
+    var a=document.querySelector('.plan-anchor[data-size="'+s+'"]');
+    if(p){p.textContent='$'+SUB_PRICES[mode][s];}
+    if(a){a.style.visibility=(mode==='annual')?'visible':'hidden';}
+  });
+}
+
+function openSubscribe(size){
+  SUB_SIZE=size;
+  var label=size.charAt(0).toUpperCase()+size.slice(1);
+  var price=SUB_PRICES[PLAN_MODE][size];
+  document.getElementById('subPlanTitle').textContent='Weekly Maintenance — '+label;
+  document.getElementById('subPlanDetail').textContent='$'+price+'/month · '+(PLAN_MODE==='annual'?'Annual commitment price':'Month to month')+' · first month charged today';
+  document.getElementById('subError').style.display='none';
+  var ov=document.getElementById('subOverlay');
+  ov.style.display='flex';
+}
+function closeSubscribe(){document.getElementById('subOverlay').style.display='none';}
+
+async function submitSubscription(){
+  var name=document.getElementById('subName').value.trim();
+  var email=document.getElementById('subEmail').value.trim();
+  var phone=document.getElementById('subPhone').value.trim();
+  var address=document.getElementById('subAddress').value.trim();
+  var city=document.getElementById('subCity').value.trim();
+  var zip=document.getElementById('subZip').value.trim();
+  var notes=document.getElementById('subNotes').value.trim();
+  var err=document.getElementById('subError');
+  err.style.display='none';
+  if(!name||!email||!address||!zip){
+    err.textContent='Please fill in your name, email, pool address and ZIP.';
+    err.style.display='block';return;
+  }
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+    err.textContent='Please enter a valid email address.';
+    err.style.display='block';return;
+  }
+  var btn=document.getElementById('subGoBtn');
+  btn.disabled=true;btn.textContent='Preparing secure checkout…';
+  try{
+    var r=await fetch('https://sshbhmfsjyddynfwerpk.supabase.co/functions/v1/create-subscription',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi'
+      },
+      body:JSON.stringify({
+        plan_key:SUB_SIZE+'_'+PLAN_MODE,
+        full_name:name,email:email,phone:phone,
+        address:address,city:city,zip:zip,notes:notes
+      })
+    });
+    var d=await r.json();
+    if(r.ok&&d.url){window.location.href=d.url;return;}
+    err.textContent=d.error||'Something went wrong. Please try again.';
+    err.style.display='block';
+  }catch(e){
+    err.textContent='Connection error. Please try again.';
+    err.style.display='block';
+  }
+  btn.disabled=false;btn.textContent='Continue to secure payment →';
+}
+</script>
 
 <!-- PARTNERS -->
 <div class="partners">
@@ -759,13 +886,7 @@ var PRICES={
         PRICES[p.service_type][p.pool_size] = Number(p.price);
       });
       // Actualizar tiles visuales de mantenimiento
-      var sizes = ['small','medium','large','xl'];
-      sizes.forEach(function(s){
-        var el = document.getElementById('tile-maintenance-'+s);
-        if(el && PRICES.maintenance && PRICES.maintenance[s]){
-          el.textContent = '$'+PRICES.maintenance[s];
-        }
-      });
+      // Tiles de maintenance muestran el precio de suscripción ANUAL (fijo en SUB_PRICES), no la tabla de one-time
       // Actualizar tiles de servicios one-time (usar precio de pool "small" como referencia)
       var tileMap = {
         'tile-green-price':  {svc:'green',   size:'small', suffix:''},
@@ -812,6 +933,7 @@ function calcPrice(){
     return;
   }
   var price=PRICES[svc]&&PRICES[svc][size]?PRICES[svc][size]:149;
+  if(svc==="maintenance"&&window.SUB_PRICES&&SUB_PRICES.annual[size]){price=SUB_PRICES.annual[size];}
   var isRec=RECURRING.indexOf(svc)>-1;
   var sizeLabel=size.charAt(0).toUpperCase()+size.slice(1);
   svcEl.textContent=sizeLabel+" pool • "+(LABELS[svc]||svc);
@@ -821,6 +943,11 @@ function calcPrice(){
 }
 
 function goStep2(){
+  var svcSel=document.getElementById("serviceType").value;
+  if(svcSel==="maintenance"){
+    document.getElementById("plans").scrollIntoView({behavior:"smooth",block:"start"});
+    return;
+  }
   document.getElementById("step1").style.display="none";
   document.getElementById("step2").classList.add("active");
   document.getElementById("step3").classList.remove("active");
@@ -837,6 +964,17 @@ function goStep3(){
   document.getElementById("step3").classList.add("active");
 }
 var SCHED_TYPE="same-day";
+function validateServiceDate(inp){
+  if(!inp.value) return;
+  var d=new Date(inp.value+"T12:00:00");
+  if(d.getDay()===0){ // domingo
+    alert("We don't provide service on Sundays. Please choose Monday through Saturday.");
+    inp.value="";
+    return;
+  }
+  var note=document.getElementById("bkDateNote");
+  if(note){note.style.color="#9ca3af";}
+}
 function setSched(el,type){
   var tabs=document.querySelectorAll(".sched-tab");
   for(var i=0;i<tabs.length;i++){tabs[i].classList.remove("on");}
@@ -873,6 +1011,13 @@ async function submitBooking(){
   if(SCHED_TYPE==="scheduled" && !dateVal){
     alert("Please choose a date for your service.");
     return;
+  }
+  if(SCHED_TYPE==="scheduled" && dateVal){
+    var dd=new Date(dateVal+"T12:00:00");
+    if(dd.getDay()===0){
+      alert("We don't provide service on Sundays. Please choose Monday through Saturday.");
+      return;
+    }
   }
 
   var price=(PRICES[svc]&&PRICES[svc][size])?PRICES[svc][size]:null;
