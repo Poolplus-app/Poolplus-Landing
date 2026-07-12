@@ -140,6 +140,43 @@
     padding:12px 18px;font-size:14px;
     background:var(--aqua-deep);
   }
+  .pw-wrap{position:relative}
+  .pw-wrap input{padding-right:52px}
+  .eye-btn{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;font-size:20px;cursor:pointer;
+    padding:8px;line-height:1;
+  }
+  .forgot-link{
+    display:block;text-align:center;margin-top:14px;
+    color:var(--aqua-deep);font-size:13.5px;font-weight:600;
+    text-decoration:none;cursor:pointer;
+  }
+  .btn-nav{
+    background:var(--foam);color:var(--aqua-deep);
+    font-weight:700;font-size:14px;
+    padding:13px;margin-top:8px;
+    border:1.5px solid var(--line);
+  }
+  .partner-card{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--aqua-deep) 100%);
+    color:var(--white);border-radius:14px;
+    padding:18px;margin:22px 0 30px;
+  }
+  .partner-card h4{font-size:16px;margin-bottom:6px}
+  .partner-card p{font-size:13.5px;opacity:.92;line-height:1.55}
+  .partner-card .lvl{
+    display:inline-block;background:rgba(255,255,255,.16);
+    border-radius:999px;padding:4px 12px;font-size:12.5px;
+    font-weight:700;margin:8px 6px 0 0;
+  }
+  .partner-card .lvl.active{background:#F5B301;color:var(--navy)}
+  .partner-card a{
+    display:inline-block;margin-top:12px;
+    color:var(--navy);background:var(--white);
+    font-weight:700;font-size:13.5px;text-decoration:none;
+    padding:10px 16px;border-radius:10px;
+  }
   .btn-reject{
     background:transparent;color:var(--red);
     font-weight:600;font-size:13.5px;
@@ -209,9 +246,13 @@
     <label for="email">Email</label>
     <input type="email" id="email" autocomplete="username" placeholder="tu@email.com">
     <label for="password">Contraseña</label>
-    <input type="password" id="password" autocomplete="current-password" placeholder="••••••••">
+    <div class="pw-wrap">
+      <input type="password" id="password" autocomplete="current-password" placeholder="••••••••">
+      <button type="button" class="eye-btn" id="eyeBtn" onclick="togglePassword()" aria-label="Ver contraseña">👁️</button>
+    </div>
     <div id="loginError" class="error-msg hidden"></div>
     <button class="btn" id="loginBtn" onclick="login()">Entrar</button>
+    <a class="forgot-link" onclick="forgotPassword()">¿Olvidaste tu contraseña?</a>
   </div>
 </div>
 
@@ -235,6 +276,18 @@
     <div id="doneWrap" class="hidden">
       <div class="section-title">✅ Completados recientes</div>
       <div id="doneList"></div>
+    </div>
+
+    <div class="partner-card">
+      <h4>🤝 Mi Partnership</h4>
+      <p>Tu nivel sube con tus <b>piscinas recurrentes activas</b> (planes mensuales). Más piscinas = mayor porcentaje para ti.</p>
+      <div>
+        <span class="lvl active">⭐ Starter · 70% · 1–19</span>
+        <span class="lvl">Pro · 75% · 20–59</span>
+        <span class="lvl">Elite · 80% · 60–100</span>
+      </div>
+      <p style="margin-top:10px">🏆 Los primeros 10 técnicos en los hitos de crecimiento reciben <b>participación en las utilidades</b> de PoolPlus.</p>
+      <a href="/partnership.html" target="_blank" rel="noopener">📄 Ver programa completo</a>
     </div>
   </main>
 </div>
@@ -302,6 +355,38 @@ function logout(){
 }
 
 /* ---------------- LOGIN ---------------- */
+function togglePassword(){
+  const inp = document.getElementById('password');
+  const btn = document.getElementById('eyeBtn');
+  if(inp.type === 'password'){ inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁️'; }
+}
+
+async function forgotPassword(){
+  const email = document.getElementById('email').value.trim();
+  const errBox = document.getElementById('loginError');
+  errBox.classList.add('hidden');
+  if(!email){
+    errBox.textContent = 'Escribe tu email arriba y vuelve a tocar "¿Olvidaste tu contraseña?".';
+    errBox.classList.remove('hidden');
+    return;
+  }
+  try{
+    await fetch(SUPABASE_URL + '/auth/v1/recover?redirect_to=' + encodeURIComponent('https://poolplus.app/reset.html'),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':ANON_KEY},
+      body: JSON.stringify({email})
+    });
+  }catch(e){}
+  // Siempre el mismo mensaje (no revelamos si el email existe)
+  errBox.style.background = '#E6F7EC';
+  errBox.style.color = '#1F9D55';
+  errBox.style.borderColor = '#BDE5C8';
+  errBox.textContent = '📬 Si ese email está registrado, te enviamos un enlace para crear una nueva contraseña. Revisa tu correo.';
+  errBox.classList.remove('hidden');
+}
+
+
 async function login(){
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
@@ -444,6 +529,12 @@ function renderBookings(rows){
       btn.onclick = ()=> openComplete(b);
       card.appendChild(btn);
 
+      const nav = document.createElement('button');
+      nav.className = 'btn btn-nav';
+      nav.textContent = '🧭 Cómo llegar';
+      nav.onclick = ()=> window.open(mapsLink(b), '_blank');
+      card.appendChild(nav);
+
       // --- Reportar novedad (dropdown) ---
       const quick = document.createElement('div');
       quick.className = 'quick';
@@ -451,7 +542,7 @@ function renderBookings(rows){
       sel.className = 'quick-select';
       [
         ['','📣 Reportar novedad…'],
-        ['💧 Recomiendo rellenar agua de la piscina','💧 Rellenar agua de la piscina'],
+        ['💧 Recomiendo agregar agua a la piscina','💧 Agregar agua a la piscina'],
         ['🔧 El equipo necesita revisión','🔧 Equipo necesita revisión'],
         ['🔄 El filtro necesita ser reemplazado','🔄 Filtro necesita ser reemplazado'],
         ['🧪 Química desbalanceada, apliqué tratamiento','🧪 Química desbalanceada, apliqué tratamiento'],
@@ -506,9 +597,10 @@ function sendQuickMessage(b, novedad){
     + '• Cliente: ' + (b.full_name || '') + '\n'
     + '• Dirección: ' + [b.address, b.city].filter(Boolean).join(', ') + '\n'
     + '• Técnico: ' + (techName || '') + '\n';
-  const msg = novedad === 'OTRO'
+  const msg = (novedad === 'OTRO'
     ? base + 'Mensaje: '
-    : base + '• Novedad: ' + novedad;
+    : base + '• Novedad: ' + novedad)
+    + '\n\n📎 Si aplica, adjunta aquí una foto de la novedad.';
   window.open('https://wa.me/' + ADMIN_WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
 }
 function rejectService(b){

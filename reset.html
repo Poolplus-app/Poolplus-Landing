@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoolPlus · Nueva contraseña</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{--navy:#0B2545;--aqua:#19A7CE;--aqua-deep:#146C94;--foam:#EAF6FB;--ink:#12263A;--gray:#5E7185;--line:#D7E6EF;--green:#1F9D55;--red:#D64545}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,var(--navy) 0%,var(--aqua-deep) 100%);
+    padding:24px;color:var(--ink);
+  }
+  .card{background:#fff;width:100%;max-width:400px;border-radius:16px;padding:32px 24px;box-shadow:0 12px 32px rgba(11,37,69,.35)}
+  h1{font-size:24px;font-weight:800;color:var(--navy);text-align:center;letter-spacing:-.5px}
+  h1 span{color:var(--aqua)}
+  .sub{color:var(--gray);font-size:14px;text-align:center;margin:6px 0 20px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--gray);margin:14px 0 6px}
+  .pw-wrap{position:relative}
+  input{width:100%;padding:14px;padding-right:52px;font-size:16px;border:1.5px solid var(--line);border-radius:10px;outline:none;background:#FBFDFE}
+  input:focus{border-color:var(--aqua)}
+  .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:20px;cursor:pointer;padding:8px}
+  .btn{display:block;width:100%;padding:16px;margin-top:22px;font-size:16px;font-weight:700;border:none;border-radius:12px;cursor:pointer;background:var(--aqua);color:#fff}
+  .btn:disabled{opacity:.55}
+  .msg{border-radius:10px;padding:12px;font-size:14px;margin-top:16px;text-align:center;display:none}
+  .msg.err{background:#FDECEC;color:var(--red);border:1px solid #F5C6C6}
+  .msg.ok{background:#E6F7EC;color:var(--green);border:1px solid #BDE5C8}
+  a.go{display:block;text-align:center;margin-top:14px;color:var(--aqua-deep);font-weight:700;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>POOL<span>PLUS</span></h1>
+  <p class="sub">Crea tu nueva contraseña</p>
+
+  <label for="pw1">Nueva contraseña</label>
+  <div class="pw-wrap">
+    <input type="password" id="pw1" placeholder="Mínimo 6 caracteres">
+    <button type="button" class="eye" onclick="toggle('pw1',this)">👁️</button>
+  </div>
+
+  <label for="pw2">Repite la contraseña</label>
+  <div class="pw-wrap">
+    <input type="password" id="pw2" placeholder="Igual a la anterior">
+    <button type="button" class="eye" onclick="toggle('pw2',this)">👁️</button>
+  </div>
+
+  <button class="btn" id="saveBtn" onclick="save()">Guardar contraseña</button>
+  <div id="msg" class="msg"></div>
+  <a class="go" id="goLogin" href="/tech.html" style="display:none">→ Ir a iniciar sesión</a>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://sshbhmfsjyddynfwerpk.supabase.co';
+const ANON_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
+
+// El enlace de recuperación llega con el token en el hash: #access_token=...&type=recovery
+function getToken(){
+  const h = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  return h.get('access_token');
+}
+function toggle(id, btn){
+  const i = document.getElementById(id);
+  if(i.type === 'password'){ i.type='text'; btn.textContent='🙈'; }
+  else { i.type='password'; btn.textContent='👁️'; }
+}
+function show(kind, text){
+  const m = document.getElementById('msg');
+  m.className = 'msg ' + kind;
+  m.textContent = text;
+  m.style.display = 'block';
+}
+
+const token = getToken();
+if(!token){
+  show('err','Este enlace no es válido o ya expiró. Pide uno nuevo desde "¿Olvidaste tu contraseña?" en la página de inicio de sesión.');
+  document.getElementById('saveBtn').disabled = true;
+}
+
+async function save(){
+  const p1 = document.getElementById('pw1').value;
+  const p2 = document.getElementById('pw2').value;
+  if(p1.length < 6){ show('err','La contraseña debe tener al menos 6 caracteres.'); return; }
+  if(p1 !== p2){ show('err','Las contraseñas no coinciden.'); return; }
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try{
+    const res = await fetch(SUPABASE_URL + '/auth/v1/user',{
+      method:'PUT',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey': ANON_KEY,
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({password: p1})
+    });
+    if(res.ok){
+      show('ok','✅ Contraseña actualizada. Ya puedes iniciar sesión.');
+      document.getElementById('goLogin').style.display = 'block';
+      btn.style.display = 'none';
+    }else{
+      const d = await res.json().catch(()=> ({}));
+      show('err', d.msg || d.message || 'No se pudo actualizar. El enlace pudo haber expirado — pide uno nuevo.');
+      btn.disabled = false; btn.textContent = 'Guardar contraseña';
+    }
+  }catch(e){
+    show('err','Error de conexión. Intenta de nuevo.');
+    btn.disabled = false; btn.textContent = 'Guardar contraseña';
+  }
+}
+</script>
+</body>
+</html>
