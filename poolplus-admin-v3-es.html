@@ -123,6 +123,7 @@ select option{background:#1a2235;}
   </div>
   <button class="nav-btn active" onclick="goTab('dashboard',this)"><span>▦</span><span style="flex:1">Panel General</span></button>
   <button class="nav-btn" onclick="goTab('reservas',this)"><span>📋</span><span style="flex:1">Reservas</span><span class="nav-badge" id="badge-res" style="display:none"></span></button>
+  <button class="nav-btn" onclick="goTab('suscripciones',this)"><span>🔁</span><span style="flex:1">Suscripciones</span><span class="nav-badge" id="badge-subs" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('precios',this)"><span>💲</span><span style="flex:1">Precios y Promos</span></button>
   <button class="nav-btn" onclick="goTab('novedades',this)"><span>⚠️</span><span style="flex:1">Novedades</span><span class="nav-badge" id="badge-nov">2</span></button>
   <button class="nav-btn" onclick="goTab('techs',this)"><span>🔧</span><span style="flex:1">Técnicos</span><span class="nav-badge" id="badge-tech">2</span></button>
@@ -179,6 +180,20 @@ select option{background:#1a2235;}
     </div>
     <div class="card card-p">
       <div id="bookings-list"><p style="color:var(--muted);font-size:13px">Cargando reservas…</p></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-suscripciones">
+    <div class="page-title">Suscripciones</div>
+    <div class="page-sub">Planes Weekly Maintenance — llamada de bienvenida en 24h, día fijo, técnico fijo, visitas del mes</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-sm sub-filter active-f" data-f="pending" onclick="setSubFilter('pending',this)">🔴 Por llamar</button>
+      <button class="btn btn-sm sub-filter" data-f="active" onclick="setSubFilter('active',this)">🟢 Activas</button>
+      <button class="btn btn-sm sub-filter" data-f="all" onclick="setSubFilter('all',this)">Todas</button>
+      <button class="btn btn-sm" onclick="loadSubscriptions()" style="margin-left:auto">🔄 Actualizar</button>
+    </div>
+    <div class="card card-p">
+      <div id="subs-list"><p style="color:var(--muted);font-size:13px">Cargando suscripciones…</p></div>
     </div>
   </div>
 
@@ -1159,11 +1174,11 @@ async function checkAdminSession(){
   const {data:{session}}=await sb.auth.getSession();
   if(session){
     document.getElementById('admin-gate').style.display='none';
-    loadBookings();
+    loadBookings();loadSubscriptions();
   }
 }
 sb.auth.onAuthStateChange((_e,session)=>{
-  if(session){document.getElementById('admin-gate').style.display='none';loadBookings();}
+  if(session){document.getElementById('admin-gate').style.display='none';loadBookings();loadSubscriptions();}
 });
 checkAdminSession();
 
@@ -1178,6 +1193,147 @@ function setResFilter(f,btn){
   if(btn){btn.style.background='#0ea5e9';btn.style.color='#fff';}
   renderBookings();
 }
+// ── SUSCRIPCIONES ─────────────────────────────────────────────
+let SUBS=[], SUB_FILTER='pending', SUBVISITS={};
+const WD_NAMES={1:'Lunes',2:'Martes',3:'Miércoles',4:'Jueves',5:'Viernes'};
+
+async function loadSubscriptions(){
+  const el=document.getElementById('subs-list');
+  const {data,error}=await sb.from('subscriptions').select('*');
+  if(error){el.innerHTML='<p style="color:#ef4444;font-size:13px">Error cargando suscripciones: '+error.message+'<br>Si menciona permisos/RLS, ejecuta el SQL de instalación en Supabase.</p>';return;}
+  SUBS=(data||[]).sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+  // Visitas ya generadas por suscripción (próximas)
+  SUBVISITS={};
+  try{
+    const today=new Date().toISOString().slice(0,10);
+    const {data:vis}=await sb.from('booking_requests').select('subscription_id,service_date').not('subscription_id','is',null);
+    (vis||[]).forEach(v=>{
+      if(!v.subscription_id)return;
+      if(!SUBVISITS[v.subscription_id])SUBVISITS[v.subscription_id]={upcoming:0,total:0};
+      SUBVISITS[v.subscription_id].total++;
+      if(v.service_date&&v.service_date>=today)SUBVISITS[v.subscription_id].upcoming++;
+    });
+  }catch(e){}
+  const pend=SUBS.filter(s=>s.status==='active'&&!s.called_at).length;
+  const badge=document.getElementById('badge-subs');
+  if(badge){badge.textContent=pend;badge.style.display=pend>0?'':'none';}
+  renderSubs();
+}
+function setSubFilter(f,btn){
+  SUB_FILTER=f;
+  document.querySelectorAll('#page-suscripciones .sub-filter').forEach(b=>b.classList.remove('active-f'));
+  if(btn)btn.classList.add('active-f');
+  renderSubs();
+}
+function subCallDeadline(created){
+  try{
+    const d=new Date(created); d.setHours(d.getHours()+24);
+    const late=new Date()>d;
+    const txt=d.toLocaleString('es-US',{weekday:'short',hour:'numeric',minute:'2-digit'});
+    return late?`⏰ VENCIDA (era ${txt})`:`antes de ${txt}`;
+  }catch(e){return 'en 24h';}
+}
+function subBadge(s){
+  const pill=(label,color)=>`<span style="background:${color}20;color:${color};border:1px solid ${color}40;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700">${label}</span>`;
+  if(s.status==='canceled'||s.status==='cancelled')return pill('✖ Cancelada','#6b7280');
+  if(s.status==='past_due')return pill('⚠️ Pago fallido','#f59e0b');
+  if(s.status==='active'&&!s.called_at)return pill('🔴 LLAMAR '+subCallDeadline(s.created_at),'#ef4444');
+  if(s.status==='active'&&(!s.service_weekday||!s.assigned_technician))return pill('📌 Falta asignar día/técnico','#f59e0b');
+  if(s.status==='active')return pill('🟢 Activa','#10b981');
+  return pill(s.status||'—','#6b7280');
+}
+function renderSubs(){
+  const el=document.getElementById('subs-list');
+  let rows=SUBS;
+  if(SUB_FILTER==='pending')rows=rows.filter(s=>s.status==='active'&&(!s.called_at||!s.service_weekday||!s.assigned_technician));
+  if(SUB_FILTER==='active')rows=rows.filter(s=>s.status==='active');
+  if(!rows.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No hay suscripciones en esta categoría.</p>';return;}
+  el.innerHTML=rows.map(s=>{
+    const v=SUBVISITS[s.id]||{upcoming:0,total:0};
+    const planTxt=`${(s.pool_size||'—').toUpperCase()} · ${s.plan_type==='annual'?'Anual':'Mensual'} · $${s.monthly_price!=null?s.monthly_price:'—'}/mes`;
+    const canGenerate=s.status==='active'&&s.service_weekday&&s.assigned_technician;
+    return `
+    <div style="border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;${s.status==='active'&&!s.called_at?'border-color:#ef444460;background:#ef44440a':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:700;font-size:15px">${s.full_name||'—'} ${subBadge(s)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">📞 ${s.phone||'—'} · ✉️ ${s.email||'—'}</div>
+          <div style="font-size:12px;color:var(--muted)">📍 ${s.address||''} ${s.city||''} ${s.zip||''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:15px">${planTxt}</div>
+          <div style="font-size:11px;color:var(--muted)">Suscrita: ${fmtDate(s.created_at)}</div>
+          <div style="font-size:11px;color:${v.upcoming>0?'#10b981':'var(--muted)'}">${v.upcoming>0?`✓ ${v.upcoming} visitas próximas`:'Sin visitas generadas'}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;margin-top:12px;gap:8px;flex-wrap:wrap">
+        ${s.status==='active'&&!s.called_at?`<button class="btn btn-primary btn-sm" onclick="markCalled('${s.id}')">✓ Llamada hecha</button>`:''}
+        ${s.status==='active'?`
+          <select id="subday-${s.id}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:inherit">
+            <option value="">Día de servicio…</option>
+            ${[1,2,3,4,5].map(d=>`<option value="${d}" ${s.service_weekday===d?'selected':''}>${WD_NAMES[d]}</option>`).join('')}
+          </select>
+          <select id="subtech-${s.id}" style="padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:inherit">
+            <option value="">Técnico…</option>
+            ${RES_TECHS.map(t=>`<option ${s.assigned_technician===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+          <button class="btn btn-sm" onclick="saveSubAssign('${s.id}')">💾 Guardar</button>
+          <button class="btn btn-primary btn-sm" onclick="generateVisits('${s.id}')" ${canGenerate?'':'disabled style="opacity:.45;cursor:not-allowed"'} title="${canGenerate?'':'Primero guarda día y técnico'}">📅 Generar 4 visitas</button>
+        `:''}
+      </div>
+      ${s.notes?`<div style="font-size:12px;color:var(--muted);margin-top:8px;border-top:1px solid var(--border);padding-top:8px">📝 ${s.notes}</div>`:''}
+    </div>`;}).join('');
+}
+async function markCalled(id){
+  const {error}=await sb.from('subscriptions').update({called_at:new Date().toISOString()}).eq('id',id);
+  if(error){alert('Error: '+error.message);return;}
+  showToast('✓ Llamada de bienvenida registrada');
+  loadSubscriptions();
+}
+async function saveSubAssign(id){
+  const day=document.getElementById('subday-'+id).value;
+  const tech=document.getElementById('subtech-'+id).value;
+  if(!day||!tech){alert('Elige día de servicio Y técnico antes de guardar.');return;}
+  const {error}=await sb.from('subscriptions').update({service_weekday:parseInt(day),assigned_technician:tech}).eq('id',id);
+  if(error){alert('Error: '+error.message);return;}
+  showToast('💾 '+WD_NAMES[day]+' · '+tech+' asignados');
+  loadSubscriptions();
+}
+function nextWeekdayDates(weekday,count){
+  const out=[]; const d=new Date(); d.setDate(d.getDate()+1); // desde mañana
+  while(out.length<count){
+    if(d.getDay()===weekday)out.push(d.toISOString().slice(0,10));
+    d.setDate(d.getDate()+1);
+  }
+  return out;
+}
+async function generateVisits(id){
+  const s=SUBS.find(x=>x.id===id);
+  if(!s||!s.service_weekday||!s.assigned_technician){alert('Primero guarda día de servicio y técnico.');return;}
+  const v=SUBVISITS[id]||{upcoming:0};
+  if(v.upcoming>0&&!confirm('Esta suscripción ya tiene '+v.upcoming+' visitas próximas generadas. ¿Generar 4 MÁS de todas formas?'))return;
+  const dates=nextWeekdayDates(s.service_weekday,4);
+  if(!confirm('Se crearán 4 visitas semanales ('+WD_NAMES[s.service_weekday]+'): '+dates.join(', ')+' asignadas a '+s.assigned_technician+'. Estas visitas NO generan cobro (incluidas en el plan). ¿Continuar?'))return;
+  const rows=dates.map(d=>({
+    full_name:s.full_name, email:s.email, phone:s.phone,
+    address:s.address, city:s.city, zip:s.zip,
+    pool_size:s.pool_size,
+    service_label:'Weekly Maintenance — Plan',
+    booking_type:'plan_visit',
+    status:'assigned',
+    assigned_technician:s.assigned_technician,
+    assigned_at:new Date().toISOString(),
+    service_date:d,
+    subscription_id:s.id,
+    notes:'Visita incluida en plan '+(s.plan_type==='annual'?'anual':'mensual')+' — NO COBRAR (automático)'
+  }));
+  const {error}=await sb.from('booking_requests').insert(rows);
+  if(error){alert('Error creando visitas: '+error.message);return;}
+  showToast('📅 4 visitas creadas · '+s.full_name+' · '+WD_NAMES[s.service_weekday]);
+  loadSubscriptions();
+  if(typeof loadBookings==='function')loadBookings();
+}
+
 async function loadBookings(){
   const {data,error}=await sb.from('booking_requests').select('*');
   if(error){document.getElementById('bookings-list').innerHTML='<p style="color:#ef4444;font-size:13px">Error cargando reservas: '+error.message+'</p>';return;}
@@ -1256,7 +1412,7 @@ async function assignTech(id){
   }else{
     showToast('👷 '+tech+' asignado (sin email de cliente)');
   }
-  loadBookings();
+  loadBookings();loadSubscriptions();
 }
 </script>
 </body>
