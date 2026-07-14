@@ -1184,6 +1184,7 @@ checkAdminSession();
 
 /* ══════════ RESERVAS ══════════ */
 const RES_TECHS=["Renny Diaz","Christian Castillo","Carlos Rodriguez","David Acuña","Dianny Roman","Paolo Bentivegna","Oscar Carabaño","Luis Paz","Daniel"];
+const TECH_EMAILS={"Renny Diaz":"clearpooljds@gmail.com","Christian Castillo":"castillocris2530@gmail.com","Carlos Rodriguez":"carlos23rodriguez@hotmail.com","David Acuña":"clearvibeservice@gmail.com","Dianny Roman":"","Paolo Bentivegna":"giannben27@gmail.com","Oscar Carabaño":"ciber811@gmail.com","Luis Paz":"zuccaropaz@gmail.com","Daniel":"poolplusapp@gmail.com"};
 let RES_FILTER='new';
 let BOOKINGS=[];
 
@@ -1400,6 +1401,7 @@ async function assignTech(id){
           customer_name:bk.full_name||'PoolPlus Customer',
           customer_email:bk.email,
           technician_name:tech,
+          technician_email:TECH_EMAILS[tech]||'poolplusllcapp@gmail.com',
           service_name:bk.service_label||bk.service_type||'Pool Service',
           service_address:[bk.address,bk.city,bk.zip].filter(Boolean).join(', ')||'On file',
           scheduled_date:bk.service_date||'Same-day'
