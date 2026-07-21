@@ -747,7 +747,10 @@ async function submitSubscription(){
       })
     });
     var d=await r.json();
-    if(r.ok&&d.url){window.location.href=d.url;return;}
+    if(r.ok&&d.url){
+      try{sessionStorage.setItem("pp_sub_plan",SUB_SIZE+'_'+PLAN_MODE);}catch(e){}
+      window.location.href=d.url;return;
+    }
     err.textContent=d.error||'Something went wrong. Please try again.';
     err.style.display='block';
   }catch(e){
