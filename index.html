@@ -1113,6 +1113,8 @@ async function submitBooking(){
       });
       var ckData=await ck.json();
       if(ck.ok && ckData.url){
+        // Guardar datos para la conversión de Google Ads al volver de Stripe
+        try{sessionStorage.setItem("pp_conv",JSON.stringify({id:bookingId,value:price}));}catch(e){}
         window.location.href=ckData.url; // el cliente guarda su tarjeta en Stripe
         return;
       }
@@ -1138,6 +1140,19 @@ async function submitBooking(){
   var w=document.getElementById("widgetWrap");
   if(bk==="confirmed"){
     goStep3();
+    // Conversión Google Ads: Reserva PoolPlus (valor real + transaction_id anti-duplicados)
+    try{
+      var cv=JSON.parse(sessionStorage.getItem("pp_conv")||"null");
+      if(typeof gtag==="function"){
+        gtag('event','conversion',{
+          'send_to':'AW-18330463537/IZ8bCKfvstQcELHa0qRE',
+          'value':(cv&&Number(cv.value))||1.0,
+          'currency':'USD',
+          'transaction_id':(cv&&cv.id)||''
+        });
+      }
+      sessionStorage.removeItem("pp_conv");
+    }catch(e){}
     if(w)w.scrollIntoView({behavior:"smooth",block:"start"});
   }else if(bk==="cancelled"){
     if(w)w.scrollIntoView({behavior:"smooth",block:"start"});
