@@ -4,6 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Welcome to PoolPlus! · Subscription Confirmed</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18330463537"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18330463537');
+
+  // Conversión Google Ads: Suscripción PoolPlus
+  // Valor = mensualidad del plan (guardado por index.html antes del checkout)
+  // transaction_id = session_id de Stripe (evita conteo doble al recargar)
+  (function(){
+    try{
+      var precios={small_annual:110,small_regular:125,medium_annual:125,medium_regular:149,large_annual:165,large_regular:185};
+      var planKey=sessionStorage.getItem("pp_sub_plan")||"";
+      var valor=precios[planKey]||110;
+      var sid=new URLSearchParams(window.location.search).get("session_id")||"";
+      gtag('event','conversion',{
+        'send_to':'AW-18330463537/IZ8bCKfvstQcELHa0qRE',
+        'value':valor,
+        'currency':'USD',
+        'transaction_id':sid
+      });
+      sessionStorage.removeItem("pp_sub_plan");
+    }catch(e){}
+  })();
+</script>
 <style>
   :root{--navy:#0B2545;--aqua:#19A7CE;--aqua-deep:#146C94;--foam:#EAF6FB;--ink:#12263A;--gray:#5E7185;--line:#D7E6EF;--green:#1F9D55;--gold:#F5B301}
   *{box-sizing:border-box;margin:0;padding:0}
