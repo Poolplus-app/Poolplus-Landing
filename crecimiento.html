@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>PoolPlus — Crecimiento</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --azul:#0e7490; --azul-osc:#155e75; --azul-claro:#e0f2fe;
+    --verde:#16a34a; --amarillo:#d97706; --rojo:#dc2626;
+    --gris:#64748b; --fondo:#f1f5f9; --card:#ffffff; --borde:#e2e8f0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',system-ui,-apple-system,sans-serif;}
+  body{background:var(--fondo); color:#0f172a; min-height:100vh;}
+
+  /* ---------- Candado PIN ---------- */
+  #lockScreen{position:fixed; inset:0; background:linear-gradient(135deg,#0c4a6e,#155e75); display:flex; align-items:center; justify-content:center; z-index:1000;}
+  .lockBox{background:#fff; border-radius:16px; padding:36px 32px; width:90%; max-width:360px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .lockBox h1{font-size:20px; color:var(--azul-osc); margin-bottom:6px;}
+  .lockBox p{font-size:13px; color:var(--gris); margin-bottom:20px;}
+  .lockBox input{width:100%; padding:14px; font-size:22px; text-align:center; letter-spacing:8px; border:2px solid var(--borde); border-radius:10px; outline:none;}
+  .lockBox input:focus{border-color:var(--azul);}
+  .lockBox button{width:100%; margin-top:14px; padding:13px; font-size:15px; font-weight:600; color:#fff; background:var(--azul); border:none; border-radius:10px; cursor:pointer;}
+  .lockBox button:hover{background:var(--azul-osc);}
+  #lockError{color:var(--rojo); font-size:13px; margin-top:10px; display:none;}
+
+  /* ---------- Layout ---------- */
+  #app{display:none; max-width:1100px; margin:0 auto; padding:20px 16px 60px;}
+  header{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:20px;}
+  header h1{font-size:22px; color:var(--azul-osc);}
+  header .sub{font-size:13px; color:var(--gris);}
+  .btnSalir{padding:8px 14px; font-size:13px; background:#fff; border:1px solid var(--borde); border-radius:8px; cursor:pointer; color:var(--gris);}
+
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px;}
+  .card{background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:16px;}
+  .card .lbl{font-size:12px; color:var(--gris); text-transform:uppercase; letter-spacing:.5px;}
+  .card .val{font-size:26px; font-weight:700; margin-top:4px;}
+  .card .det{font-size:12px; color:var(--gris); margin-top:2px;}
+  .dot{display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px;}
+  .verde{background:var(--verde);} .amarillo{background:var(--amarillo);} .rojo{background:var(--rojo);} .grisD{background:#cbd5e1;}
+  .txtVerde{color:var(--verde);} .txtAmarillo{color:var(--amarillo);} .txtRojo{color:var(--rojo);}
+
+  .panel{background:var(--card); border:1px solid var(--borde); border-radius:12px; padding:20px; margin-bottom:20px;}
+  .panel h2{font-size:16px; color:var(--azul-osc); margin-bottom:14px;}
+  .chartWrap{position:relative; height:340px;}
+
+  /* ---------- Diagnóstico ---------- */
+  .diag{border-left:4px solid var(--azul); background:var(--azul-claro); border-radius:8px; padding:14px 16px; margin-bottom:10px; font-size:14px; line-height:1.5;}
+  .diag.warn{border-left-color:var(--amarillo); background:#fef3c7;}
+  .diag.bad{border-left-color:var(--rojo); background:#fee2e2;}
+  .diag.good{border-left-color:var(--verde); background:#dcfce7;}
+  .diag b{font-weight:700;}
+
+  /* ---------- Formulario Ads ---------- */
+  .formGrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; align-items:end;}
+  .formGrid label{font-size:12px; color:var(--gris); display:block; margin-bottom:4px;}
+  .formGrid input{width:100%; padding:10px; font-size:14px; border:1px solid var(--borde); border-radius:8px; outline:none;}
+  .formGrid input:focus{border-color:var(--azul);}
+  .btnGuardar{padding:11px 18px; font-size:14px; font-weight:600; color:#fff; background:var(--azul); border:none; border-radius:8px; cursor:pointer;}
+  .btnGuardar:hover{background:var(--azul-osc);}
+  #adsMsg{font-size:13px; margin-top:10px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th,td{padding:9px 8px; text-align:left; border-bottom:1px solid var(--borde);}
+  th{color:var(--gris); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.4px;}
+  tr:last-child td{border-bottom:none;}
+  .num{text-align:right;}
+  .fase{display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--azul-claro); color:var(--azul-osc); font-weight:600;}
+
+  @media(max-width:640px){
+    .chartWrap{height:260px;}
+    header h1{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ CANDADO PIN ============ -->
+<div id="lockScreen">
+  <div class="lockBox">
+    <h1>🔒 PoolPlus Crecimiento</h1>
+    <p>Ingresa el PIN de acceso</p>
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••••">
+    <button onclick="verificarPin()">Entrar</button>
+    <div id="lockError">PIN incorrecto. Intenta de nuevo.</div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <header>
+    <div>
+      <h1>📈 Crecimiento PoolPlus</h1>
+      <div class="sub">Plan $40,000 · Meta: 300 clientes (autofinanciamiento)</div>
+    </div>
+    <button class="btnSalir" onclick="salir()">Salir</button>
+  </header>
+
+  <!-- KPIs del mes -->
+  <div class="cards" id="kpiCards"></div>
+
+  <!-- Diagnóstico -->
+  <div class="panel">
+    <h2>🧭 Diagnóstico automático</h2>
+    <div id="diagBox"></div>
+  </div>
+
+  <!-- Gráfica -->
+  <div class="panel">
+    <h2>Clientes activos: plan vs realidad</h2>
+    <div class="chartWrap"><canvas id="chartActivos"></canvas></div>
+  </div>
+
+  <!-- Formulario Ads -->
+  <div class="panel">
+    <h2>➕ Registrar semana de Google Ads</h2>
+    <div class="formGrid">
+      <div><label>Desde</label><input type="date" id="fIni"></div>
+      <div><label>Hasta</label><input type="date" id="fFin"></div>
+      <div><label>Gasto (USD)</label><input type="number" id="fGasto" min="0" step="0.01" placeholder="0.00"></div>
+      <div><label>Leads</label><input type="number" id="fLeads" min="0" step="1" placeholder="0"></div>
+      <div><label>Notas (opcional)</label><input type="text" id="fNotas" placeholder=""></div>
+      <div><button class="btnGuardar" onclick="guardarAds()">Guardar</button></div>
+    </div>
+    <div id="adsMsg"></div>
+  </div>
+
+  <!-- Historial Ads -->
+  <div class="panel">
+    <h2>Historial de Ads</h2>
+    <div style="overflow-x:auto;"><table id="tablaAds">
+      <thead><tr><th>Desde</th><th>Hasta</th><th class="num">Gasto</th><th class="num">Leads</th><th class="num">CPA</th><th>Notas</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <!-- Tabla plan vs real -->
+  <div class="panel">
+    <h2>Plan mes a mes</h2>
+    <div style="overflow-x:auto;"><table id="tablaPlan">
+      <thead><tr><th>Mes</th><th>Fase</th><th class="num">Inversión plan</th><th class="num">Meta 40%</th><th class="num">Meta 30%</th><th class="num">Real</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</div>
+
+<script>
+/* ================================================
+   PoolPlus — Pestaña Crecimiento (Sesión 21)
+   Página independiente protegida por PIN (Supabase)
+   ================================================ */
+const SUPA_URL = 'https://sshbhmfsjyddynfwerpk.supabase.co';
+const SUPA_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
+
+let PIN = sessionStorage.getItem('growth_pin') || null;
+let planData = [], adsData = [], realesData = [];
+let chart = null;
+
+/* ---------- Helpers RPC ---------- */
+async function rpc(fn, args){
+  const r = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY},
+    body:JSON.stringify(args)
+  });
+  if(!r.ok) throw new Error('RPC '+fn+' → '+r.status);
+  return r.json();
+}
+
+/* ---------- PIN ---------- */
+async function verificarPin(){
+  const pin = document.getElementById('pinInput').value.trim();
+  if(!pin) return;
+  try{
+    const ok = await rpc('growth_check_pin',{p_pin:pin});
+    if(ok === true){
+      PIN = pin;
+      sessionStorage.setItem('growth_pin', pin);
+      entrar();
+    }else{
+      mostrarErrorPin();
+    }
+  }catch(e){ mostrarErrorPin(); }
+}
+function mostrarErrorPin(){
+  const el = document.getElementById('lockError');
+  el.style.display = 'block';
+  document.getElementById('pinInput').value = '';
+}
+function salir(){
+  sessionStorage.removeItem('growth_pin');
+  location.reload();
+}
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') verificarPin(); });
+
+/* ---------- Carga inicial ---------- */
+async function entrar(){
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  await cargarTodo();
+}
+async function cargarTodo(){
+  [planData, adsData, realesData] = await Promise.all([
+    rpc('growth_get_plan',{p_pin:PIN}),
+    rpc('growth_get_ads',{p_pin:PIN}),
+    rpc('growth_get_reales',{p_pin:PIN})
+  ]);
+  pintarKPIs();
+  pintarDiagnostico();
+  pintarGrafica();
+  pintarTablaAds();
+  pintarTablaPlan();
+}
+
+/* ---------- Utilidades ---------- */
+const fmt$ = n => '$'+Number(n).toLocaleString('en-US',{maximumFractionDigits:0});
+const fmt$c = n => '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const mesCorto = d => {
+  const [y,m] = d.split('-');
+  const n = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return n[parseInt(m)-1]+' '+y.slice(2);
+};
+function mesActualISO(){
+  const h = new Date();
+  return h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0')+'-01';
+}
+function adsDelMes(mesISO){
+  // suma entradas cuya fecha_inicio cae dentro del mes
+  const ini = new Date(mesISO+'T00:00:00');
+  const fin = new Date(ini); fin.setMonth(fin.getMonth()+1);
+  let gasto=0, leads=0;
+  adsData.forEach(a=>{
+    const f = new Date(a.fecha_inicio+'T00:00:00');
+    if(f>=ini && f<fin){ gasto+=Number(a.gasto); leads+=Number(a.leads); }
+  });
+  return {gasto, leads};
+}
+
+/* ---------- Métricas del mes actual ---------- */
+function metricasActuales(){
+  const mesISO = mesActualISO();
+  const plan = planData.find(p=>p.mes===mesISO) || null;
+  const real = realesData.find(r=>r.mes===mesISO) || {nuevos:0,cancelados:0,activos_fin_mes:0};
+  const realPrev = (()=>{
+    const i = realesData.findIndex(r=>r.mes===mesISO);
+    return i>0 ? realesData[i-1] : null;
+  })();
+  const ads = adsDelMes(mesISO);
+  const cpa = ads.leads>0 ? ads.gasto/ads.leads : null;
+  const conv = ads.leads>0 ? (Number(real.nuevos)/ads.leads)*100 : null;
+  const baseChurn = realPrev ? Number(realPrev.activos_fin_mes) : Number(real.activos_fin_mes);
+  const churn = baseChurn>0 ? (Number(real.cancelados)/baseChurn)*100 : null;
+  return {mesISO, plan, real, ads, cpa, conv, churn};
+}
+function semaforoCPA(cpa){ if(cpa===null) return ['grisD','—']; if(cpa<=60) return ['verde','En meta']; if(cpa<=80) return ['amarillo','Vigilar']; return ['rojo','Crítico']; }
+function semaforoConv(c){ if(c===null) return ['grisD','—']; if(c>=40) return ['verde','En meta']; if(c>=30) return ['amarillo','Vigilar']; return ['rojo','Crítico']; }
+function semaforoChurn(c){ if(c===null) return ['grisD','—']; if(c<=2.3) return ['verde','En meta']; if(c<=3.5) return ['amarillo','Vigilar']; return ['rojo','Crítico']; }
+
+/* ---------- KPIs ---------- */
+function pintarKPIs(){
+  const m = metricasActuales();
+  const meta40 = m.plan ? m.plan.activos_40 : '—';
+  const meta30 = m.plan ? m.plan.activos_30 : '—';
+  const [dCpa,tCpa] = semaforoCPA(m.cpa);
+  const [dConv,tConv] = semaforoConv(m.conv);
+  const [dChu,tChu] = semaforoChurn(m.churn);
+  const fase = m.plan ? m.plan.fase : '—';
+  document.getElementById('kpiCards').innerHTML = `
+    <div class="card"><div class="lbl">Clientes activos</div>
+      <div class="val">${m.real.activos_fin_mes}</div>
+      <div class="det">Meta mes: ${meta40} (40%) · ${meta30} (30%)</div></div>
+    <div class="card"><div class="lbl">Nuevos este mes</div>
+      <div class="val">${m.real.nuevos}</div>
+      <div class="det">Cancelados: ${m.real.cancelados}</div></div>
+    <div class="card"><div class="lbl">Gasto Ads mes</div>
+      <div class="val">${fmt$(m.ads.gasto)}</div>
+      <div class="det">Plan: ${m.plan?fmt$(m.plan.inversion_plan):'—'} · Leads: ${m.ads.leads}</div></div>
+    <div class="card"><div class="lbl">CPA</div>
+      <div class="val"><span class="dot ${dCpa}"></span>${m.cpa!==null?fmt$c(m.cpa):'—'}</div>
+      <div class="det">${tCpa} (meta ≤$60)</div></div>
+    <div class="card"><div class="lbl">Conversión</div>
+      <div class="val"><span class="dot ${dConv}"></span>${m.conv!==null?m.conv.toFixed(0)+'%':'—'}</div>
+      <div class="det">${tConv} (meta ≥40%)</div></div>
+    <div class="card"><div class="lbl">Churn</div>
+      <div class="val"><span class="dot ${dChu}"></span>${m.churn!==null?m.churn.toFixed(1)+'%':'—'}</div>
+      <div class="det">${tChu} (meta ≤2.3%)</div></div>
+    <div class="card"><div class="lbl">Fase actual</div>
+      <div class="val" style="font-size:18px; margin-top:8px;"><span class="fase">${fase}</span></div>
+      <div class="det">${proximoCheckpoint()}</div></div>
+  `;
+}
+function proximoCheckpoint(){
+  const cps = ['2026-10-31','2027-01-31','2027-04-30','2027-08-31','2028-01-31'];
+  const hoy = new Date().toISOString().slice(0,10);
+  const prox = cps.find(c=>c>=hoy);
+  if(!prox) return 'Checkpoints completados';
+  const [y,m,dd] = prox.split('-');
+  const n = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return 'Próximo checkpoint: fin '+n[parseInt(m)-1]+' '+y;
+}
+
+/* ---------- Motor de diagnóstico ---------- */
+function pintarDiagnostico(){
+  const m = metricasActuales();
+  const box = document.getElementById('diagBox');
+  const msgs = [];
+
+  // Sin datos de Ads aún
+  if(m.ads.leads===0 && m.ads.gasto===0){
+    msgs.push(['','Aún no hay datos de Google Ads este mes. Registra la primera semana con el formulario de abajo para activar el diagnóstico completo.']);
+  }
+
+  // Progreso vs metas
+  if(m.plan){
+    const act = Number(m.real.activos_fin_mes);
+    if(act >= m.plan.activos_40){
+      msgs.push(['good','<b>Vas adelante del plan.</b> Con '+act+' activos ya alcanzaste la meta de la curva 40% ('+m.plan.activos_40+') de este mes.']);
+    }else if(act >= m.plan.activos_30){
+      msgs.push(['','Vas entre las dos curvas: '+act+' activos (meta 30%: '+m.plan.activos_30+' · meta 40%: '+m.plan.activos_40+'). Escenario conservador cumplido, empuja conversión para acercarte a la curva base.']);
+    }else{
+      const falta40 = m.plan.activos_40-act, falta30 = m.plan.activos_30-act;
+      msgs.push(['warn','<b>Por debajo del plan.</b> Tienes '+act+' activos; faltan '+falta30+' para la curva conservadora (30%) y '+falta40+' para la base (40%). Regla del modelo: antes de subir pauta, revisa la máquina de conversión.']);
+    }
+  }
+
+  // CPA
+  if(m.cpa!==null){
+    if(m.cpa>80) msgs.push(['bad','<b>CPA crítico ('+fmt$c(m.cpa)+').</b> Muy por encima del objetivo de $60. Revisa keywords, concordancias y ciudades de peor rendimiento antes de gastar más. Cada lead te está costando '+fmt$c(m.cpa-60)+' de más.']);
+    else if(m.cpa>60) msgs.push(['warn','CPA en zona amarilla ('+fmt$c(m.cpa)+'). Aún manejable, pero optimiza anuncios y horarios antes de escalar presupuesto.']);
+    else msgs.push(['good','CPA saludable ('+fmt$c(m.cpa)+'), dentro del objetivo de $60.']);
+  }
+
+  // Conversión
+  if(m.conv!==null){
+    if(m.conv<30) msgs.push(['bad','<b>Conversión crítica ('+m.conv.toFixed(0)+'%).</b> Regla 2 del modelo: con conversión ≤30%, la prioridad es mejorar la máquina de conversión (velocidad de respuesta, seguimiento, propuesta) — NO subir la pauta. Cada punto de conversión vale miles de dólares en este plan.']);
+    else if(m.conv<40) msgs.push(['warn','Conversión en '+m.conv.toFixed(0)+'% (escenario conservador). Funciona, pero el plan base asume 40%: afina respuesta rápida a leads y seguimiento.']);
+    else msgs.push(['good','Conversión en '+m.conv.toFixed(0)+'%, cumpliendo el supuesto base del modelo (40%).']);
+  }
+
+  // Churn
+  if(m.churn!==null){
+    if(m.churn>3.5) msgs.push(['bad','<b>Churn crítico ('+m.churn.toFixed(1)+'%).</b> Por encima del 3.5%: cada cliente que se va borra el trabajo de la pauta. Prioriza calidad de servicio, fotos y comunicación antes que crecimiento.']);
+    else if(m.churn>2.3) msgs.push(['warn','Churn en '+m.churn.toFixed(1)+'%, sobre el supuesto de 2.3%. Vigílalo: si sube, la meta de 300 se aleja aunque la pauta funcione.']);
+  }
+
+  // Proyección recalculada
+  const proy = proyectar(m);
+  if(proy) msgs.push(['',proy]);
+
+  if(msgs.length===0) msgs.push(['','Sin datos suficientes para el diagnóstico todavía.']);
+  box.innerHTML = msgs.map(x=>`<div class="diag ${x[0]}">${x[1]}</div>`).join('');
+}
+
+/* Proyección con datos reales: ¿cuándo llegamos a 300? */
+function proyectar(m){
+  if(m.cpa===null || m.conv===null) return null;
+  const churnR = (m.churn!==null? m.churn : 2.3)/100;
+  const convR = m.conv/100;
+  let act = Number(m.real.activos_fin_mes);
+  const futuro = planData.filter(p=>p.mes>m.mesISO);
+  let mesLlegada = null;
+  for(const p of futuro){
+    const presupuesto = Number(p.inversion_plan) + 7*act; // reinversión $7/cliente
+    const leads = presupuesto / m.cpa;
+    const nuevos = leads * convR;
+    act = act + nuevos - act*churnR;
+    if(act>=300 && !mesLlegada){ mesLlegada = p.mes; break; }
+  }
+  const plan300 = planData.find(p=>p.activos_40>=300);
+  const plan300txt = plan300 ? mesCorto(plan300.mes) : '—';
+  if(mesLlegada){
+    return '<b>Proyección con tus números reales:</b> llegarías a 300 clientes en <b>'+mesCorto(mesLlegada)+'</b> (plan base: '+plan300txt+'), manteniendo CPA '+fmt$c(m.cpa)+', conversión '+m.conv.toFixed(0)+'% y churn '+(m.churn!==null?m.churn.toFixed(1):'2.3')+'%.';
+  }
+  return '<b>Proyección con tus números reales:</b> con CPA '+fmt$c(m.cpa)+' y conversión '+m.conv.toFixed(0)+'%, no alcanzas 300 clientes dentro del horizonte del plan (ago 2028). El modelo dice: mejora conversión o CPA antes de aumentar inversión.';
+}
+
+/* ---------- Gráfica ---------- */
+function pintarGrafica(){
+  const labels = planData.map(p=>mesCorto(p.mes));
+  const c40 = planData.map(p=>p.activos_40);
+  const c30 = planData.map(p=>p.activos_30);
+  const real = planData.map(p=>{
+    const r = realesData.find(x=>x.mes===p.mes);
+    return r ? Number(r.activos_fin_mes) : null;
+  });
+  const ctx = document.getElementById('chartActivos');
+  if(chart) chart.destroy();
+  chart = new Chart(ctx,{
+    type:'line',
+    data:{labels, datasets:[
+      {label:'Plan 40%', data:c40, borderColor:'#0e7490', backgroundColor:'transparent', borderWidth:2, pointRadius:0, tension:.3},
+      {label:'Plan 30%', data:c30, borderColor:'#94a3b8', backgroundColor:'transparent', borderWidth:2, borderDash:[6,4], pointRadius:0, tension:.3},
+      {label:'Real', data:real, borderColor:'#16a34a', backgroundColor:'#16a34a', borderWidth:3, pointRadius:4, tension:.2, spanGaps:false}
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{legend:{position:'top', labels:{boxWidth:20, font:{size:12}}},
+        annotation:undefined,
+        tooltip:{callbacks:{}}
+      },
+      scales:{
+        y:{beginAtZero:true, grid:{color:'#eef2f7'},
+           title:{display:true, text:'Clientes activos', font:{size:12}}},
+        x:{grid:{display:false}, ticks:{maxRotation:60, font:{size:10}}}
+      }
+    }
+  });
+}
+
+/* ---------- Formulario Ads ---------- */
+async function guardarAds(){
+  const msg = document.getElementById('adsMsg');
+  const ini = document.getElementById('fIni').value;
+  const fin = document.getElementById('fFin').value;
+  const gasto = parseFloat(document.getElementById('fGasto').value);
+  const leads = parseInt(document.getElementById('fLeads').value);
+  const notas = document.getElementById('fNotas').value.trim() || null;
+  if(!ini || !fin || isNaN(gasto) || isNaN(leads)){
+    msg.innerHTML = '<span class="txtRojo">Completa fecha inicio, fecha fin, gasto y leads.</span>'; return;
+  }
+  if(fin < ini){
+    msg.innerHTML = '<span class="txtRojo">La fecha fin no puede ser anterior a la fecha inicio.</span>'; return;
+  }
+  msg.textContent = 'Guardando…';
+  try{
+    const ok = await rpc('growth_add_ads_entry',{p_pin:PIN, p_fecha_inicio:ini, p_fecha_fin:fin, p_gasto:gasto, p_leads:leads, p_notas:notas});
+    if(ok===true){
+      msg.innerHTML = '<span class="txtVerde">✔ Semana guardada.</span>';
+      document.getElementById('fGasto').value=''; document.getElementById('fLeads').value=''; document.getElementById('fNotas').value='';
+      await cargarTodo();
+    }else{
+      msg.innerHTML = '<span class="txtRojo">PIN inválido. Sal y vuelve a entrar.</span>';
+    }
+  }catch(e){
+    msg.innerHTML = '<span class="txtRojo">Error al guardar. Revisa tu conexión e intenta de nuevo.</span>';
+  }
+}
+
+/* ---------- Tablas ---------- */
+function pintarTablaAds(){
+  const tb = document.querySelector('#tablaAds tbody');
+  if(adsData.length===0){
+    tb.innerHTML = '<tr><td colspan="6" style="color:var(--gris)">Sin registros todavía.</td></tr>'; return;
+  }
+  tb.innerHTML = adsData.map(a=>{
+    const cpa = a.leads>0 ? fmt$c(a.gasto/a.leads) : '—';
+    return `<tr><td>${a.fecha_inicio}</td><td>${a.fecha_fin}</td>
+      <td class="num">${fmt$c(a.gasto)}</td><td class="num">${a.leads}</td>
+      <td class="num">${cpa}</td><td>${a.notas||''}</td></tr>`;
+  }).join('');
+}
+function pintarTablaPlan(){
+  const tb = document.querySelector('#tablaPlan tbody');
+  const mesAct = mesActualISO();
+  tb.innerHTML = planData.map(p=>{
+    const r = realesData.find(x=>x.mes===p.mes);
+    const real = r ? r.activos_fin_mes : '—';
+    const hl = p.mes===mesAct ? ' style="background:#f0f9ff;font-weight:600;"' : '';
+    return `<tr${hl}><td>${mesCorto(p.mes)}</td><td><span class="fase">${p.fase}</span></td>
+      <td class="num">${fmt$(p.inversion_plan)}</td>
+      <td class="num">${p.activos_40}</td><td class="num">${p.activos_30}</td>
+      <td class="num">${real}</td></tr>`;
+  }).join('');
+}
+
+/* ---------- Arranque ---------- */
+(async ()=>{
+  if(PIN){
+    try{
+      const ok = await rpc('growth_check_pin',{p_pin:PIN});
+      if(ok===true){ entrar(); return; }
+    }catch(e){}
+    sessionStorage.removeItem('growth_pin');
+  }
+  document.getElementById('pinInput').focus();
+})();
+</script>
+</body>
+</html>
