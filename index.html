@@ -251,7 +251,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
           <div class="field">
             <div class="field-label">
               
-              Pool Size
+              Pool Size <span style="color:#e05252;">*</span>
             </div>
             <div class="select-wrap">
               <select id="poolSize" onchange="calcPrice()">
@@ -268,7 +268,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
           <div class="field">
             <div class="field-label">
               
-              Service Type
+              Service Type <span style="color:#e05252;">*</span>
             </div>
             <div class="select-wrap">
               <select id="serviceType" onchange="calcPrice()">
@@ -777,8 +777,8 @@ async function submitSubscription(){
   </div>
 </div>
 
-<!-- APP DOWNLOAD -->
-<div class="app-section">
+<!-- APP DOWNLOAD — oculto temporalmente hasta que exista la app nativa. Para restaurar: quitar style="display:none" -->
+<div class="app-section" style="display:none">
   <div class="app-inner">
     <div>
       <h2>Download our app now</h2>
@@ -932,6 +932,7 @@ var LABELS={
 function calcPrice(){
   var size=document.getElementById("poolSize").value;
   var svc=document.getElementById("serviceType").value;
+  if(svc&&!size){document.getElementById("poolSize").value="medium";size="medium";}
   var svcEl=document.getElementById("priceService");
   var amtEl=document.getElementById("priceAmt");
   var currEl=document.getElementById("priceCurr");
