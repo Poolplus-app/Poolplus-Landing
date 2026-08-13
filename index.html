@@ -1025,7 +1025,7 @@ function validateServiceDate(inp){
   if(!inp.value) return;
   var d=new Date(inp.value+"T12:00:00");
   if(d.getDay()===0){ // domingo
-    alert("We don't provide service on Sundays. Please choose Monday through Saturday.");
+    alert("We don't provide service on Sundays. Please choose Monday through Friday.");
     inp.value="";
     return;
   }
@@ -1049,7 +1049,7 @@ async function submitBooking(){
   var zip=document.getElementById("bkZip").value.trim();
   var address=document.getElementById("bkAddress").value.trim();
   var city=document.getElementById("bkCity").value.trim();
-  var dateVal=document.getElementById("bkDate").value;
+  var dateVal="";
   var notes=document.getElementById("bkNotes").value.trim();
   var consentSms=document.getElementById("c1").checked;
   var consentMkt=document.getElementById("c2").checked;
@@ -1072,7 +1072,7 @@ async function submitBooking(){
   if(SCHED_TYPE==="scheduled" && dateVal){
     var dd=new Date(dateVal+"T12:00:00");
     if(dd.getDay()===0){
-      alert("We don't provide service on Sundays. Please choose Monday through Saturday.");
+      alert("We don't provide service on Sundays. Please choose Monday through Friday.");
       return;
     }
   }
@@ -1124,7 +1124,7 @@ async function submitBooking(){
     email:email, phone:phone,
     service:label, pool_size:size,
     address:address, city:city, zip:zip,
-    service_date:dateVal||"same-day",
+    service_date:dateVal||"to_be_assigned",
     schedule_type:SCHED_TYPE,
     price:price!==null?String(price):"",
     notes:notes,
