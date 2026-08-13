@@ -100,7 +100,7 @@ select option{background:#1a2235;}
 .avatar{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:white;flex-shrink:0;}
 /* scrollbar */
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#334155;border-radius:4px;}
-  /* ===== Pantalla Operacion (bloque 1) ===== */
+  /* ===== Pantalla Operación (bloque 1) ===== */Pantalla Operación (bloque 1) ===
   .ops-wrap{max-width:1100px}
   .ops-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .ops-h .ops-t{font-family:'Syne',sans-serif;font-weight:800;font-size:22px}
@@ -173,7 +173,7 @@ select option{background:#1a2235;}
     <div class="logo-icon">💧</div>
     <div class="logo-text">Pool<span>plus</span> <span class="logo-sub">Admin</span></div>
   </div>
-  <button class="nav-btn active" onclick="goTab('operacion',this);loadOperacion()"><span>&#129517;</span><span style="flex:1">Operacion</span></button>
+  <button class="nav-btn active" onclick="goTab('operacion',this);loadOperacion()"><span>&#129517;</span><span style="flex:1">Operación</span></button>
   <button class="nav-btn" onclick="goTab('dashboard',this)"><span>▦</span><span style="flex:1">Panel General</span></button>
   <button class="nav-btn" onclick="goTab('reservas',this)"><span>📋</span><span style="flex:1">Reservas</span><span class="nav-badge" id="badge-res" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('suscripciones',this)"><span>🔁</span><span style="flex:1">Suscripciones</span><span class="nav-badge" id="badge-subs" style="display:none"></span></button>
@@ -197,15 +197,15 @@ select option{background:#1a2235;}
 
   <!-- DASHBOARD -->
   <div class="page active" id="page-operacion">
-    <div class="page-title">Operacion</div>
+    <div class="page-title">Operación</div>
     <div class="ops-wrap">
-      <div class="ops-h"><span class="ops-t">Que paso</span><span class="ops-badge" id="ops-stamp">leyendo...</span><button class="ops-btn sec" id="ops-reload">Recargar</button></div>
-      <p class="ops-sub">Ultimos 7 dias contra los 7 anteriores. Todo sale de la base de datos. Las pruebas no cuentan.</p>
+      <div class="ops-h"><span class="ops-badge" id="ops-stamp">leyendo...</span><button class="ops-btn sec" id="ops-reload">Recargar</button></div>
+      <p class="ops-sub">Últimos 7 días contra los 7 anteriores. Todo sale de la base de datos. Las pruebas no cuentan.</p>
       <div class="ops-kpis" id="ops-kpis"></div>
-      <div class="ops-card"><h3>Crecimiento, ultimas 8 semanas</h3><div id="ops-chart"></div><div class="ops-legend" id="ops-legend"></div></div>
+      <div class="ops-card"><h3>Crecimiento, últimas 8 semanas</h3><div id="ops-chart"></div><div class="ops-legend" id="ops-legend"></div></div>
       <div class="ops-card"><h3>Prospectos sin contactar</h3><div id="ops-prospects"></div></div>
       <div class="ops-card"><h3>Servicios pendientes</h3><div id="ops-services"></div></div>
-      <div class="ops-card"><div class="ops-note"><b>Como leer los colores.</b><br>Numero blanco: dato real de la base.<br><span style="color:#7aa2cc">Azul: esta en cero de verdad.</span><br><span style="color:#f87171">Rojo: no lo puedo leer. La base no me da permiso o la tabla no responde. No es un cero.</span><br><span style="color:#d4a72c">Ambar: no hay fuente conectada todavia.</span><div id="ops-blocked" style="margin-top:10px"></div></div></div>
+      <div class="ops-card"><div class="ops-note"><b>Cómo leer los colores.</b><br>Número blanco: dato real de la base.<br><span style="color:#7aa2cc">Azul: está en cero de verdad.</span><br><span style="color:#f87171">Rojo: no lo puedo leer. La base no me da permiso o la tabla no responde. No es un cero.</span><br><span style="color:#d4a72c">Ámbar: no hay fuente conectada todavía.</span><div id="ops-blocked" style="margin-top:10px"></div></div></div>
     </div>
   </div>
   <div class="page" id="page-dashboard">
@@ -1484,11 +1484,11 @@ async function assignTech(id){
 }
 </script>
   <script>
-  /* ===== Pantalla Operacion (bloque 1) - solo datos reales ===== */
+  /* ===== Pantalla Operación (bloque 1) - solo datos reales ===== */
   (function(){
     var MAIL='poolplusllcapp@gmail.com';
     var DAY=86400000;
-    var SIN_LECTURA={ads_entries:'RLS activo, cero politicas',services:'RLS activo, cero politicas',profiles:'RLS activo, cero politicas',growth_plan:'RLS activo, cero politicas',growth_settings:'RLS activo, cero politicas'};
+    var SIN_LECTURA={ads_entries:'RLS activo, cero políticas',services:'RLS activo, cero políticas',profiles:'RLS activo, cero políticas',growth_plan:'RLS activo, cero políticas',growth_settings:'RLS activo, cero políticas'};
     var pruebasFuera=0;
 
     function esPrueba(r){
@@ -1508,7 +1508,7 @@ async function assignTech(id){
       if(SIN_LECTURA[tabla]) return {estado:'error',msg:SIN_LECTURA[tabla]};
       try{
         var res=await sb.from(tabla).select('*');
-        if(res.error) return {estado:'error',msg:res.error.message||'la base no respondio'};
+        if(res.error) return {estado:'error',msg:res.error.message||'la base no respondió'};
         var rows=res.data||[];
         var t=rows.filter(esPrueba).length;
         pruebasFuera+=t;
@@ -1525,7 +1525,7 @@ async function assignTech(id){
       var cls='', num='', foot='';
       if(o.estado==='error'){ cls='is-error'; num='no lo puedo leer'; foot='<span class="ops-badge b-error">'+esc(o.msg)+'</span>'; }
       else if(o.estado==='sinfuente'){ cls='is-nosource'; num='sin fuente conectada'; foot='<span class="ops-badge b-nosource">'+esc(o.msg)+'</span>'; }
-      else if(o.total===0){ cls='is-zero'; num='0'; foot='<span class="ops-badge b-zero">esta en cero</span> '+(o.extra||''); }
+      else if(o.total===0){ cls='is-zero'; num='0'; foot='<span class="ops-badge b-zero">está en cero</span> '+(o.extra||''); }
       else { cls=''; num=o.total; foot=delta(o.cur,o.prev); }
       return '<div class="ops-kpi '+cls+'"><div class="k-lab">'+esc(o.lab)+'</div><div class="k-num">'+num+'</div><div class="k-foot">'+foot+'</div></div>';
     }
@@ -1556,11 +1556,11 @@ async function assignTech(id){
       try{
         var res=await sb.from('clients').update({status:next}).eq('id',id).select();
         if(res.error||!res.data||!res.data.length){
-          if(m) m.innerHTML='<span class="ops-down">no se guardo. La base no me da permiso de escritura en clients.</span>';
+          if(m) m.innerHTML='<span class="ops-down">no se guardó. La base no me da permiso de escritura en clients.</span>';
           return;
         }
         loadOperacion();
-      }catch(e){ if(m) m.innerHTML='<span class="ops-down">no se guardo: '+esc((e&&e.message)||'error')+'</span>'; }
+      }catch(e){ if(m) m.innerHTML='<span class="ops-down">no se guardó: '+esc((e&&e.message)||'error')+'</span>'; }
     };
 
     window.loadOperacion=async function(){
@@ -1572,8 +1572,8 @@ async function assignTech(id){
       var ses=null;
       try{ var s=await sb.auth.getSession(); ses=s&&s.data?s.data.session:null; }catch(e){}
       if(!ses){
-        box.innerHTML=kpi({lab:'Sesion',estado:'sinfuente',msg:'entra con tu correo y vuelvo a leer'});
-        if(stamp) stamp.textContent='sin sesion';
+        box.innerHTML=kpi({lab:'Sesión',estado:'sinfuente',msg:'entra con tu correo y vuelvo a leer'});
+        if(stamp) stamp.textContent='sin sesión';
         setTimeout(function(){ if(!document.hidden) loadOperacion(); },5000);
         return;
       }
@@ -1584,8 +1584,8 @@ async function assignTech(id){
       else{
         var pros=cl.rows.filter(function(r){ return (r.status||'')==='prospecto'||(r.status||'')==='contactado'; });
         var clis=cl.rows.filter(function(r){ return (r.status||'')==='cliente'; });
-        ks.push(kpi({lab:'Prospectos',total:pros.length,cur:nuevos(pros,0),prev:nuevos(pros,1),extra:'<span class="ops-flat">nadie entro todavia</span>'}));
-        ks.push(kpi({lab:'Clientes',total:clis.length,cur:nuevos(clis,0),prev:nuevos(clis,1),extra:'<span class="ops-flat">ningun prospecto ha comprado</span>'}));
+        ks.push(kpi({lab:'Prospectos',total:pros.length,cur:nuevos(pros,0),prev:nuevos(pros,1),extra:'<span class="ops-flat">nadie entró todavía</span>'}));
+        ks.push(kpi({lab:'Clientes',total:clis.length,cur:nuevos(clis,0),prev:nuevos(clis,1),extra:'<span class="ops-flat">ningún prospecto ha comprado</span>'}));
       }
       if(su.estado!=='ok') ks.push(kpi({lab:'Suscriptores',estado:'error',msg:su.msg}));
       else{
@@ -1613,12 +1613,12 @@ async function assignTech(id){
       if(cl.estado!=='ok') pb.innerHTML='<div class="ops-fail">No lo puedo leer: '+esc(cl.msg)+'. No significa que no haya prospectos.</div>';
       else{
         var pend=cl.rows.filter(function(r){ return (r.status||'')==='prospecto'||(r.status||'')==='contactado'; });
-        if(!pend.length) pb.innerHTML='<div class="ops-empty">Cero prospectos en cola. Este cero es real: la tabla se leyo bien y no hay ninguno.</div>';
+        if(!pend.length) pb.innerHTML='<div class="ops-empty">Cero prospectos en cola. Este cero es real: la tabla se leyó bien y no hay ninguno.</div>';
         else pb.innerHTML='<div class="ops-list">'+pend.map(function(r){
           var nom=r.full_name||r.name||r.nombre||'sin nombre';
           var st=(r.status||'')==='contactado'?'contactado':'prospecto';
           var sig=st==='prospecto'?'contactado':'cliente';
-          return '<div class="ops-row"><div><div class="r-main">'+esc(nom)+' <span class="ops-badge">'+st+'</span></div><div class="r-meta">'+esc(r.city||'sin ciudad')+' &middot; '+esc(r.source||'sin fuente')+' &middot; entro '+fdia(r.created_at)+'</div></div><div class="ops-acts"><button class="ops-btn" data-id="'+esc(r.id)+'" data-next="'+sig+'">Marcar '+sig+'</button></div><div class="ops-msg" id="ops-msg-'+esc(r.id)+'"></div></div>';
+          return '<div class="ops-row"><div><div class="r-main">'+esc(nom)+' <span class="ops-badge">'+st+'</span></div><div class="r-meta">'+esc(r.city||'sin ciudad')+' &middot; '+esc(r.source||'sin fuente')+' &middot; entró '+fdia(r.created_at)+'</div></div><div class="ops-acts"><button class="ops-btn" data-id="'+esc(r.id)+'" data-next="'+sig+'">Marcar '+sig+'</button></div><div class="ops-msg" id="ops-msg-'+esc(r.id)+'"></div></div>';
         }).join('')+'</div>';
         pb.onclick=function(ev){ var b=ev.target.closest('button[data-next]'); if(b) opsEstado(b.getAttribute('data-id'),b.getAttribute('data-next')); };
       }
@@ -1627,10 +1627,10 @@ async function assignTech(id){
       if(br.estado!=='ok') sv.innerHTML='<div class="ops-fail">No lo puedo leer: '+esc(br.msg)+'</div>';
       else{
         var abiertos=br.rows.filter(function(r){ var s=(r.status||''); return !r.completed_at && s!=='completed' && s!=='cancelled' && s!=='cancelado'; });
-        if(!abiertos.length) sv.innerHTML='<div class="ops-empty">Cero servicios pendientes. Cero real, la tabla respondio.</div>';
+        if(!abiertos.length) sv.innerHTML='<div class="ops-empty">Cero servicios pendientes. Cero real, la tabla respondió.</div>';
         else sv.innerHTML='<div class="ops-list">'+abiertos.map(function(r){
           var faltan=[];
-          if(!r.assigned_technician) faltan.push('sin tecnico');
+          if(!r.assigned_technician) faltan.push('sin técnico');
           if(!r.service_date) faltan.push('sin fecha');
           if(!r.paid_at) faltan.push('sin pago');
           return '<div class="ops-row"><div><div class="r-main">'+esc(r.service_type||'servicio sin tipo')+(r.price?' &middot; $'+esc(r.price):'')+'</div><div class="r-meta">'+esc(r.city||'sin ciudad')+' &middot; pedido '+fdia(r.created_at)+' &middot; '+esc(r.status||'sin estado')+'</div></div><div class="ops-acts">'+faltan.map(function(f){return '<span class="ops-badge b-error">'+f+'</span>'}).join(' ')+'</div></div>';
