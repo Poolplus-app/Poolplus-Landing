@@ -100,6 +100,58 @@ select option{background:#1a2235;}
 .avatar{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:white;flex-shrink:0;}
 /* scrollbar */
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#334155;border-radius:4px;}
+  /* ===== Pantalla Operacion (bloque 1) ===== */
+  .ops-wrap{max-width:1100px}
+  .ops-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .ops-h .ops-t{font-family:'Syne',sans-serif;font-weight:800;font-size:22px}
+  .ops-sub{color:var(--muted);font-size:13px;margin:6px 0 16px}
+  .ops-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .ops-kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+  .ops-kpi .k-lab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .ops-kpi .k-num{font-size:30px;font-weight:800;line-height:1.15;margin-top:6px;color:var(--text)}
+  .ops-kpi .k-foot{font-size:12px;margin-top:8px;color:var(--muted);line-height:1.5}
+  .ops-kpi.is-zero{border-color:#26456b}
+  .ops-kpi.is-zero .k-num{color:#7aa2cc}
+  .ops-kpi.is-nosource{border-color:#8a6a1f;background:#191505}
+  .ops-kpi.is-nosource .k-num{font-size:15px;font-weight:700;color:#d4a72c}
+  .ops-kpi.is-error{border-color:#7f1d1d;background:#1c0d0d}
+  .ops-kpi.is-error .k-num{font-size:15px;font-weight:700;color:#f87171}
+  .ops-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+  .ops-badge.b-zero{border-color:#26456b;color:#7aa2cc}
+  .ops-badge.b-nosource{border-color:#8a6a1f;color:#d4a72c}
+  .ops-badge.b-error{border-color:#7f1d1d;color:#f87171}
+  .ops-up{color:#34d399}
+  .ops-down{color:#f87171}
+  .ops-flat{color:var(--muted)}
+  .ops-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:16px}
+  .ops-card h3{font-size:14px;margin:0 0 12px;font-weight:700}
+  .ops-chart{width:100%;height:220px;display:block}
+  .ops-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
+  .ops-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px}
+  .ops-list{display:flex;flex-direction:column;gap:8px}
+  .ops-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+  .ops-row .r-main{font-weight:700;font-size:14px}
+  .ops-row .r-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .ops-acts{display:flex;gap:6px;flex-wrap:wrap}
+  .ops-btn{background:var(--pool);color:#04121f;border:0;border-radius:9px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer}
+  .ops-btn.sec{background:transparent;border:1px solid var(--border);color:var(--text)}
+  .ops-empty{font-size:13px;color:#7aa2cc;border:1px dashed #26456b;border-radius:10px;padding:12px}
+  .ops-fail{font-size:13px;color:#f87171;border:1px solid #7f1d1d;background:#1c0d0d;border-radius:10px;padding:12px}
+  .ops-msg{font-size:12px;width:100%}
+  .ops-note{font-size:11px;color:var(--muted);line-height:1.7}
+  @media (max-width:760px){
+    html body{flex-direction:column}
+    html body #sidebar{position:static;width:auto;min-height:0;height:auto;flex-direction:row;align-items:center;gap:8px;overflow-x:auto;padding:10px;border-right:0;border-bottom:1px solid var(--border)}
+    html body #sidebar .nav-btn{flex:0 0 auto;white-space:nowrap}
+    html body #sidebar .logo-row{flex:0 0 auto;padding:0 8px 0 0;margin:0}
+    html body #content,html body .page{padding:14px}
+    .ops-kpis{grid-template-columns:repeat(2,1fr);gap:10px}
+    .ops-kpi .k-num{font-size:24px}
+    .ops-chart{height:180px}
+    .ops-row{flex-direction:column;align-items:flex-start}
+    .ops-acts{width:100%}
+    .ops-acts .ops-btn{flex:1}
+  }
 </style>
 </head>
 <body>
@@ -121,7 +173,8 @@ select option{background:#1a2235;}
     <div class="logo-icon">💧</div>
     <div class="logo-text">Pool<span>plus</span> <span class="logo-sub">Admin</span></div>
   </div>
-  <button class="nav-btn active" onclick="goTab('dashboard',this)"><span>▦</span><span style="flex:1">Panel General</span></button>
+  <button class="nav-btn active" onclick="goTab('operacion',this);loadOperacion()"><span>&#129517;</span><span style="flex:1">Operacion</span></button>
+  <button class="nav-btn" onclick="goTab('dashboard',this)"><span>▦</span><span style="flex:1">Panel General</span></button>
   <button class="nav-btn" onclick="goTab('reservas',this)"><span>📋</span><span style="flex:1">Reservas</span><span class="nav-badge" id="badge-res" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('suscripciones',this)"><span>🔁</span><span style="flex:1">Suscripciones</span><span class="nav-badge" id="badge-subs" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('precios',this)"><span>💲</span><span style="flex:1">Precios y Promos</span></button>
@@ -143,7 +196,19 @@ select option{background:#1a2235;}
 <div id="content">
 
   <!-- DASHBOARD -->
-  <div class="page active" id="page-dashboard">
+  <div class="page active" id="page-operacion">
+    <div class="page-title">Operacion</div>
+    <div class="ops-wrap">
+      <div class="ops-h"><span class="ops-t">Que paso</span><span class="ops-badge" id="ops-stamp">leyendo...</span><button class="ops-btn sec" id="ops-reload">Recargar</button></div>
+      <p class="ops-sub">Ultimos 7 dias contra los 7 anteriores. Todo sale de la base de datos. Las pruebas no cuentan.</p>
+      <div class="ops-kpis" id="ops-kpis"></div>
+      <div class="ops-card"><h3>Crecimiento, ultimas 8 semanas</h3><div id="ops-chart"></div><div class="ops-legend" id="ops-legend"></div></div>
+      <div class="ops-card"><h3>Prospectos sin contactar</h3><div id="ops-prospects"></div></div>
+      <div class="ops-card"><h3>Servicios pendientes</h3><div id="ops-services"></div></div>
+      <div class="ops-card"><div class="ops-note"><b>Como leer los colores.</b><br>Numero blanco: dato real de la base.<br><span style="color:#7aa2cc">Azul: esta en cero de verdad.</span><br><span style="color:#f87171">Rojo: no lo puedo leer. La base no me da permiso o la tabla no responde. No es un cero.</span><br><span style="color:#d4a72c">Ambar: no hay fuente conectada todavia.</span><div id="ops-blocked" style="margin-top:10px"></div></div></div>
+    </div>
+  </div>
+  <div class="page" id="page-dashboard">
     <div class="page-title">Panel General</div>
     <div class="page-sub">Resumen — Junio 2026</div>
     <div class="alert alert-warn">⚠️ <strong>2 técnicos</strong> requieren atención — documentos faltantes o aprobación pendiente. <button class="btn btn-warning btn-sm" style="margin-left:auto" onclick="goTabById('techs')">Revisar →</button></div>
@@ -1418,5 +1483,175 @@ async function assignTech(id){
   loadBookings();loadSubscriptions();
 }
 </script>
+  <script>
+  /* ===== Pantalla Operacion (bloque 1) - solo datos reales ===== */
+  (function(){
+    var MAIL='poolplusllcapp@gmail.com';
+    var DAY=86400000;
+    var SIN_LECTURA={ads_entries:'RLS activo, cero politicas',services:'RLS activo, cero politicas',profiles:'RLS activo, cero politicas',growth_plan:'RLS activo, cero politicas',growth_settings:'RLS activo, cero politicas'};
+    var pruebasFuera=0;
+
+    function esPrueba(r){
+      for(var k in r){
+        var val=r[k];
+        if(typeof val==='string' && val.toLowerCase().trim()===MAIL) return true;
+        if(/(price|amount|precio|monto)/i.test(k) && val!==null && val!=='' && isFinite(Number(val)) && Number(val)<=1) return true;
+      }
+      return false;
+    }
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function fdia(x){ if(!x) return 'sin fecha'; var t=Date.parse(x); if(isNaN(t)) return 'sin fecha'; return new Date(t).toLocaleDateString('es-US',{day:'2-digit',month:'short'}); }
+    function ini(w){ return Date.now()-w*7*DAY; }
+    function nuevos(rows,w){ var a=ini(w+1), b=ini(w); return rows.filter(function(r){ var t=Date.parse(r.created_at||r.inserted_at||''); return !isNaN(t)&&t>=a&&t<b; }).length; }
+
+    async function leer(tabla){
+      if(SIN_LECTURA[tabla]) return {estado:'error',msg:SIN_LECTURA[tabla]};
+      try{
+        var res=await sb.from(tabla).select('*');
+        if(res.error) return {estado:'error',msg:res.error.message||'la base no respondio'};
+        var rows=res.data||[];
+        var t=rows.filter(esPrueba).length;
+        pruebasFuera+=t;
+        return {estado:'ok',rows:rows.filter(function(r){return !esPrueba(r)})};
+      }catch(e){ return {estado:'error',msg:(e&&e.message)||'error de red'}; }
+    }
+
+    function delta(cur,prev){
+      if(cur===prev) return '<span class="ops-flat">igual que la semana pasada ('+prev+')</span>';
+      var dd=cur-prev, sube=dd>0;
+      return '<span class="'+(sube?'ops-up':'ops-down')+'">'+(sube?'+'+dd:dd)+'</span> <span class="ops-flat">esta semana '+cur+', la anterior '+prev+'</span>';
+    }
+    function kpi(o){
+      var cls='', num='', foot='';
+      if(o.estado==='error'){ cls='is-error'; num='no lo puedo leer'; foot='<span class="ops-badge b-error">'+esc(o.msg)+'</span>'; }
+      else if(o.estado==='sinfuente'){ cls='is-nosource'; num='sin fuente conectada'; foot='<span class="ops-badge b-nosource">'+esc(o.msg)+'</span>'; }
+      else if(o.total===0){ cls='is-zero'; num='0'; foot='<span class="ops-badge b-zero">esta en cero</span> '+(o.extra||''); }
+      else { cls=''; num=o.total; foot=delta(o.cur,o.prev); }
+      return '<div class="ops-kpi '+cls+'"><div class="k-lab">'+esc(o.lab)+'</div><div class="k-num">'+num+'</div><div class="k-foot">'+foot+'</div></div>';
+    }
+
+    function chart(series){
+      var W=760,H=220,pl=32,pr=8,pt=10,pb=24,n=8, max=1;
+      series.forEach(function(s){ if(s.datos) s.datos.forEach(function(x){ if(x>max) max=x; }); });
+      var X=function(i){ return pl+i*(W-pl-pr)/(n-1); };
+      var Y=function(x){ return pt+(H-pt-pb)*(1-x/max); };
+      var g='';
+      for(var i=0;i<=2;i++){ var val=Math.round(max*i/2), yy=Y(val);
+        g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+yy+'" y2="'+yy+'" stroke="#1e2d45" stroke-width="1"/>';
+        g+='<text x="2" y="'+(yy+4)+'" fill="#64748b" font-size="10">'+val+'</text>';
+      }
+      series.forEach(function(s){
+        if(!s.datos) return;
+        g+='<polyline fill="none" stroke="'+s.color+'" stroke-width="2" points="'+s.datos.map(function(x,i){return X(i)+','+Y(x)}).join(' ')+'"/>';
+        s.datos.forEach(function(x,i){ g+='<circle cx="'+X(i)+'" cy="'+Y(x)+'" r="2.6" fill="'+s.color+'"/>'; });
+      });
+      for(var j=0;j<n;j++){ var lab=(n-1-j)===0?'ahora':'-'+(n-1-j)+'sem';
+        g+='<text x="'+X(j)+'" y="'+(H-6)+'" fill="#64748b" font-size="10" text-anchor="middle">'+lab+'</text>'; }
+      return '<svg class="ops-chart" viewBox="0 0 '+W+' '+H+'">'+g+'</svg>';
+    }
+
+    window.opsEstado=async function(id,next){
+      var m=document.getElementById('ops-msg-'+id);
+      if(m) m.innerHTML='<span class="ops-flat">guardando...</span>';
+      try{
+        var res=await sb.from('clients').update({status:next}).eq('id',id).select();
+        if(res.error||!res.data||!res.data.length){
+          if(m) m.innerHTML='<span class="ops-down">no se guardo. La base no me da permiso de escritura en clients.</span>';
+          return;
+        }
+        loadOperacion();
+      }catch(e){ if(m) m.innerHTML='<span class="ops-down">no se guardo: '+esc((e&&e.message)||'error')+'</span>'; }
+    };
+
+    window.loadOperacion=async function(){
+      var box=document.getElementById('ops-kpis');
+      if(!box) return;
+      pruebasFuera=0;
+      var stamp=document.getElementById('ops-stamp');
+      if(stamp) stamp.textContent='leyendo...';
+      var ses=null;
+      try{ var s=await sb.auth.getSession(); ses=s&&s.data?s.data.session:null; }catch(e){}
+      if(!ses){
+        box.innerHTML=kpi({lab:'Sesion',estado:'sinfuente',msg:'entra con tu correo y vuelvo a leer'});
+        if(stamp) stamp.textContent='sin sesion';
+        setTimeout(function(){ if(!document.hidden) loadOperacion(); },5000);
+        return;
+      }
+      var cl=await leer('clients'), su=await leer('subscriptions'), br=await leer('booking_requests');
+
+      var ks=[kpi({lab:'Llamadas',estado:'sinfuente',msg:'GHL no escribe en la base'})];
+      if(cl.estado!=='ok'){ ks.push(kpi({lab:'Prospectos',estado:'error',msg:cl.msg})); ks.push(kpi({lab:'Clientes',estado:'error',msg:cl.msg})); }
+      else{
+        var pros=cl.rows.filter(function(r){ return (r.status||'')==='prospecto'||(r.status||'')==='contactado'; });
+        var clis=cl.rows.filter(function(r){ return (r.status||'')==='cliente'; });
+        ks.push(kpi({lab:'Prospectos',total:pros.length,cur:nuevos(pros,0),prev:nuevos(pros,1),extra:'<span class="ops-flat">nadie entro todavia</span>'}));
+        ks.push(kpi({lab:'Clientes',total:clis.length,cur:nuevos(clis,0),prev:nuevos(clis,1),extra:'<span class="ops-flat">ningun prospecto ha comprado</span>'}));
+      }
+      if(su.estado!=='ok') ks.push(kpi({lab:'Suscriptores',estado:'error',msg:su.msg}));
+      else{
+        var act=su.rows.filter(function(r){ return (r.status||'')==='active'; });
+        ks.push(kpi({lab:'Suscriptores',total:act.length,cur:nuevos(act,0),prev:nuevos(act,1),extra:'<span class="ops-flat">cero recurrentes</span>'}));
+      }
+      box.innerHTML=ks.join('');
+
+      var ser=[];
+      if(cl.estado==='ok'){
+        var pr2=cl.rows.filter(function(r){ return (r.status||'')==='prospecto'||(r.status||'')==='contactado'; });
+        var cl2=cl.rows.filter(function(r){ return (r.status||'')==='cliente'; });
+        ser.push({lab:'Prospectos',color:'#38bdf8',datos:[7,6,5,4,3,2,1,0].map(function(w){ return nuevos(pr2,w); })});
+        ser.push({lab:'Clientes',color:'#a78bfa',datos:[7,6,5,4,3,2,1,0].map(function(w){ return nuevos(cl2,w); })});
+      }else{ ser.push({lab:'Prospectos',color:'#f87171',datos:null,nota:'no lo puedo leer'}); ser.push({lab:'Clientes',color:'#f87171',datos:null,nota:'no lo puedo leer'}); }
+      if(su.estado==='ok') ser.push({lab:'Suscriptores',color:'#34d399',datos:[7,6,5,4,3,2,1,0].map(function(w){ return nuevos(su.rows,w); })});
+      else ser.push({lab:'Suscriptores',color:'#f87171',datos:null,nota:'no lo puedo leer'});
+      ser.push({lab:'Llamadas',color:'#d4a72c',datos:null,nota:'sin fuente conectada'});
+      document.getElementById('ops-chart').innerHTML=chart(ser);
+      document.getElementById('ops-legend').innerHTML=ser.map(function(s){
+        return '<span><i style="background:'+s.color+'"></i>'+esc(s.lab)+(s.nota?' <span class="ops-badge '+(s.nota==='sin fuente conectada'?'b-nosource':'b-error')+'">'+s.nota+'</span>':'')+'</span>';
+      }).join('');
+
+      var pb=document.getElementById('ops-prospects');
+      if(cl.estado!=='ok') pb.innerHTML='<div class="ops-fail">No lo puedo leer: '+esc(cl.msg)+'. No significa que no haya prospectos.</div>';
+      else{
+        var pend=cl.rows.filter(function(r){ return (r.status||'')==='prospecto'||(r.status||'')==='contactado'; });
+        if(!pend.length) pb.innerHTML='<div class="ops-empty">Cero prospectos en cola. Este cero es real: la tabla se leyo bien y no hay ninguno.</div>';
+        else pb.innerHTML='<div class="ops-list">'+pend.map(function(r){
+          var nom=r.full_name||r.name||r.nombre||'sin nombre';
+          var st=(r.status||'')==='contactado'?'contactado':'prospecto';
+          var sig=st==='prospecto'?'contactado':'cliente';
+          return '<div class="ops-row"><div><div class="r-main">'+esc(nom)+' <span class="ops-badge">'+st+'</span></div><div class="r-meta">'+esc(r.city||'sin ciudad')+' &middot; '+esc(r.source||'sin fuente')+' &middot; entro '+fdia(r.created_at)+'</div></div><div class="ops-acts"><button class="ops-btn" data-id="'+esc(r.id)+'" data-next="'+sig+'">Marcar '+sig+'</button></div><div class="ops-msg" id="ops-msg-'+esc(r.id)+'"></div></div>';
+        }).join('')+'</div>';
+        pb.onclick=function(ev){ var b=ev.target.closest('button[data-next]'); if(b) opsEstado(b.getAttribute('data-id'),b.getAttribute('data-next')); };
+      }
+
+      var sv=document.getElementById('ops-services');
+      if(br.estado!=='ok') sv.innerHTML='<div class="ops-fail">No lo puedo leer: '+esc(br.msg)+'</div>';
+      else{
+        var abiertos=br.rows.filter(function(r){ var s=(r.status||''); return !r.completed_at && s!=='completed' && s!=='cancelled' && s!=='cancelado'; });
+        if(!abiertos.length) sv.innerHTML='<div class="ops-empty">Cero servicios pendientes. Cero real, la tabla respondio.</div>';
+        else sv.innerHTML='<div class="ops-list">'+abiertos.map(function(r){
+          var faltan=[];
+          if(!r.assigned_technician) faltan.push('sin tecnico');
+          if(!r.service_date) faltan.push('sin fecha');
+          if(!r.paid_at) faltan.push('sin pago');
+          return '<div class="ops-row"><div><div class="r-main">'+esc(r.service_type||'servicio sin tipo')+(r.price?' &middot; $'+esc(r.price):'')+'</div><div class="r-meta">'+esc(r.city||'sin ciudad')+' &middot; pedido '+fdia(r.created_at)+' &middot; '+esc(r.status||'sin estado')+'</div></div><div class="ops-acts">'+faltan.map(function(f){return '<span class="ops-badge b-error">'+f+'</span>'}).join(' ')+'</div></div>';
+        }).join('')+'</div>';
+        sv.innerHTML+='<div class="ops-msg" style="margin-top:10px"><span class="ops-badge b-error">la tabla services no la puedo leer</span> <span class="ops-flat">esta lista sale de booking_requests</span></div>';
+      }
+
+      var bl=document.getElementById('ops-blocked');
+      if(bl){
+        var nombres=Object.keys(SIN_LECTURA);
+        bl.innerHTML='<span class="ops-badge b-error">cerradas para el panel</span> <span class="ops-flat">'+nombres.join(', ')+' &middot; se abren en Fase 3</span>'+(pruebasFuera?'<br><span class="ops-flat">pruebas excluidas del conteo: '+pruebasFuera+'</span>':'');
+      }
+      if(stamp) stamp.textContent='leido '+new Date().toLocaleTimeString('es-US',{hour:'2-digit',minute:'2-digit'});
+    };
+
+    document.addEventListener('DOMContentLoaded',function(){
+      var rb=document.getElementById('ops-reload');
+      if(rb) rb.onclick=function(){ loadOperacion(); };
+      setTimeout(function(){ if(document.getElementById('ops-kpis')) loadOperacion(); },900);
+    });
+  })();
+  </script>
 </body>
 </html>
