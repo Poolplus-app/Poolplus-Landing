@@ -258,7 +258,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div class="hero-pill hero-svc" onclick="heroPick('maintenance')">💧 Weekly Maintenance</div>
         <div class="hero-pill hero-svc" onclick="heroPick('green')">⚡ Green Pool Rescue</div>
         <div class="hero-pill hero-svc" onclick="heroPick('repair')">🔧 Equipment Repair</div>
-        <div class="hero-pill hero-svc" onclick="heroPick('party')">🎉 Pre-Party Cleanup</div>
+        <div class="hero-pill hero-svc" onclick="heroPick('party')">🎉 Prime Cleaning</div>
         <div class="hero-pill hero-svc" onclick="heroPick('remodel')">🏗️ Remodeling Consult</div>
       </div>
     </div>
@@ -305,7 +305,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
                 <optgroup label="── One-Time Services">
                   <option value="green">Green Pool Rescue ⚡</option>
                   <option value="repair">Equipment Repair</option>
-                  <option value="party">Pre-Party Cleanup ⚡</option>
+                  <option value="party">Prime Cleaning ⚡</option>
                   <option value="remodel">Remodeling Consult</option>
                 </optgroup>
               </select>
@@ -380,16 +380,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
             </select>
           </div>
         </div>
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">Schedule your service</div>
-        <div class="schedule-tabs">
-          <div class="sched-tab on" onclick="setSched(this,'same-day')">Same-day service</div>
-          <div class="sched-tab" onclick="setSched(this,'scheduled')">Schedule for later</div>
-        </div>
-        <div class="input-field" style="margin-bottom:16px;">
-          
-          <input type="date" id="bkDate" onchange="validateServiceDate(this)"/>
-          <div id="bkDateNote" style="font-size:11.5px;color:#9ca3af;margin-top:4px;">Service days: Monday – Saturday</div>
-        </div>
+        
         <div style="font-size:13px;font-weight:500;color:var(--muted);margin-bottom:10px;">Tell us about your request</div>
         <textarea style="width:100%;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;font-size:13px;font-family:inherit;color:var(--text);outline:none;resize:none;height:72px;" placeholder="Any notes for the technician..." id="bkNotes"></textarea>
         <div style="margin:14px 0 0;">
@@ -507,7 +498,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
           <div style="position:absolute;top:14px;left:14px;background:#10b981;color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:50px;">🔄 Recurring</div>
         </div>
         <div class="pool-card-title">Scheduled Services</div>
-        <div class="pool-card-desc">Set up recurring cleanings that continue automatically until you cancel. Weekly or bi-weekly — you choose.</div>
+        <div class="pool-card-desc">Set up recurring cleanings that continue automatically until you cancel. Weekly service on a fixed day assigned by PoolPlus.</div>
       </div>
 
       <div class="pool-card">
@@ -602,7 +593,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
       <div class="service-tile">
         <div class="tag-spacer"></div>
         <div class="service-ico">🎉</div>
-        <div class="service-name">Pre-Party Cleanup</div>
+        <div class="service-name">Prime Cleaning</div>
         <div class="service-desc">Deep clean so your pool is ready for guests. Book at least 24h in advance.</div>
         <div class="service-price" id="tile-party-price">$199</div>
       </div>
@@ -712,7 +703,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <input id="subZip" placeholder="ZIP *" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
       </div>
       <textarea id="subNotes" placeholder="Notes (gate code, dogs, spa, etc.)" rows="2" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;resize:vertical;"></textarea>
-      <div style="background:#EAF6FB;border-radius:10px;padding:11px 13px;font-size:12.5px;color:#146C94;line-height:1.5;">📅 Weekly service runs <b>Monday – Friday</b>. We'll call you within 24 hours to schedule your service day.</div>
+      <div style="background:#EAF6FB;border-radius:10px;padding:11px 13px;font-size:12.5px;color:#146C94;line-height:1.5;">📅 Weekly service runs <b>Monday – Saturday</b>. We'll call you within 24 hours to schedule your service day.</div>
     </div>
     <div id="subError" style="display:none;background:#fdecec;color:#d64545;border:1px solid #f5c6c6;border-radius:10px;padding:11px;font-size:13.5px;margin-top:12px;"></div>
     <button id="subGoBtn" onclick="submitSubscription()" style="margin-top:16px;width:100%;background:#1e90c8;color:#fff;border:none;border-radius:50px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;">Continue to secure payment →</button>
@@ -941,9 +932,35 @@ var PRICES={
     );
     const {data} = await sb.from('prices').select('*');
     if(data && data.length){
+      var SIZED = {
+        maintenance:'maintenance',
+        green_pool_rescue:'green',
+        pre_party_cleanup:'party',
+        filter_service:'filter',
+        leak_detection:'leak'
+      };
+      var FLAT = {
+        equipment_repair:'repair',
+        remodeling_consult:'remodel'
+      };
+      var SIZES = ['small','medium','large','xl'];
       data.forEach(function(p){
-        if(!PRICES[p.service_type]) PRICES[p.service_type]={};
-        PRICES[p.service_type][p.pool_size] = Number(p.price);
+        if(!p || p.active === false) return;
+        var key = String(p.key || '');
+        var svc = null, size = null;
+        for(var i=0; i<SIZES.length; i++){
+          var suf = '_' + SIZES[i];
+          if(key.length > suf.length && key.slice(-suf.length) === suf){
+            svc = SIZED[key.slice(0, key.length - suf.length)];
+            size = SIZES[i];
+            break;
+          }
+        }
+        if(!svc){ svc = FLAT[key]; size = null; }
+        if(!svc) return;
+        if(!PRICES[svc]) PRICES[svc] = {};
+        if(size){ PRICES[svc][size] = Number(p.price); }
+        else { SIZES.forEach(function(s){ PRICES[svc][s] = Number(p.price); }); }
       });
       // Actualizar tiles visuales de mantenimiento
       // Tiles de maintenance muestran el precio de suscripción ANUAL (fijo en SUB_PRICES), no la tabla de one-time
@@ -974,7 +991,7 @@ var LABELS={
   filter:"Filter Service",
   leak:"Leak Detection",
   repair:"Equipment Diagnostic",
-  party:"Pre-Party Cleanup",
+  party:"Prime Cleaning",
   remodel:"Remodeling Consult"
 };
 
@@ -1029,7 +1046,7 @@ function goStep3(){
   document.getElementById("step2").classList.remove("active");
   document.getElementById("step3").classList.add("active");
 }
-var SCHED_TYPE="same-day";
+var SCHED_TYPE="to_be_assigned";
 function validateServiceDate(inp){
   if(!inp.value) return;
   var d=new Date(inp.value+"T12:00:00");
@@ -1058,7 +1075,7 @@ async function submitBooking(){
   var zip=document.getElementById("bkZip").value.trim();
   var address=document.getElementById("bkAddress").value.trim();
   var city=document.getElementById("bkCity").value.trim();
-  var dateVal=document.getElementById("bkDate").value;
+  var dateVal="";
   var notes=document.getElementById("bkNotes").value.trim();
   var consentSms=document.getElementById("c1").checked;
   var consentMkt=document.getElementById("c2").checked;
@@ -1133,7 +1150,7 @@ async function submitBooking(){
     email:email, phone:phone,
     service:label, pool_size:size,
     address:address, city:city, zip:zip,
-    service_date:dateVal||"same-day",
+    service_date:dateVal||"to_be_assigned",
     schedule_type:SCHED_TYPE,
     price:price!==null?String(price):"",
     notes:notes,
