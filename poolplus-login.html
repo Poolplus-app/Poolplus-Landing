@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pool Plus — Client Login</title>
+<title>PoolPlus — Client Login</title>
+<link rel="stylesheet" href="/brand.css"/>
+<link rel="icon" href="/brand/favicon.svg" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -75,10 +77,7 @@ footer a{color:rgba(255,255,255,.3);text-decoration:none;}
 
 <nav>
   <div class="nav-inner">
-    <a href="/index.html">
-      <img src="https://poolplus.app/forms/images/poolplus-logo-white.svg" class="nav-logo" onerror="this.src='https://i.imgur.com/placeholder.png';this.style.display='none';this.nextSibling.style.display='block'"/>
-      <span style="display:none;color:white;font-size:20px;font-weight:800;">Pool<span style="color:#1e90c8;">Plus</span></span>
-    </a>
+    <a href="/index.html" class="pp-logo pp-logo--dark" style="font-size:20px" aria-label="PoolPlus"><i class="pp-mark"></i><span class="pp-word">Pool<b>Plus</b></span></a>
     <a href="/index.html" class="nav-back">← Back to home</a>
   </div>
 </nav>
@@ -87,8 +86,7 @@ footer a{color:rgba(255,255,255,.3);text-decoration:none;}
   <div class="card">
 
     <div class="card-logo">
-      <img src="https://poolplus.app/forms/images/poolplus-logo-dark.svg" onerror="this.style.display='none';this.nextSibling.style.display='block'"/>
-      <span style="display:none;font-size:24px;font-weight:800;color:var(--text);">Pool<span style="color:#1e90c8;">Plus</span></span>
+      <span class="pp-logo" style="font-size:24px"><i class="pp-mark"></i><span class="pp-word">Pool<b>Plus</b></span></span>
     </div>
 
     <!-- LOGIN FORM -->
