@@ -4,6 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>PoolPlus — My Pool</title>
+<link rel="stylesheet" href="/brand.css"/>
+<link rel="icon" href="/brand/favicon.svg" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -96,7 +98,7 @@ nav{background:var(--dark);padding:0 5%;position:sticky;top:0;z-index:100;box-sh
 <div id="portalContent" style="display:none;">
 <nav>
   <div class="nav-inner">
-    <a href="/index.html" class="nav-logo">Pool<span>Plus</span></a>
+    <a href="/index.html" class="pp-logo pp-logo--dark" style="font-size:20px" aria-label="PoolPlus"><i class="pp-mark"></i><span class="pp-word">Pool<b>Plus</b></span></a>
     <div class="nav-right">
       <span class="nav-user" id="navUserEmail"></span>
       <button class="btn-signout" onclick="signOut()">Sign out</button>
