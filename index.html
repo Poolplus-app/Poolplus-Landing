@@ -735,7 +735,7 @@ function setPlanMode(mode){
 
 function openSubscribe(size){
   SUB_SIZE=size;
-  var label=size.charAt(0).toUpperCase()+size.slice(1);
+  var label=ppSizeLabel(size);
   var price=SUB_PRICES[PLAN_MODE][size];
   document.getElementById('subPlanTitle').textContent='Weekly Maintenance — '+label;
   document.getElementById('subPlanDetail').textContent='$'+price+'/month · '+(PLAN_MODE==='annual'?'Annual commitment price':'Month to month')+' · first month charged today';
@@ -983,6 +983,8 @@ function heroPick(svc){
   calcPrice();
   document.getElementById("widgetWrap").scrollIntoView({behavior:"smooth",block:"center"});
 }
+var PP_SIZE_LABEL={small:"Compact",medium:"Standard",large:"Large",xl:"XL / Commercial"};
+function ppSizeLabel(s){return PP_SIZE_LABEL[s]||(s.charAt(0).toUpperCase()+s.slice(1));}
 function calcPrice(){
   var size=document.getElementById("poolSize").value;
   var svc=document.getElementById("serviceType").value;
@@ -1001,7 +1003,7 @@ function calcPrice(){
   var price=PRICES[svc]&&PRICES[svc][size]?PRICES[svc][size]:149;
   if(svc==="maintenance"&&window.SUB_PRICES&&SUB_PRICES.annual[size]){price=SUB_PRICES.annual[size];}
   var isRec=RECURRING.indexOf(svc)>-1;
-  var sizeLabel=size.charAt(0).toUpperCase()+size.slice(1);
+  var sizeLabel=ppSizeLabel(size);
   svcEl.textContent=sizeLabel+" pool • "+(LABELS[svc]||svc);
   fromEl.textContent="From";
   amtEl.textContent="$"+price;
