@@ -1000,11 +1000,17 @@ function calcPrice(){
     fromEl.textContent="";
     return;
   }
-  var price=PRICES[svc]&&PRICES[svc][size]?PRICES[svc][size]:149;
+  var price=PRICES[svc]&&PRICES[svc][size]?PRICES[svc][size]:null;
   if(svc==="maintenance"&&window.SUB_PRICES&&SUB_PRICES.annual[size]){price=SUB_PRICES.annual[size];}
   var isRec=RECURRING.indexOf(svc)>-1;
   var sizeLabel=ppSizeLabel(size);
   svcEl.textContent=sizeLabel+" pool • "+(LABELS[svc]||svc);
+  if(size==="xl"||price===null){
+    fromEl.textContent="";
+    amtEl.textContent="Custom quote";
+    currEl.textContent="we confirm it with you";
+    return;
+  }
   fromEl.textContent="From";
   amtEl.textContent="$"+price;
   currEl.textContent=isRec?"USD / month":"USD";
@@ -1089,6 +1095,7 @@ async function submitBooking(){
   }
 
   var price=(PRICES[svc]&&PRICES[svc][size])?PRICES[svc][size]:null;
+  if(size==="xl"){price=null;}
   var label=LABELS[svc]||svc;
   var parts=name.split(/\s+/);
   var firstName=parts.shift()||name;
