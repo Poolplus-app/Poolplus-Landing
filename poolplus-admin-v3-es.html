@@ -127,9 +127,9 @@ select option{background:#1a2235;}
   <button class="nav-btn" onclick="goTab('reservas',this)"><span>📋</span><span style="flex:1">Reservas</span><span class="nav-badge" id="badge-res" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('suscripciones',this)"><span>🔁</span><span style="flex:1">Suscripciones</span><span class="nav-badge" id="badge-subs" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('precios',this)"><span>💲</span><span style="flex:1">Precios y Promos</span></button>
-  <button class="nav-btn" onclick="goTab('novedades',this)"><span>⚠️</span><span style="flex:1">Novedades</span><span class="nav-badge" id="badge-nov">2</span></button>
-  <button class="nav-btn" onclick="goTab('techs',this)"><span>🔧</span><span style="flex:1">Técnicos</span><span class="nav-badge" id="badge-tech">2</span></button>
-  <button class="nav-btn" onclick="goTab('aplicaciones',this)"><span>📥</span><span style="flex:1">Aplicaciones</span><span class="nav-badge" id="badge-apps">3</span></button>
+  <button class="nav-btn" onclick="goTab('novedades',this)"><span>⚠️</span><span style="flex:1">Novedades</span><span class="nav-badge" id="badge-nov" style="display:none"></span></button>
+  <button class="nav-btn" onclick="goTab('techs',this)"><span>🔧</span><span style="flex:1">Técnicos</span><span class="nav-badge" id="badge-tech" style="display:none"></span></button>
+  <button class="nav-btn" onclick="goTab('aplicaciones',this)"><span>📥</span><span style="flex:1">Aplicaciones</span><span class="nav-badge" id="badge-apps" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('clients',this)"><span>👥</span><span style="flex:1">Clientes</span></button>
   <button class="nav-btn" onclick="goTab('promos',this)"><span>🏷</span><span style="flex:1">Promociones</span></button>
   <button class="nav-btn" onclick="goTab('pagos',this)"><span>💰</span><span style="flex:1">Pagos a Técnicos</span></button>
@@ -148,12 +148,7 @@ select option{background:#1a2235;}
   <div class="page active" id="page-dashboard">
     <div class="page-title">Panel General</div>
     <div class="page-sub">Resumen — Junio 2026</div>
-    <div class="alert alert-warn">⚠️ <strong>2 técnicos</strong> requieren atención — documentos faltantes o aprobación pendiente. <button class="btn btn-warning btn-sm" style="margin-left:auto" onclick="goTabById('techs')">Revisar →</button></div>
-    <div class="alert alert-danger">🔔 <strong>2 novedades</strong> esperando tu decisión. <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="goTabById('novedades')">Revisar →</button></div>
-    <div style="background:#0ea5e915;border:1px solid #0ea5e930;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;color:#0ea5e9;margin-bottom:14px">
-      📥 <strong>3 aplicaciones</strong> de técnicos esperando revisión.
-      <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="goTabById('aplicaciones')">Revisar →</button>
-    </div>
+    <div id="avisos-dashboard"></div>
     <div class="grid-auto" style="margin-bottom:24px" id="stats-grid"></div>
     <!-- Price snapshot -->
     <div class="card card-p" style="margin-bottom:20px">
@@ -688,7 +683,26 @@ function savePrice(id,type,key){
   renderStats();
 }
 // ── RENDER FUNCTIONS ─────────────────────────────────────────
+// Los avisos del tablero salen de los datos, no del HTML. Si no hay nada
+// que atender, no aparece nada — antes decian 2, 2 y 3 siempre.
+function renderAvisos(){
+  const cont=document.getElementById("avisos-dashboard");
+  if(!cont) return;
+  const tecs=TECHS.filter(function(t){return t.status!=="active";}).length;
+  const novs=alertasState.filter(function(a){return a.status==="pending";}).length;
+  const apps=APPS.filter(function(a){return a.status==="pending";}).length;
+  let html="";
+  if(tecs>0) html+=`<div class="alert alert-warn">⚠️ <strong>${tecs} ${tecs===1?"técnico":"técnicos"}</strong> ${tecs===1?"requiere":"requieren"} atención. <button class="btn btn-warning btn-sm" style="margin-left:auto" onclick="goTabById('techs')">Revisar →</button></div>`;
+  if(novs>0) html+=`<div class="alert alert-danger">🔔 <strong>${novs} ${novs===1?"novedad":"novedades"}</strong> esperando tu decisión. <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="goTabById('novedades')">Revisar →</button></div>`;
+  if(apps>0) html+=`<div style="background:#0ea5e915;border:1px solid #0ea5e930;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;color:#0ea5e9;margin-bottom:14px">📥 <strong>${apps} ${apps===1?"aplicación":"aplicaciones"}</strong> de ${apps===1?"técnico":"técnicos"} esperando revisión.<button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="goTabById('aplicaciones')">Revisar →</button></div>`;
+  if(!html) html=`<div style="background:#10b98110;border:1px solid #10b98130;border-radius:10px;padding:12px 16px;font-size:13px;color:#10b981;margin-bottom:14px">✅ Nada pendiente de tu decisión.</div>`;
+  cont.innerHTML=html;
+  const bn=document.getElementById("badge-nov"); if(bn){bn.textContent=novs; bn.style.display=novs>0?"":"none";}
+  const bt=document.getElementById("badge-tech"); if(bt){bt.textContent=tecs; bt.style.display=tecs>0?"":"none";}
+}
+
 function renderStats(){
+  renderAvisos();
   const mrr=CLIENTS.filter(c=>c.status==="active").reduce((a,c)=>a+(PRICES.planes[c.plan]?.precio||0),0);
   const actClients=CLIENTS.filter(c=>c.status==="active").length;
   const actTechs=TECHS.filter(t=>t.status==="active").length;
