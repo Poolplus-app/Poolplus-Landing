@@ -535,28 +535,16 @@ function togglePass(){
 function doLogin(){/* eliminado */}
 
 // ── DATA ──────────────────────────────────────────────────────
-const TECHS = [
-  {id:1,name:"Oscar Carabaño",    email:"oscar@poolplus.app",   loc:"Weston",        rating:4.9,jobs:1200,status:"active",   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded"}, earn:12400,pend:840,  stripe:"acct_1A2B"},
-  {id:2,name:"Abel López",        email:"abel@poolplus.app",    loc:"Davie",          rating:4.8,jobs:980, status:"active",   docs:{id:"uploaded",lic:"missing", ins:"uploaded"}, earn:9800, pend:560,  stripe:""},
-  {id:3,name:"Renny Diaz",        email:"renny@poolplus.app",   loc:"Pembroke Pines", rating:4.9,jobs:1850,status:"suspended",docs:{id:"uploaded",lic:"uploaded",ins:"expired" }, earn:18200,pend:0,    stripe:"acct_4D5E"},
-  {id:4,name:"Luis Paz",          email:"luis@poolplus.app",    loc:"Doral",          rating:4.7,jobs:760, status:"pending",  docs:{id:"missing", lic:"missing", ins:"missing" }, earn:0,    pend:0,    stripe:""},
-  {id:5,name:"Christian Castillo",email:"christian@poolplus.app",loc:"Coral Springs", rating:4.6,jobs:430, status:"active",   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded"}, earn:4300, pend:280,  stripe:"acct_7G8H"},
-  {id:6,name:"Giann Bentivegna",  email:"giann@poolplus.app",   loc:"Plantation",     rating:4.8,jobs:610, status:"active",   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded"}, earn:6100, pend:420,  stripe:"acct_J1K2"},
-];
+// Los tecnicos salen de la tabla `technicians`. Ver cargarDatosReales().
+let TECHS = [];
 // Los clientes de demostracion se retiraron. El tablero muestra la realidad:
 // hoy no hay suscripciones activas. Cuando se conecte a la tabla `subscriptions`
 // este arreglo se reemplaza por esa consulta.
 const CLIENTS = [];
-let PROMOS = [
-  {id:1,code:"WELCOME50", label:"Primer Mes 50% Off",          type:"percent",    val:50,  uses:38,limit:100,active:true, expires:"2026-07-31"},
-  {id:2,code:"ANNUAL2026",label:"Plan Anual — Paga 10, Usa 12",type:"months_free",val:2,   uses:14,limit:50, active:true, expires:"2026-12-31"},
-  {id:3,code:"REF-OSCAR", label:"Referido de Oscar Carabaño",  type:"percent",    val:50,  uses:7, limit:null,active:true, expires:null},
-];
-const ALERTAS = [
-  {id:1,client:"Jennifer Walsh",   type:"green_pool",isNew:true, tech:"Christian Castillo",time:"9:22 AM",date:"18 Jun",status:"pending"},
-  {id:2,client:"John & Maria Rivera",type:"equipment",isNew:false,tech:"Oscar Carabaño",   time:"8:45 AM",date:"18 Jun",status:"pending"},
-  {id:3,client:"Sarah Thompson",   type:"green_pool",isNew:false,tech:"Abel López",        time:"7:30 AM",date:"17 Jun",status:"logged"},
-];
+// No existe tabla de promociones todavia. Vacio en vez de inventado.
+let PROMOS = [];
+// Las novedades hoy viajan por WhatsApp, no hay tabla. Vacio en vez de inventado.
+const ALERTAS = [];
 let alertasState = [...ALERTAS];
 
 const PRICES = {
@@ -614,7 +602,8 @@ function discountLabel(p){
   return `$${p.val}`;
 }
 function comp(docs){
-  const vals=Object.values(docs);
+  const vals=Object.values(docs||{});
+  if(!vals.length) return null;
   return Math.round(vals.filter(v=>v==="uploaded").length/vals.length*100);
 }
 
@@ -799,17 +788,18 @@ function renderTechs(){
   let list=TECHS.filter(t=>(techFilter==="all"||t.status===techFilter)&&(t.name.toLowerCase().includes(techSearch.toLowerCase())||t.loc.toLowerCase().includes(techSearch.toLowerCase())));
   document.getElementById("techs-tbody").innerHTML=list.map(t=>{
     const c=comp(t.docs);
-    const warn=Object.values(t.docs).some(v=>v!=="uploaded")?"⚠️":"";
+    const warn=c!==null&&Object.values(t.docs).some(v=>v!=="uploaded")?"⚠️":"";
     const progColor=c===100?"linear-gradient(90deg,#10b981,#34d399)":"linear-gradient(90deg,#f59e0b,#fbbf24)";
+    const docCell=c===null?`<span style="color:var(--muted);font-size:12px" title="Los documentos viven en la aplicacion del tecnico">—</span>`:`<div style="display:flex;align-items:center;gap:8px"><div class="progress" style="width:60px"><div class="progress-fill" style="width:${c}%;background:${progColor}"></div></div><span style="font-size:11px;font-weight:700;color:${c===100?"#10b981":"#f59e0b"}">${c}%</span><span>${warn}</span></div>`;
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:10px">${avatar(t.name)}<div><div style="font-size:13px;font-weight:600">${t.name}</div><div style="font-size:11px;color:var(--muted)">${t.email}</div></div></div></td>
       <td style="font-size:13px;color:var(--muted)">📍 ${t.loc}</td>
-      <td><div style="display:flex;align-items:center;gap:8px"><div class="progress" style="width:60px"><div class="progress-fill" style="width:${c}%;background:${progColor}"></div></div><span style="font-size:11px;font-weight:700;color:${c===100?"#10b981":"#f59e0b"}">${c}%</span><span>${warn}</span></div></td>
+      <td>${docCell}</td>
       <td style="font-size:13px">⭐ ${t.rating}</td>
       <td style="font-size:13px;font-weight:600">${t.jobs.toLocaleString()}</td>
       <td style="font-size:13px;font-weight:700;color:#10b981">$${t.earn.toLocaleString()}</td>
       <td>${badge(t.status)}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openTechModal(${t.id})">Gestionar</button></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openTechModal('${t.id}')">Gestionar</button></td>
     </tr>`;
   }).join("");
 }
@@ -981,18 +971,8 @@ function openClientModal(id){
 }
 
 // ── APLICACIONES ──────────────────────────────────────────────
-let APPS = [
-  {id:1, fname:"Miguel",   lname:"Torres",    email:"miguel.torres@email.com",  phone:"(786) 555-1201", zone:"Weston",        exp:"3–5 años",     plate:"FLR-4421 · FL", status:"pending",  date:"19 Jun 2026",
-   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded",wc:"none"}, notes:""},
-  {id:2, fname:"Carolina", lname:"Méndez",    email:"carolina.m@email.com",     phone:"(954) 555-3302", zone:"Coral Springs",  exp:"6–10 años",    plate:"ABC-9932 · FL", status:"pending",  date:"18 Jun 2026",
-   docs:{id:"uploaded",lic:"missing",ins:"uploaded",wc:"uploaded"}, notes:""},
-  {id:3, fname:"Andrés",   lname:"Villareal", email:"andres.v@email.com",       phone:"(305) 555-7703", zone:"Doral",          exp:"1–2 años",     plate:"MIA-0012 · FL", status:"pending",  date:"17 Jun 2026",
-   docs:{id:"uploaded",lic:"uploaded",ins:"missing",wc:"none"}, notes:""},
-  {id:4, fname:"Patricia", lname:"Suárez",    email:"psuarez@email.com",        phone:"(786) 555-4404", zone:"Davie",          exp:"Más de 10 años",plate:"BRW-7731 · FL", status:"approved", date:"15 Jun 2026",
-   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded",wc:"none"}, notes:"Aprobada — experiencia excelente"},
-  {id:5, fname:"José",     lname:"Ramírez",   email:"jose.ram@email.com",       phone:"(954) 555-5505", zone:"Pembroke Pines", exp:"Menos de 1 año",plate:"PPB-2210 · FL", status:"rejected", date:"14 Jun 2026",
-   docs:{id:"uploaded",lic:"missing",ins:"missing",wc:"none"}, notes:"Rechazado — sin licencia ni seguro"},
-];
+// Las aplicaciones salen de `technician_applications`. Ver cargarDatosReales().
+let APPS = [];
 let appFilter = "pending";
 
 const DOC_LABELS = {id:"ID / Documento",lic:"Licencia CPO",ins:"Seguro",wc:"Workers' Comp"};
@@ -1122,8 +1102,8 @@ function renderApps(){
 
     const actions=a.status==="pending"?`
       <div style="display:flex;gap:8px;margin-top:14px">
-        <button class="btn btn-danger" style="flex:1;padding:9px" onclick="rechazarApp(${a.id})">❌ Rechazar</button>
-        <button class="btn btn-success" style="flex:2;padding:9px" ${!allDocsOk?"disabled title='Faltan documentos'":""} onclick="aprobarApp(${a.id})">✅ Aprobar y crear credenciales</button>
+        <button class="btn btn-danger" style="flex:1;padding:9px" onclick="rechazarApp('${a.id}')">❌ Rechazar</button>
+        <button class="btn btn-success" style="flex:2;padding:9px" ${!allDocsOk?"disabled title='Faltan documentos'":""} onclick="aprobarApp('${a.id}')">✅ Aprobar y crear credenciales</button>
       </div>`:
       a.status==="approved"?`<div style="margin-top:12px;font-size:12px;color:#10b981">✅ Aprobada · Credenciales enviadas por correo</div>`:
       `<div style="margin-top:12px;font-size:12px;color:#ef4444">❌ Rechazada${a.notes?" — "+a.notes:""}</div>`;
@@ -1177,7 +1157,68 @@ function renderAll(){
   updateAppBadge();
 }
 renderAll();
+
+// --- Datos reales: el panel no inventa nada -------------------------
+// Tecnicos, aplicaciones, servicios hechos y dinero por pagar salen de
+// la base. Lo que no tiene fuente real se muestra vacio, nunca inventado.
+async function cargarDatosReales(){
+  try{
+    const [tec, res, gan, apps] = await Promise.all([
+      sb.from('technicians').select('*'),
+      sb.from('booking_requests').select('assigned_technician_id,completed_at'),
+      sb.from('technician_earnings').select('technician_id,monto,pagado_at'),
+      sb.from('technician_applications').select('*')
+    ]);
+    const hechos={}, ganado={}, porPagar={};
+    (res.data||[]).forEach(function(r){
+      if(r.assigned_technician_id && r.completed_at){
+        hechos[r.assigned_technician_id]=(hechos[r.assigned_technician_id]||0)+1;
+      }
+    });
+    (gan.data||[]).forEach(function(e){
+      const m=Number(e.monto)||0;
+      ganado[e.technician_id]=(ganado[e.technician_id]||0)+m;
+      if(!e.pagado_at) porPagar[e.technician_id]=(porPagar[e.technician_id]||0)+m;
+    });
+    TECHS = (tec.data||[]).map(function(t){
+      return {
+        id:t.id, name:t.name||'(sin nombre)', email:t.email||'—',
+        loc:t.zona||'—', rating:'—', jobs:hechos[t.id]||0,
+        status:t.status||'pending', docs:{},
+        earn:Math.round(ganado[t.id]||0), pend:Math.round(porPagar[t.id]||0),
+        stripe:''
+      };
+    });
+    RES_TECHS = TECHS.filter(function(t){return t.status==='active';}).map(function(t){return t.name;});
+    APPS = (apps.data||[]).map(function(a){
+      const partes=String(a.full_name||'').trim().split(/\s+/);
+      return {
+        id:a.id, fname:partes[0]||'—', lname:partes.slice(1).join(' '),
+        email:a.email||'—', phone:a.phone||'—', zone:a.city||'—',
+        exp:(a.experience_years!=null?a.experience_years+' anos':'—'), plate:'—',
+        status:a.status||'pending',
+        date:a.created_at?new Date(a.created_at).toLocaleDateString('es-US',{day:'numeric',month:'short',year:'numeric'}):'—',
+        docs:{
+          id:a.license_url?'uploaded':'missing',
+          lic:a.cpo_url?'uploaded':'missing',
+          ins:a.insurance_url?'uploaded':'missing',
+          wc:a.has_workers_comp?'uploaded':'none'
+        },
+        notes:a.notes||''
+      };
+    });
+    if(typeof renderTechs==='function') renderTechs();
+    if(typeof renderPagos==='function') renderPagos();
+    if(typeof renderApps==='function') renderApps();
+    if(typeof renderStats==='function') renderStats();
+    if(typeof updateAppBadge==='function') updateAppBadge();
+  }catch(e){
+    // Si la base falla, el panel queda vacio. Vacio es honesto; inventado no.
+  }
+}
+
 loadPreciosDB();
+cargarDatosReales();
 </script>
 
 <script>
@@ -1204,7 +1245,7 @@ sb.auth.onAuthStateChange((_e,session)=>{
 checkAdminSession();
 
 /* ══════════ RESERVAS ══════════ */
-const RES_TECHS=["Renny Diaz","Christian Castillo","Carlos Rodriguez","David Acuña","Dianny Roman","Paolo Bentivegna","Oscar Carabaño","Luis Paz","Daniel"];
+let RES_TECHS=[];
 const TECH_EMAILS={"Renny Diaz":"clearpooljds@gmail.com","Christian Castillo":"castillocris2530@gmail.com","Carlos Rodriguez":"carlos23rodriguez@hotmail.com","David Acuña":"clearvibeservice@gmail.com","Dianny Roman":"","Paolo Bentivegna":"giannben27@gmail.com","Oscar Carabaño":"ciber811@gmail.com","Luis Paz":"zuccaropaz@gmail.com","Daniel":"poolplusapp@gmail.com"};
 let RES_FILTER='new';
 let BOOKINGS=[];
