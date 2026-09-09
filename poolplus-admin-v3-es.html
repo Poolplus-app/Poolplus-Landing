@@ -147,7 +147,7 @@ select option{background:#1a2235;}
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
     <div class="page-title">Panel General</div>
-    <div class="page-sub">Resumen — Junio 2026</div>
+    <div class="page-sub" id="resumen-mes">Resumen</div>
     <div id="avisos-dashboard"></div>
     <div class="grid-auto" style="margin-bottom:24px" id="stats-grid"></div>
     <!-- Price snapshot -->
@@ -686,6 +686,12 @@ function savePrice(id,type,key){
 // Los avisos del tablero salen de los datos, no del HTML. Si no hay nada
 // que atender, no aparece nada — antes decian 2, 2 y 3 siempre.
 function renderAvisos(){
+  // El mes del encabezado sale del reloj, no de un texto fijo que decia "Junio 2026".
+  const mes=document.getElementById("resumen-mes");
+  if(mes){
+    const f=new Date().toLocaleDateString('es-US',{month:'long',year:'numeric',timeZone:'America/New_York'});
+    mes.textContent='Resumen — '+f.charAt(0).toUpperCase()+f.slice(1);
+  }
   const cont=document.getElementById("avisos-dashboard");
   if(!cont) return;
   const tecs=TECHS.filter(function(t){return t.status!=="active";}).length;
