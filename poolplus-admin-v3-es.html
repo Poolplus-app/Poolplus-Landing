@@ -417,9 +417,8 @@ select option{background:#1a2235;}
         <div class="section-label">Aplica a</div>
         <select id="pf-applies" style="width:100%">
           <option>Todos los planes</option>
-          <option>Esencial</option>
-          <option>Premium</option>
-          <option>Elite</option>
+          <option>Plan mensual</option>
+          <option>Plan anual</option>
           <option>Solo primer mes</option>
         </select>
       </div>
@@ -544,14 +543,10 @@ const TECHS = [
   {id:5,name:"Christian Castillo",email:"christian@poolplus.app",loc:"Coral Springs", rating:4.6,jobs:430, status:"active",   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded"}, earn:4300, pend:280,  stripe:"acct_7G8H"},
   {id:6,name:"Giann Bentivegna",  email:"giann@poolplus.app",   loc:"Plantation",     rating:4.8,jobs:610, status:"active",   docs:{id:"uploaded",lic:"uploaded",ins:"uploaded"}, earn:6100, pend:420,  stripe:"acct_J1K2"},
 ];
-const CLIENTS = [
-  {id:1,name:"John & Maria Rivera",addr:"123 Alhambra Pl, Coral Gables", plan:"Premium", status:"active",   promo:"WELCOME50", bill:"$124.50",  tech:"Oscar Carabaño",    isNew:false,notes:""},
-  {id:2,name:"Sarah Thompson",     addr:"456 Collins Ave, Miami Beach",   plan:"Elite",   status:"active",   promo:"ANNUAL2026",bill:"$0 (anual)",tech:"Abel López",        isNew:false,notes:""},
-  {id:3,name:"Mike Delgado",       addr:"789 SW 107th Ave, Kendall",      plan:"Esencial",status:"active",   promo:"REF-OSCAR", bill:"$74.50",   tech:"Oscar Carabaño",    isNew:false,notes:""},
-  {id:4,name:"Ana Castillo",       addr:"321 NW 87th Ave, Doral",         plan:"Premium", status:"paused",   promo:null,        bill:"Pausado",  tech:"Luis Paz",           isNew:false,notes:"Viajando hasta junio"},
-  {id:5,name:"Roberto Campos",     addr:"654 Bird Rd, South Miami",       plan:"Esencial",status:"cancelled",promo:null,        bill:"—",        tech:null,                 isNew:false,notes:"Canceló — precio"},
-  {id:6,name:"Jennifer Walsh",     addr:"1842 SW 145th Ave, Weston",      plan:"Premium", status:"active",   promo:"WELCOME50", bill:"$124.50",  tech:"Christian Castillo", isNew:true, notes:""},
-];
+// Los clientes de demostracion se retiraron. El tablero muestra la realidad:
+// hoy no hay suscripciones activas. Cuando se conecte a la tabla `subscriptions`
+// este arreglo se reemplaza por esa consulta.
+const CLIENTS = [];
 let PROMOS = [
   {id:1,code:"WELCOME50", label:"Primer Mes 50% Off",          type:"percent",    val:50,  uses:38,limit:100,active:true, expires:"2026-07-31"},
   {id:2,code:"ANNUAL2026",label:"Plan Anual — Paga 10, Usa 12",type:"months_free",val:2,   uses:14,limit:50, active:true, expires:"2026-12-31"},
@@ -565,11 +560,9 @@ const ALERTAS = [
 let alertasState = [...ALERTAS];
 
 const PRICES = {
-  planes:{
-    Esencial:{precio:149,color:"#0ea5e9",desc:"Mantenimiento semanal, piscina estándar"},
-    Premium: {precio:249,color:"#8b5cf6",desc:"Semanal + químicos incluidos"},
-    Elite:   {precio:349,color:"#f59e0b",desc:"Dos veces por semana + prioridad"},
-  },
+  // Los planes reales (mensual y anual por tamano) viven en la tabla `prices`.
+  // Esencial / Premium / Elite eran de la maqueta del equipo anterior.
+  planes:{},
   novedades:{
     green_pool:{precio:85, icon:"🟢",label:"Piscina Verde",          bloquea:true, penalidad:true },
     sedimento: {precio:65, icon:"🟤",label:"Sedimento Fino / Sistema Back",bloquea:true, penalidad:false},
@@ -602,7 +595,7 @@ const DOC_META = {
   missing: {icon:"⚠️",color:"#f59e0b",label:"Faltante"},
   expired: {icon:"🔴",color:"#ef4444",label:"Vencido"},
 };
-const PLAN_COLORS = {Esencial:"#0ea5e9",Premium:"#8b5cf6",Elite:"#f59e0b"};
+const PLAN_COLORS = {"Plan mensual":"#0ea5e9","Plan anual":"#10b981"};
 
 // ── HELPERS ───────────────────────────────────────────────────
 function avatar(name,size=34){
@@ -728,7 +721,7 @@ function renderStats(){
   document.getElementById("price-snapshot").innerHTML=snap;
 
   // plan dist
-  document.getElementById("plan-dist").innerHTML=["Esencial","Premium","Elite"].map(plan=>{
+  document.getElementById("plan-dist").innerHTML=Object.keys(PRICES.planes).map(plan=>{
     const count=CLIENTS.filter(c=>c.plan===plan&&c.status==="active").length;
     const color=PLAN_COLORS[plan]||"#0ea5e9";
     return `<div style="background:var(--surface2);border-radius:10px;padding:16px;text-align:center;border:1px solid ${color}30"><div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:${color}">${count}</div><div style="font-size:13px;font-weight:600;margin-top:4px">${plan}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">$${PRICES.planes[plan]?.precio||0}/mes</div></div>`;
