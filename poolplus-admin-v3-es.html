@@ -535,7 +535,7 @@ let TECHS = [];
 // Los clientes de demostracion se retiraron. El tablero muestra la realidad:
 // hoy no hay suscripciones activas. Cuando se conecte a la tabla `subscriptions`
 // este arreglo se reemplaza por esa consulta.
-const CLIENTS = [];
+let CLIENTS = [];
 // No existe tabla de promociones todavia. Vacio en vez de inventado.
 let PROMOS = [];
 // Las novedades hoy viajan por WhatsApp, no hay tabla. Vacio en vez de inventado.
@@ -572,6 +572,11 @@ const STATUS_META = {
   pending:   {color:"#f59e0b",bg:"#f59e0b20",label:"Pendiente"},
   paused:    {color:"#f59e0b",bg:"#f59e0b20",label:"Pausado"},
   cancelled: {color:"#64748b",bg:"#64748b20",label:"Cancelado"},
+  prospecto: {color:"#0ea5e9",bg:"#0ea5e920",label:"Prospecto"},
+  activo:    {color:"#10b981",bg:"#10b98120",label:"Activo"},
+  inactivo:  {color:"#64748b",bg:"#64748b20",label:"Inactivo"},
+  descartado:{color:"#64748b",bg:"#64748b20",label:"Descartado"},
+  incompleto:{color:"#f59e0b",bg:"#f59e0b20",label:"Incompleto"},
 };
 const DOC_META = {
   uploaded:{icon:"✅",color:"#10b981",label:"Cargado"},
@@ -838,7 +843,7 @@ function renderClients(){
       <td>${promoHtml}</td>
       <td style="font-size:13px;font-weight:600;color:#10b981">${c.bill}</td>
       <td>${badge(c.status)}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="openClientModal(${c.id})">Gestionar</button></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openClientModal('${c.id}')">Gestionar</button></td>
     </tr>`;
   }).join("");
 }
@@ -966,6 +971,27 @@ function openTechModal(id){
 }
 
 // ── CLIENT MODAL ──────────────────────────────────────────────
+// La historia del cliente se arma con lo que YA se registra: no hace falta
+// capturar nada nuevo, solo mostrar en orden lo que la base viene guardando.
+function fechaCorta(v){
+  if(!v) return '';
+  try{
+    return new Date(v).toLocaleString('es-US',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true,timeZone:'America/New_York'});
+  }catch(e){ return String(v); }
+}
+function lineaDeTiempo(c){
+  const h=(c.historia||[]).slice().sort(function(a,b){ return new Date(a.cuando)-new Date(b.cuando); });
+  if(!h.length) return `<div style="color:var(--muted);font-size:12px">Todavia no hay movimientos registrados.</div>`;
+  return `<div style="border-left:2px solid var(--border);margin-left:6px;padding-left:14px">` + h.map(function(e){
+    return `<div style="position:relative;padding:7px 0">
+      <span style="position:absolute;left:-21px;top:11px;width:9px;height:9px;border-radius:50%;background:${e.color||'#0ea5e9'}"></span>
+      <div style="font-size:12.5px;font-weight:600">${e.icono||''} ${e.titulo}</div>
+      ${e.detalle?`<div style="font-size:11.5px;color:var(--muted);margin-top:1px">${e.detalle}</div>`:''}
+      <div style="font-size:10.5px;color:var(--muted);margin-top:2px">${fechaCorta(e.cuando)}</div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
 function openClientModal(id){
   const c=CLIENTS.find(x=>x.id===id);
   const planColor=PLAN_COLORS[c.plan]||"#0ea5e9";
@@ -976,6 +1002,10 @@ function openClientModal(id){
       <div style="background:var(--surface2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Estado</div><div>${badge(c.status)}</div></div>
       <div style="background:var(--surface2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Próx. Cobro</div><div style="font-size:13px;font-weight:700;color:#10b981">${c.bill}</div></div>
       <div style="background:var(--surface2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Tipo</div><div style="font-size:13px;font-weight:700">${c.isNew?"🆕 Nuevo":"Recurrente"}</div></div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Historia del cliente</div>
+      ${lineaDeTiempo(c)}
     </div>
     <div>
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Notas Internas</div>
@@ -1183,11 +1213,14 @@ renderAll();
 // la base. Lo que no tiene fuente real se muestra vacio, nunca inventado.
 async function cargarDatosReales(){
   try{
-    const [tec, res, gan, apps] = await Promise.all([
+    const [tec, res, gan, apps, cli, subs, cal] = await Promise.all([
       sb.from('technicians').select('*'),
-      sb.from('booking_requests').select('assigned_technician_id,completed_at'),
-      sb.from('technician_earnings').select('technician_id,monto,pagado_at'),
-      sb.from('technician_applications').select('*')
+      sb.from('booking_requests').select('*'),
+      sb.from('technician_earnings').select('*'),
+      sb.from('technician_applications').select('*'),
+      sb.from('clients').select('*'),
+      sb.from('subscriptions').select('*'),
+      sb.from('ratings').select('*')
     ]);
     const hechos={}, ganado={}, porPagar={};
     (res.data||[]).forEach(function(r){
@@ -1227,6 +1260,70 @@ async function cargarDatosReales(){
         notes:a.notes||''
       };
     });
+    // ── Clientes con su historia ──────────────────────────────────
+    // Nada de esto se captura nuevo: son las marcas de tiempo que la base
+    // ya venia guardando, puestas en orden.
+    const califPorReserva={};
+    (cal.data||[]).forEach(function(r){ califPorReserva[r.booking_id]=r; });
+    const pagoPorReserva={};
+    (gan.data||[]).forEach(function(g){ pagoPorReserva[g.booking_id]=g; });
+    const hace30 = Date.now() - 30*24*60*60*1000;
+
+    CLIENTS = (cli.data||[]).map(function(c){
+      const reservas=(res.data||[]).filter(function(b){ return b.client_id===c.id; });
+      const sub=(subs.data||[]).find(function(s){
+        return (s.email||'').toLowerCase()===(c.email||'').toLowerCase() && (c.email||'')!=='';
+      });
+      const h=[];
+      h.push({cuando:c.created_at, icono:'👤', color:'#0ea5e9',
+              titulo:'Cliente registrado',
+              detalle: c.source==='llamada' ? 'Entro por llamada telefonica'
+                     : c.source==='web' ? 'Entro por el sitio web'
+                     : c.source ? 'Origen: '+c.source : ''});
+      if(sub) h.push({cuando:sub.created_at, icono:'🔁', color:'#8b5cf6',
+              titulo:'Suscripcion '+(sub.plan_type==='annual'?'anual':'mensual'),
+              detalle:'$'+(sub.monthly_price!=null?sub.monthly_price:'—')+'/mes · '+(sub.status||'')});
+      reservas.forEach(function(b){
+        const serv=b.service_label||b.service||'Servicio';
+        const precio=b.price!=null?' · $'+b.price:'';
+        h.push({cuando:b.created_at, icono:'📋', color:'#0ea5e9',
+                titulo:'Reserva: '+serv, detalle:(b.city||'')+precio});
+        if(b.assigned_at) h.push({cuando:b.assigned_at, icono:'👷', color:'#f59e0b',
+                titulo:'Tecnico asignado', detalle:b.assigned_technician||''});
+        if(b.alert_sent_at) h.push({cuando:b.alert_sent_at, icono:'📧', color:'#64748b',
+                titulo:'Aviso enviado a administracion', detalle:''});
+        if(b.called_at) h.push({cuando:b.called_at, icono:'📞', color:'#0ea5e9',
+                titulo:'Llamada al cliente', detalle:''});
+        if(b.completed_at) h.push({cuando:b.completed_at, icono:'✅', color:'#10b981',
+                titulo:'Servicio completado', detalle:b.photo_url?'Con foto':''});
+        if(b.paid_at) h.push({cuando:b.paid_at, icono:'💳', color:'#10b981',
+                titulo:'Cobro realizado', detalle:'$'+(b.price!=null?b.price:'—')});
+        if(b.payment_error) h.push({cuando:b.completed_at||b.created_at, icono:'⚠️', color:'#ef4444',
+                titulo:'El cobro fallo', detalle:String(b.payment_error).slice(0,90)});
+        const cf=califPorReserva[b.id];
+        if(cf) h.push({cuando:cf.created_at, icono:'⭐', color:'#f59e0b',
+                titulo:'Califico el servicio', detalle:(cf.rating!=null?cf.rating+' de 5':'')});
+        const pg=pagoPorReserva[b.id];
+        if(pg) h.push({cuando:pg.created_at, icono:'💰', color:'#8b5cf6',
+                titulo:'Anotado el pago al tecnico',
+                detalle:'$'+pg.monto+' · se paga el '+(pg.viernes_pago||'—')});
+      });
+      const ultima=reservas.slice().sort(function(a,b){ return new Date(b.created_at)-new Date(a.created_at); })[0];
+      return {
+        id:c.id, name:c.full_name||'(sin nombre)',
+        addr:[c.address,c.city].filter(Boolean).join(', ')||'—',
+        plan: sub ? ('Plan '+(sub.plan_type==='annual'?'anual':'mensual')) : '—',
+        status: c.status||'prospecto',
+        promo:null,
+        bill: sub && sub.monthly_price!=null ? '$'+sub.monthly_price : '—',
+        tech: (sub&&sub.assigned_technician) || (ultima&&ultima.assigned_technician) || null,
+        isNew: c.created_at ? (new Date(c.created_at).getTime() > hace30) : false,
+        notes: c.notes||'',
+        historia: h.filter(function(e){ return !!e.cuando; })
+      };
+    });
+    if(typeof renderClients==='function') renderClients();
+
     if(typeof renderTechs==='function') renderTechs();
     if(typeof renderPagos==='function') renderPagos();
     if(typeof renderApps==='function') renderApps();
