@@ -945,8 +945,25 @@ var PRICES={
         if(size){ PRICES[svc][size] = Number(p.price); }
         else { SIZES.forEach(function(s){ PRICES[svc][s] = Number(p.price); }); }
       });
+      // ── Planes de suscripción: la tabla manda ──
+      // Los precios de los planes viven en `prices` (plan_mensual_* y plan_anual_*).
+      // Lo que está escrito arriba en SUB_PRICES es solo el respaldo por si la base falla.
+      var PLAN_MAP = {plan_mensual:'regular', plan_anual:'annual'};
+      data.forEach(function(p){
+        if(!p || p.active === false) return;
+        var key = String(p.key || '');
+        Object.keys(PLAN_MAP).forEach(function(pref){
+          SIZES.forEach(function(sz){
+            if(key === pref + '_' + sz && window.SUB_PRICES && SUB_PRICES[PLAN_MAP[pref]]){
+              SUB_PRICES[PLAN_MAP[pref]][sz] = Number(p.price);
+            }
+          });
+        });
+      });
+      if(typeof setPlanMode === 'function'){ setPlanMode(PLAN_MODE); }
+
       // Actualizar tiles visuales de mantenimiento
-      // Tiles de maintenance muestran el precio de suscripción ANUAL (fijo en SUB_PRICES), no la tabla de one-time
+      // Los tiles de maintenance muestran el precio de suscripción ANUAL, que ahora también sale de la tabla
       // Actualizar tiles de servicios one-time (usar precio de pool "small" como referencia)
       var tileMap = {
         'tile-green-price':  {svc:'green',   size:'small', suffix:''},
