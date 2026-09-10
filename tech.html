@@ -302,8 +302,8 @@
       <h3>Completar servicio</h3>
       <p id="modalServiceInfo"></p>
       <div class="photo-slot" onclick="document.getElementById('photoInput').click()">
-        📸 Tomar foto de la piscina terminada
-        <small>Obligatoria. Sin foto no se puede completar el servicio.</small>
+        📸 Foto de constancia del servicio
+        <small>Obligatoria. Lo normal es la piscina terminada. Si llueve fuerte o ya está oscuro, una foto de la casa desde afuera sirve: lo que importa es que quede constancia de que estuviste.</small>
       </div>
       <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" onchange="photoSelected(event)">
       <img id="photoPreview" class="hidden" alt="Foto del servicio">
@@ -324,6 +324,7 @@
           <option value="agua_verde">Agua verde</option>
           <option value="sedimento">Sedimento fino</option>
           <option value="acid_wash">Necesita acid wash</option>
+          <option value="nivel_agua">Nivel de agua bajo</option>
           <option value="otro">Otro</option>
         </select>
         <div class="photo-slot" style="margin-top:10px"
@@ -335,12 +336,12 @@
                class="hidden" onchange="ppNovedadFoto(event)">
         <img id="novedadPreview" class="hidden" alt="Novedad"
              style="width:100%;border-radius:12px;margin-top:10px;display:block">
-        <textarea id="novedadNota" rows="2" placeholder="Una línea, opcional"
+        <textarea id="novedadNota" rows="2" placeholder="Nota para administración — el cliente NO la ve"
                   style="width:100%;margin-top:10px;padding:11px;border-radius:10px;
                          border:1px solid #e2e8f0;font-size:15px;font-family:inherit"></textarea>
         <div style="margin-top:10px;font-size:12.5px;color:#92400e;line-height:1.45">
-          El servicio se completa igual. Administración llama al cliente con la cotización —
-          vos no pones precio.
+          El servicio se completa igual. Al cliente le llega solo la foto; tu nota la lee
+          administración, que decide si llama y con qué precio.
         </div>
       </div>
       <button class="btn btn-complete hidden" id="toConfirmBtn" onclick="showConfirm()">Continuar</button>
@@ -350,9 +351,9 @@
     <div id="modalStep2" class="hidden">
       <h3>¿Confirmas que el servicio está completo?</h3>
       <div class="confirm-box">
-        ⚠️ Al confirmar, se le cobrará al cliente y se le enviará esta foto.
-        Esta acción <b>no se puede deshacer</b>. Revisa que la foto muestre
-        claramente la piscina limpia.
+        ⚠️ Al confirmar se cierra el servicio y esta foto se le envía al cliente.
+        Si el servicio se cobra aparte, el cobro sale ahora. Esta acción
+        <b>no se puede deshacer</b>.
       </div>
       <button class="btn btn-complete" id="confirmBtn" onclick="submitComplete()">Sí, completar y cobrar</button>
       <button class="btn btn-secondary" id="backBtn" onclick="backToStep1()">Volver</button>
