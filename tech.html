@@ -307,6 +307,42 @@
       </div>
       <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" onchange="photoSelected(event)">
       <img id="photoPreview" class="hidden" alt="Foto del servicio">
+
+      <!-- ===== Novedad del servicio (opcional, nunca bloquea) ===== -->
+      <div id="novedadToggle" class="hidden" onclick="ppToggleNovedad()"
+           style="margin-top:14px;padding:12px 14px;border:1px dashed #cbd5e1;border-radius:12px;
+                  text-align:center;font-size:14px;color:#1E88C8;font-weight:600;cursor:pointer">
+        <span id="novedadToggleTxt">+ Encontré algo que reportar</span>
+      </div>
+      <div id="novedadBox" class="hidden" style="margin-top:12px;padding:14px;border:1px solid #FDE68A;
+           background:#FFF7ED;border-radius:12px">
+        <select id="novedadTipo"
+                style="width:100%;padding:11px;border-radius:10px;border:1px solid #e2e8f0;
+                       font-size:15px;font-family:inherit;background:#fff">
+          <option value="">¿Qué encontraste?</option>
+          <option value="equipo">Equipo dañado</option>
+          <option value="agua_verde">Agua verde</option>
+          <option value="sedimento">Sedimento fino</option>
+          <option value="acid_wash">Necesita acid wash</option>
+          <option value="otro">Otro</option>
+        </select>
+        <div class="photo-slot" style="margin-top:10px"
+             onclick="document.getElementById('novedadFoto').click()">
+          📸 Foto de lo que encontraste
+          <small>Aparte de la foto de la piscina.</small>
+        </div>
+        <input type="file" id="novedadFoto" accept="image/*" capture="environment"
+               class="hidden" onchange="ppNovedadFoto(event)">
+        <img id="novedadPreview" class="hidden" alt="Novedad"
+             style="width:100%;border-radius:12px;margin-top:10px;display:block">
+        <textarea id="novedadNota" rows="2" placeholder="Una línea, opcional"
+                  style="width:100%;margin-top:10px;padding:11px;border-radius:10px;
+                         border:1px solid #e2e8f0;font-size:15px;font-family:inherit"></textarea>
+        <div style="margin-top:10px;font-size:12.5px;color:#92400e;line-height:1.45">
+          El servicio se completa igual. Administración llama al cliente con la cotización —
+          vos no pones precio.
+        </div>
+      </div>
       <button class="btn btn-complete hidden" id="toConfirmBtn" onclick="showConfirm()">Continuar</button>
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
     </div>
@@ -725,5 +761,143 @@ document.getElementById('password').addEventListener('keydown', e=>{
   if(e.key === 'Enter') login();
 });
 </script>
+
+<script>
+/* ===== Novedad del servicio =================================================
+   Se añade encima de lo que ya existe, sin tocarlo. En el servicio recurrente
+   la novedad NUNCA bloquea: el mantenimiento se hizo igual. El técnico solo
+   reporta; el precio lo pone PoolPlus.
+   Orden al cerrar: primero reportar-novedad, después complete-service, porque
+   el correo al cliente se arma al completar y tiene que encontrarla guardada.
+============================================================================ */
+let ppNovedadB64 = null;
+
+function ppToggleNovedad(){
+  const caja = document.getElementById('novedadBox');
+  const txt  = document.getElementById('novedadToggleTxt');
+  const abierta = !caja.classList.contains('hidden');
+  if(abierta){
+    caja.classList.add('hidden');
+    txt.textContent = '+ Encontré algo que reportar';
+    ppLimpiarNovedad();
+  }else{
+    caja.classList.remove('hidden');
+    txt.textContent = '− No reportar nada';
+  }
+}
+
+function ppLimpiarNovedad(){
+  ppNovedadB64 = null;
+  const t = document.getElementById('novedadTipo');
+  const n = document.getElementById('novedadNota');
+  const p = document.getElementById('novedadPreview');
+  if(t) t.value = '';
+  if(n) n.value = '';
+  if(p){ p.src = ''; p.classList.add('hidden'); }
+}
+
+function ppNovedadFoto(ev){
+  const file = ev.target.files && ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 1280;
+      let w = img.width, h = img.height;
+      if(w > h && w > max){ h = Math.round(h * max / w); w = max; }
+      else if(h >= w && h > max){ w = Math.round(w * max / h); h = max; }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = c.toDataURL('image/jpeg', 0.8);
+      ppNovedadB64 = dataUrl.split(',')[1];
+      const prev = document.getElementById('novedadPreview');
+      prev.src = dataUrl;
+      prev.classList.remove('hidden');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* Cuando aparece la foto de la piscina, aparece también la opción de reportar.
+   Se vigila el preview en vez de tocar photoSelected(). */
+(function(){
+  const prev = document.getElementById('photoPreview');
+  const tog  = document.getElementById('novedadToggle');
+  if(!prev || !tog) return;
+  new MutationObserver(() => {
+    if(!prev.classList.contains('hidden')) tog.classList.remove('hidden');
+  }).observe(prev, { attributes:true, attributeFilter:['class'] });
+})();
+
+/* Al abrir el modal de otro servicio, se limpia lo de la novedad. */
+(function(){
+  const original = window.openComplete;
+  if(typeof original !== 'function') return;
+  window.openComplete = function(b){
+    const caja = document.getElementById('novedadBox');
+    const tog  = document.getElementById('novedadToggle');
+    const txt  = document.getElementById('novedadToggleTxt');
+    if(caja) caja.classList.add('hidden');
+    if(tog)  tog.classList.add('hidden');
+    if(txt)  txt.textContent = '+ Encontré algo que reportar';
+    ppLimpiarNovedad();
+    return original.apply(this, arguments);
+  };
+})();
+
+/* Antes de completar, si hay novedad se guarda. Si eso falla, NO se completa:
+   completar sin la novedad mandaría al cliente un correo diciendo que su
+   piscina quedó bien, escondiendo lo que el técnico encontró. */
+(function(){
+  const original = window.submitComplete;
+  if(typeof original !== 'function') return;
+  window.submitComplete = async function(){
+    const sel = document.getElementById('novedadTipo');
+    const caja = document.getElementById('novedadBox');
+    const abierta = caja && !caja.classList.contains('hidden');
+    const tipo = abierta && sel ? sel.value : '';
+
+    if(abierta && !tipo){
+      showToast('Elegí qué encontraste, o cerrá el reporte. 👆');
+      return;
+    }
+
+    if(tipo){
+      const btn = document.getElementById('confirmBtn');
+      if(btn) btn.disabled = true;
+      try{
+        const nota = (document.getElementById('novedadNota')||{}).value || '';
+        const res = await fetch(SUPABASE_URL + '/functions/v1/reportar-novedad', {
+          method:'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            booking_id: currentBooking.id,
+            tipo: tipo,
+            nota: nota,
+            foto_base64: ppNovedadB64
+          })
+        });
+        const j = await res.json().catch(()=>({}));
+        if(!res.ok || !j.ok){
+          showToast('No se pudo guardar la novedad. ' + (j.error||''));
+          if(btn) btn.disabled = false;
+          return;
+        }
+      }catch(e){
+        showToast('No se pudo guardar la novedad. ' + e.message);
+        if(btn) btn.disabled = false;
+        return;
+      }
+      if(btn) btn.disabled = false;
+    }
+
+    return original.apply(this, arguments);
+  };
+})();
+</script>
+
 </body>
 </html>
