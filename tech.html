@@ -502,7 +502,7 @@ async function loadBookings(){
   loading.classList.remove('hidden');
   try{
     const url = SUPABASE_URL + '/rest/v1/booking_requests'
-      + '?select=id,full_name,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at,price'
+      + '?select=id,full_name,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at,price,arrival_window,arrival_promised_at'
       + '&order=service_date.asc.nullslast';
     const res = await fetch(url,{headers: authHeaders()});
     if(res.status === 401){ logout(); return; }
@@ -896,6 +896,197 @@ function ppNovedadFoto(ev){
     }
 
     return original.apply(this, arguments);
+  };
+})();
+</script>
+
+
+<script>
+/* ===== Ventanas de llegada ==================================================
+   El técnico dice cuándo llega. La HORA no se calcula aquí: se calcula en el
+   servidor, en hora de Florida, porque es una promesa de la empresa y el reloj
+   de un teléfono puede estar en cualquier parte. Aquí solo se muestra lo que
+   el servidor devolvió, que es palabra por palabra lo que lee el cliente.
+
+   Nada de esto bloquea nada. Un técnico que no toque ninguna ventana puede
+   completar su servicio igual; simplemente el cliente no recibió una hora.
+============================================================================ */
+
+const PP_VENT_TXT = {
+  una_hora:   'antes de una hora',
+  dos_cuatro: 'entre 2 y 4 horas',
+  manana_am:  'mañana por la mañana',
+  manana_pm:  'mañana por la tarde',
+};
+
+function ppHoraLocal(iso){
+  if(!iso) return null;
+  try{
+    return new Date(iso).toLocaleTimeString('en-US', {
+      timeZone: 'America/New_York',
+      hour: 'numeric', minute: '2-digit', hour12: true,
+    });
+  }catch(e){ return null; }
+}
+
+function ppBtnVent(txt, alTocar, principal){
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = txt;
+  b.onclick = alTocar;
+  b.style.cssText =
+    'display:block;width:100%;margin-top:8px;padding:13px 12px;border-radius:11px;'
+    + 'font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;'
+    + (principal
+        ? 'background:#1E88C8;color:#fff;border:1px solid #1E88C8;'
+        : 'background:#fff;color:#0F172A;border:1px solid #cbd5e1;');
+  return b;
+}
+
+function ppTitulo(txt){
+  const t = document.createElement('div');
+  t.textContent = txt;
+  t.style.cssText = 'font-size:14px;font-weight:700;color:#0F172A';
+  return t;
+}
+
+/* Lo ya prometido. Se ve la frase, no el código.
+   `hora` explícita gana sobre la calculada: cuando acaba de responder el
+   servidor, esa es la hora exacta que salió hacia el cliente. */
+function ppPintarPrometido(caja, b, hora){
+  caja.innerHTML = '';
+  const h = hora || ppHoraLocal(b.arrival_promised_at);
+
+  const linea = document.createElement('div');
+  linea.style.cssText =
+    'padding:12px 14px;border-radius:11px;background:#ECFDF5;border:1px solid #BBF7D0;'
+    + 'font-size:14px;color:#065F46;line-height:1.45;font-weight:600';
+  linea.textContent = h
+    ? '✅ Le prometiste llegar antes de las ' + h
+    : '✅ Le prometiste ir ' + (PP_VENT_TXT[b.arrival_window] || '');
+
+  const extra = document.createElement('div');
+  extra.style.cssText = 'font-size:12.5px;color:#047857;font-weight:400;margin-top:4px';
+  extra.textContent = h
+    ? 'El cliente ya recibió esa hora.'
+    : 'Cuando llegue el día, entrá acá y dale la hora exacta.';
+  linea.appendChild(extra);
+  caja.appendChild(linea);
+
+  const cambiar = document.createElement('div');
+  cambiar.textContent = 'Cambiar la hora';
+  cambiar.style.cssText =
+    'margin-top:8px;text-align:center;font-size:13px;color:#1E88C8;font-weight:600;cursor:pointer';
+  cambiar.onclick = function(){ ppPintarElegir(caja, b, true); };
+  caja.appendChild(cambiar);
+}
+
+/* Los tres botones. "Mañana" abre dos más en el mismo sitio. */
+function ppPintarElegir(caja, b, esCambio){
+  caja.innerHTML = '';
+  caja.appendChild(ppTitulo(esCambio ? '¿A qué hora llegás ahora?' : '¿Cuándo llegás?'));
+
+  if(esCambio){
+    const av = document.createElement('div');
+    av.textContent = 'El cliente recibe un correo nuevo con la hora nueva.';
+    av.style.cssText = 'font-size:12.5px;color:#92400e;margin-top:4px;line-height:1.4';
+    caja.appendChild(av);
+  }
+
+  caja.appendChild(ppBtnVent('Antes de 1 hora', function(){ ppPrometer(caja, b, 'una_hora'); }, true));
+  caja.appendChild(ppBtnVent('Entre 2 y 4 horas', function(){ ppPrometer(caja, b, 'dos_cuatro'); }));
+  caja.appendChild(ppBtnVent('Mañana', function(){ ppPintarManana(caja, b); }));
+}
+
+function ppPintarManana(caja, b){
+  caja.innerHTML = '';
+  caja.appendChild(ppTitulo('Mañana, ¿a qué hora?'));
+  caja.appendChild(ppBtnVent('Por la mañana', function(){ ppPrometer(caja, b, 'manana_am'); }, true));
+  caja.appendChild(ppBtnVent('Por la tarde', function(){ ppPrometer(caja, b, 'manana_pm'); }, true));
+  const volver = document.createElement('div');
+  volver.textContent = '← Volver';
+  volver.style.cssText =
+    'margin-top:8px;text-align:center;font-size:13px;color:#6B7280;font-weight:600;cursor:pointer';
+  volver.onclick = function(){ ppPintarElegir(caja, b); };
+  caja.appendChild(volver);
+}
+
+async function ppPrometer(caja, b, ventana){
+  const botones = caja.querySelectorAll('button');
+  botones.forEach(function(x){ x.disabled = true; });
+  try{
+    const res = await fetch(SUPABASE_URL + '/functions/v1/prometer-llegada', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ booking_id: b.id, ventana: ventana })
+    });
+    const j = await res.json().catch(function(){ return {}; });
+    if(!res.ok || !j.ok){
+      showToast('No se pudo guardar. ' + (j.error || ''));
+      botones.forEach(function(x){ x.disabled = false; });
+      return;
+    }
+    /* Se guarda en el objeto que ya está en pantalla en vez de recargar la
+       lista: recargar borraría la foto a medio tomar de otra tarjeta. */
+    b.arrival_window = j.ventana;
+    b.arrival_promised_at = null;
+    ppPintarPrometido(caja, b, j.hora);
+    showToast(j.hora
+      ? 'Listo. Al cliente le llega: llegamos antes de las ' + j.hora
+      : 'Listo. Al cliente le llega: vamos ' + (j.etiqueta || ''));
+  }catch(e){
+    showToast('No se pudo guardar. ' + e.message);
+    botones.forEach(function(x){ x.disabled = false; });
+  }
+}
+
+/* El correo del técnico trae ?booking=<id>. Si viene, esa tarjeta se sube
+   arriba de la pantalla y se marca, para que no tenga que buscarla entre
+   varias. Si el id no está en su lista, no pasa nada: ve su lista normal. */
+function ppEnfocarReserva(){
+  try{
+    const id = new URLSearchParams(location.search).get("booking");
+    if(!id) return;
+    const lista = document.getElementById("pendingList");
+    if(!lista) return;
+    const tarjetas = lista.querySelectorAll(".card");
+    const card = tarjetas[ppOrdenIds.indexOf(id)];
+    if(!card) return;
+    card.style.outline = "2px solid #1E88C8";
+    card.style.outlineOffset = "2px";
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
+  }catch(e){}
+}
+let ppOrdenIds = [];
+
+/* Se cuelga de renderBookings sin tocarla: corre la original y después mete el
+   bloque en cada tarjeta pendiente, en el mismo orden en que se pintaron. */
+(function(){
+  const original = window.renderBookings;
+  if(typeof original !== 'function') return;
+  window.renderBookings = function(rows){
+    const salida = original.apply(this, arguments);
+    try{
+      const pend = (Array.isArray(rows) ? rows : []).filter(function(r){ return !r.completed_at; });
+      const lista = document.getElementById('pendingList');
+      if(!lista) return salida;
+      const tarjetas = lista.querySelectorAll('.card');
+      ppOrdenIds = pend.map(function(x){ return x.id; });
+      pend.forEach(function(b, i){
+        const card = tarjetas[i];
+        if(!card) return;
+        const caja = document.createElement('div');
+        caja.style.cssText =
+          'margin:12px 0 4px;padding:12px 13px;border:1px dashed #cbd5e1;border-radius:12px';
+        if(b.arrival_window) ppPintarPrometido(caja, b);
+        else ppPintarElegir(caja, b);
+        const primerBoton = card.querySelector('button');
+        if(primerBoton) card.insertBefore(caja, primerBoton);
+        else card.appendChild(caja);
+      });
+      ppEnfocarReserva();
+    }catch(e){ /* si esto falla, la pantalla sigue funcionando como antes */ }
+    return salida;
   };
 })();
 </script>
