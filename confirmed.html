@@ -17,11 +17,22 @@
 </script>
 <!-- Event snippet for Submit lead form conversion page -->
 <script>
-  gtag('event', 'conversion', {
-    'send_to': 'AW-18330463537/3yiqCPatkNIcELHa0qRE',
-    'value': 1.0,
-    'currency': 'USD'
-  });
+  /* El valor lo deja index.html en la memoria de la sesion justo antes de
+     mandar al cliente a Stripe: un mes del plan mas barato, a proposito.
+     Si no esta (sesion bloqueada, o alguien abre esta pagina directo) se manda
+     1.0, que es lo que se mandaba antes: no se pierde la conversion.
+     El identificador NO se borra: si el cliente recarga esta pagina, Google
+     recibe el mismo transaction_id y no cuenta la venta dos veces. */
+  (function(){
+    var cv=null;
+    try{cv=JSON.parse(sessionStorage.getItem("pp_conv_sub")||"null");}catch(e){}
+    gtag('event', 'conversion', {
+      'send_to': 'AW-18330463537/3yiqCPatkNIcELHa0qRE',
+      'value': (cv&&Number(cv.value))||1.0,
+      'currency': 'USD',
+      'transaction_id': (cv&&cv.id)||''
+    });
+  })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

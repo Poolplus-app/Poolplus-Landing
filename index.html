@@ -783,7 +783,27 @@ async function submitSubscription(){
     });
     var d=await r.json();
     if(r.ok&&d.url){
-      try{sessionStorage.setItem("pp_sub_plan",SUB_SIZE+'_'+PLAN_MODE);}catch(e){}
+      /* Lo que se le va a reportar a Google cuando el cliente vuelva de Stripe.
+         Decision de Daniel (16 sep 2026): se reporta UN MES del plan MAS BARATO,
+         no lo que el cliente contrato. Razon: los clientes que llegan por Google
+         suelen no durar, y es preferible quedarse corto que prometerle a Google
+         un valor que no se va a cumplir.
+         El numero no se escribe a mano: sale del minimo de SUB_PRICES, que la
+         pagina ya cargo desde la tabla `prices`. Si cambian los precios, cambia solo.
+         El id evita que una recarga de la pagina de confirmacion cuente dos veces. */
+      try{
+        sessionStorage.setItem("pp_sub_plan",SUB_SIZE+'_'+PLAN_MODE);
+        var ppMin=null;
+        for(var ppM in SUB_PRICES){for(var ppS in SUB_PRICES[ppM]){
+          var ppV=Number(SUB_PRICES[ppM][ppS]);
+          if(ppV>0&&(ppMin===null||ppV<ppMin))ppMin=ppV;
+        }}
+        sessionStorage.setItem("pp_conv_sub",JSON.stringify({
+          id:((window.crypto&&crypto.randomUUID)?crypto.randomUUID():"sub-"+Date.now()),
+          value:ppMin,
+          plan:SUB_SIZE+'_'+PLAN_MODE
+        }));
+      }catch(e){}
       window.location.href=d.url;return;
     }
     err.textContent=d.error||'Something went wrong. Please try again.';
