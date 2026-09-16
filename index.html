@@ -83,7 +83,9 @@ nav{background:rgba(11,17,32,.92);backdrop-filter:blur(12px);padding:0 6%;positi
 .sched-tab.on{border-color:var(--blue);background:#eff7fd;color:var(--blue);}
 .consent-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
 .consent-row input[type=checkbox]{width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--blue);}
-.consent-row label{font-size:12px;color:#9ca3af;line-height:1.6;cursor:pointer;}
+.consent-row label{font-size:12px;color:#6b7280;line-height:1.6;cursor:pointer;}
+.consent-note{font-size:12px;color:#6b7280;line-height:1.6;margin-top:10px;}
+.consent-note a{color:var(--blue);text-decoration:underline;}
 .consent-row label strong{color:var(--text);}
 .send-btn{width:100%;background:var(--dark);color:white;border:none;border-radius:12px;padding:15px 24px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-top:16px;font-family:inherit;transition:all .2s;}
 .send-btn:hover{background:#1a2540;}
@@ -396,12 +398,13 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
         <div style="margin:14px 0 0;">
           <div class="consent-row">
             <input type="checkbox" id="c1"/>
-            <label for="c1">By checking this box, I consent to receive non-marketing text messages from <strong>PoolPlus LLC</strong>. Message &amp; data rates may apply. Text STOP to opt out.</label>
+            <label for="c1">By checking this box, I consent to receive non-marketing text messages from <strong>PoolPlus LLC</strong> about my service &mdash; booking confirmation, technician arrival time and service updates. Message frequency varies. Message &amp; data rates may apply. Text STOP to opt out, HELP for help.</label>
           </div>
           <div class="consent-row" style="margin-bottom:0;">
             <input type="checkbox" id="c2"/>
-            <label for="c2">By checking this box, I consent to receive marketing and promotional messages from <strong>PoolPlus LLC</strong>. Text STOP to opt out.</label>
+            <label for="c2">By checking this box, I consent to receive marketing and promotional messages from <strong>PoolPlus LLC</strong>. Message frequency varies. Message &amp; data rates may apply. Text STOP to opt out, HELP for help.</label>
           </div>
+          <div class="consent-note">See our <a href="/terms.html">Terms of Service</a> and <a href="/privacy.html">Privacy Policy</a>. We never sell or share your phone number with third parties for marketing.</div>
         </div>
         <button class="send-btn" id="bkSendBtn" onclick="submitBooking()">
           Send request
