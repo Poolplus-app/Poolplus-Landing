@@ -1079,6 +1079,43 @@ function setSched(el,type){
 // ── Envío real de la reserva: Supabase + GHL ──
 var GHL_WEBHOOK="https://services.leadconnectorhq.com/hooks/Q9902WErnxzPxpByDd3j/webhook-trigger/15debeac-cae8-4789-b8eb-920bb0e7e79e";
 
+/* ===== De dónde vino la reserva =============================================
+   Se calcula al CARGAR la página, no al enviar. Alguien que llega por un
+   anuncio puede mirar precios, bajar, volver a subir y reservar diez minutos
+   después: para entonces el gclid ya no está en la barra de direcciones.
+   Por eso se guarda en sessionStorage, que vive lo que viva la pestaña.
+
+   Si el navegador no deja guardar (modo privado, cookies bloqueadas), no se
+   rompe nada: se vuelve a calcular con lo que haya en ese momento.
+
+   `source` es el canal en una palabra, que es lo que se cuenta.
+   `source_detail` es la cadena cruda de la URL, por si algún día hay que
+   saber qué campaña exacta y no solo qué canal.
+========================================================================== */
+var PP_ORIGEN=(function(){
+  function leer(){try{return JSON.parse(sessionStorage.getItem("pp_origen")||"null");}catch(e){return null;}}
+  function guardar(o){try{sessionStorage.setItem("pp_origen",JSON.stringify(o));}catch(e){}}
+  var previo=leer();
+  if(previo&&previo.source)return previo;
+  var p;
+  try{p=new URLSearchParams(location.search);}catch(e){p=null;}
+  function q(k){return p?(p.get(k)||""):"";}
+  var gclid=q("gclid")||q("wbraid")||q("gbraid");
+  var utm=q("utm_source").toLowerCase();
+  var src=q("src").toLowerCase();
+  var source;
+  if(src)source=src;
+  else if(gclid)source="google_ads";
+  else if(utm)source=utm;
+  else if(document.referrer&&document.referrer.indexOf(location.hostname)===-1)source="referido";
+  else source="directo";
+  var detail=(location.search||"").replace(/^\?/,"")||null;
+  if(!detail&&source==="referido")detail=document.referrer.slice(0,300);
+  var o={source:source,detail:detail};
+  guardar(o);
+  return o;
+})();
+
 async function submitBooking(){
   var name=document.getElementById("bkName").value.trim();
   var email=document.getElementById("bkEmail").value.trim();
@@ -1141,7 +1178,8 @@ async function submitBooking(){
       price:price, schedule_type:SCHED_TYPE,
       service_date:dateVal||null, notes:notes,
       consent_sms:consentSms, consent_marketing:consentMkt,
-      status:"new"
+      status:"new",
+      source:PP_ORIGEN.source, source_detail:PP_ORIGEN.detail
     };
     if(bookingId){insertRow.id=bookingId;}
     var {error}=await sb.from("booking_requests").insert(insertRow);
@@ -1168,6 +1206,7 @@ async function submitBooking(){
     notes:notes,
     consent_sms:consentSms?"yes":"no",
     consent_marketing:consentMkt?"yes":"no",
+    source:PP_ORIGEN.source,
     db_saved:savedDB?"yes":"no",
     db_error:dbErrorMsg
   };
