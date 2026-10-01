@@ -502,8 +502,8 @@ async function loadBookings(){
   loading.classList.remove('hidden');
   try{
     const url = SUPABASE_URL + '/rest/v1/booking_requests'
-      + '?select=id,full_name,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at,price,arrival_window,arrival_promised_at'
-      + '&order=service_date.asc.nullslast';
+      + '?select=id,full_name,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at,price,arrival_window,arrival_promised_at,created_at'
+      + '&order=created_at.desc';
     const res = await fetch(url,{headers: authHeaders()});
     if(res.status === 401){ logout(); return; }
     const rows = await res.json();
@@ -515,7 +515,16 @@ async function loadBookings(){
   }
 }
 
-function fmtDate(d){
+function fmtCuando(b){
+          // Si la reserva tiene fecha de servicio (visitas de plan), esa manda.
+          // Si no, se muestra cuando ENTRO la solicitud, para poder distinguirlas.
+          if(b.service_date) return fmtDate(b.service_date);
+          if(!b.created_at) return 'Fecha por confirmar';
+          const dt = new Date(b.created_at);
+          return 'Entró ' + dt.toLocaleDateString('es-US',{month:'short', day:'numeric'})
+                          + ', ' + dt.toLocaleTimeString('es-US',{hour:'numeric', minute:'2-digit'});
+        }
+        function fmtDate(d){
   if(!d) return 'Fecha por confirmar';
   const dt = new Date(d + 'T12:00:00');
   return dt.toLocaleDateString('es-US',{weekday:'short', month:'short', day:'numeric'});
@@ -556,7 +565,7 @@ function renderBookings(rows){
       card.innerHTML =
         (isToday(b.service_date)
           ? '<span class="badge today">HOY</span>'
-          : '<span class="badge date">'+esc(fmtDate(b.service_date))+'</span>')
+          : '<span class="badge date">'+esc(fmtCuando(b))+'</span>')
         + '<div class="service">'+esc(b.service_label || b.service || 'Servicio')+'</div>'
         + '<div class="row"><span class="ic">👤</span><span>'+esc(b.full_name)+'</span></div>'
         + '<div class="row"><span class="ic">📍</span><a href="'+mapsLink(b)+'" target="_blank" rel="noopener">'
@@ -644,15 +653,12 @@ function sendQuickMessage(b, novedad){
   window.open('https://wa.me/' + ADMIN_WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
 }
 function rejectService(b){
-  const msg = '⚠️ POOLPLUS - No puedo tomar este servicio:\n'
-    + '• Servicio: ' + (b.service_label || b.service || '') + '\n'
-    + '• Cliente: ' + (b.full_name || '') + '\n'
-    + '• Dirección: ' + [b.address, b.city].filter(Boolean).join(', ') + '\n'
-    + '• Fecha: ' + (b.service_date || 'por confirmar') + '\n'
-    + '• Técnico: ' + (techName || '') + '\n'
-    + 'Motivo: ';
-  window.open('https://wa.me/' + ADMIN_WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
-}
+            // v2: el enlace de WhatsApp no abria en todos los telefonos y, peor, no dejaba
+            // rastro: la reserva seguia asignada. Hasta que exista la liberacion automatica,
+            // esto al menos no miente y funciona en cualquier telefono.
+            showToast('Llama a administración para liberar este servicio: (954) 817-4832 📞');
+            window.location.href = 'tel:+' + ADMIN_WHATSAPP;
+          }
 
 /* ---------------- COMPLETAR SERVICIO ---------------- */
 function openComplete(b){
