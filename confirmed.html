@@ -15,23 +15,26 @@
   gtag('js', new Date());
   gtag('config', 'AW-18330463537');
 </script>
-<!-- Event snippet for Submit lead form conversion page -->
+<!-- Conversion Google Ads: Reserva PoolPlus (dejo la tarjeta) -->
 <script>
-  /* El valor lo deja index.html en la memoria de la sesion justo antes de
-     mandar al cliente a Stripe: un mes del plan mas barato, a proposito.
-     Si no esta (sesion bloqueada, o alguien abre esta pagina directo) se manda
-     1.0, que es lo que se mandaba antes: no se pierde la conversion.
-     El identificador NO se borra: si el cliente recarga esta pagina, Google
-     recibe el mismo transaction_id y no cuenta la venta dos veces. */
+  /* Cuenta como venta: el cliente reservo en la web y dejo su tarjeta en
+     Stripe (modo setup; se cobra al completar el servicio). index.html guarda
+     pp_conv = {id: booking_id, value: precio} justo antes de mandarlo a Stripe.
+     Solo se reporta si viene de Stripe (session_id en la URL) Y existe pp_conv.
+     Quien abre esta pagina suelta, o llega por el link del correo (telefono),
+     no cuenta. transaction_id = booking_id: una recarga no cuenta doble. */
   (function(){
-    var cv=null;
-    try{cv=JSON.parse(sessionStorage.getItem("pp_conv_sub")||"null");}catch(e){}
-    gtag('event', 'conversion', {
-      'send_to': 'AW-18330463537/3yiqCPatkNIcELHa0qRE',
-      'value': (cv&&Number(cv.value))||1.0,
-      'currency': 'USD',
-      'transaction_id': (cv&&cv.id)||''
-    });
+    try{
+      var sid=new URLSearchParams(window.location.search).get("session_id");
+      var cv=JSON.parse(sessionStorage.getItem("pp_conv")||"null");
+      if(!sid||!cv||!cv.id) return;
+      gtag('event','conversion',{
+        'send_to':'AW-18330463537/IZ8bCKfvstQcELHa0qRE',
+        'value':Number(cv.value)||0,
+        'currency':'USD',
+        'transaction_id':String(cv.id)
+      });
+    }catch(e){}
   })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
