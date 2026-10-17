@@ -1288,12 +1288,12 @@ async function submitBooking(){
     // Conversión Google Ads: Reserva PoolPlus (valor real + transaction_id anti-duplicados)
     try{
       var cv=JSON.parse(sessionStorage.getItem("pp_conv")||"null");
-      if(typeof gtag==="function"){
+      if(typeof gtag==="function"&&cv&&cv.id){ // solo si hay reserva guardada antes de ir a Stripe
         gtag('event','conversion',{
           'send_to':'AW-18330463537/IZ8bCKfvstQcELHa0qRE',
-          'value':(cv&&Number(cv.value))||1.0,
+          'value':Number(cv.value)||0,
           'currency':'USD',
-          'transaction_id':(cv&&cv.id)||''
+          'transaction_id':String(cv.id)
         });
       }
       sessionStorage.removeItem("pp_conv");
