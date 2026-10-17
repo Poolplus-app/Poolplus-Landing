@@ -24,6 +24,7 @@
       var planKey=sessionStorage.getItem("pp_sub_plan")||"";
       var valor=precios[planKey]||110;
       var sid=new URLSearchParams(window.location.search).get("session_id")||"";
+      if(!sid) return; // sin session_id no viene de pagar en Stripe: no se cuenta
       gtag('event','conversion',{
         'send_to':'AW-18330463537/IZ8bCKfvstQcELHa0qRE',
         'value':valor,
