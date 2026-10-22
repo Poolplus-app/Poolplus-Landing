@@ -131,6 +131,7 @@ select option{background:#1a2235;}
   <button class="nav-btn" onclick="goTab('techs',this)"><span>🔧</span><span style="flex:1">Técnicos</span><span class="nav-badge" id="badge-tech" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('aplicaciones',this)"><span>📥</span><span style="flex:1">Aplicaciones</span><span class="nav-badge" id="badge-apps" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('clients',this)"><span>👥</span><span style="flex:1">Clientes</span></button>
+  <button class="nav-btn" onclick="goTab('cartera',this);cartLlenarTecnicos()"><span>➕</span><span style="flex:1">Clientes de cartera</span></button>
   <button class="nav-btn" onclick="goTab('promos',this)"><span>🏷</span><span style="flex:1">Promociones</span></button>
   <button class="nav-btn" onclick="goTab('pagos',this)"><span>💰</span><span style="flex:1">Pagos a Técnicos</span></button>
   <button class="nav-btn" onclick="goTab('config',this)"><span>⚙️</span><span style="flex:1">Configuración</span></button>
@@ -314,6 +315,35 @@ select option{background:#1a2235;}
       <table class="tbl"><thead><tr style="border-bottom:1px solid var(--border)">
         <th>Técnico</th><th>Nivel</th><th>Servicios</th><th>Ganancias</th><th>Pago Pendiente</th><th>Stripe Connect</th><th></th>
       </tr></thead><tbody id="pagos-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- CLIENTES DE CARTERA -->
+  <div class="page" id="page-cartera">
+    <div class="page-title">Formulario de clientes de cartera</div>
+    <div class="page-sub">Alta uno a uno de los clientes que llegan con una cartera comprada. Cada uno conserva su precio acordado; no pasa por la página ni escoge precio.</div>
+    <div class="card card-p" style="max-width:760px">
+      <div class="cart-grid">
+        <label class="cart-f cart-full">Nombre completo<input id="cart-nombre" type="text"></label>
+        <label class="cart-f">Correo<input id="cart-correo" type="email"></label>
+        <label class="cart-f">Teléfono<input id="cart-tel" type="tel"></label>
+        <label class="cart-f cart-full">Dirección de la piscina<input id="cart-dir" type="text" placeholder="Calle y número"></label>
+        <label class="cart-f">Ciudad<input id="cart-ciudad" type="text"></label>
+        <label class="cart-f">Zip<input id="cart-zip" type="text" inputmode="numeric" maxlength="5"></label>
+        <label class="cart-f">Tamaño<select id="cart-tam"><option value="">Escoger…</option><option value="small">Compacta</option><option value="medium">Estándar</option><option value="large">Grande</option></select></label>
+        <label class="cart-f">Precio acordado (USD al mes)<input id="cart-precio" type="number" min="1" step="1"></label>
+        <label class="cart-f">Día de visita<select id="cart-dia"><option value="">Escoger…</option><option value="lunes">Lunes</option><option value="martes">Martes</option><option value="miercoles">Miércoles</option><option value="jueves">Jueves</option><option value="viernes">Viernes</option><option value="sabado">Sábado</option></select></label>
+        <label class="cart-f">Técnico<select id="cart-tec"><option value="">Escoger…</option></select></label>
+        <label class="cart-f">Idioma del cliente<select id="cart-idioma"><option value="en">Inglés</option><option value="es">Español</option></select></label>
+        <label class="cart-f">Primer cobro<input id="cart-cobro" type="date" value="2026-11-01"></label>
+        <label class="cart-f cart-full">Notas internas (opcional)<textarea id="cart-notas" rows="2" placeholder="Acceso, mascotas, código de la puerta…"></textarea></label>
+        <label class="cart-full" style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)"><input id="cart-enviar" type="checkbox" checked style="width:auto"> Enviar al cliente el correo con el enlace para dejar su tarjeta</label>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="cart-btn" onclick="cartDarDeAlta()">Dar de alta</button>
+        <button class="btn btn-ghost" onclick="cartLimpiar()">Limpiar</button>
+      </div>
+      <div id="cart-msg" style="display:none;margin-top:16px;padding:14px;border-radius:10px;font-size:13px;line-height:1.6"></div>
     </div>
   </div>
 
@@ -1594,6 +1624,73 @@ async function assignTech(id){
     showToast('👷 '+tech+' asignado (sin email de cliente)');
   }
   loadBookings();loadSubscriptions();
+}
+</script>
+<style>
+.cart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cart-full{grid-column:1/-1}
+.cart-f{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--muted)}
+.cart-f input,.cart-f select,.cart-f textarea{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;font-family:inherit;font-weight:400}
+@media(max-width:640px){.cart-grid{grid-template-columns:1fr}}
+</style>
+<script>
+// Formulario de clientes de cartera (22 oct 2026). Usa la funcion alta-cliente-heredado.
+function cartLlenarTecnicos(){
+  var sel=document.getElementById('cart-tec'); if(!sel) return;
+  var actual=sel.value;
+  var lista=[]; try{lista=(TECHS||[]).map(function(t){return t.name;}).filter(Boolean).sort();}catch(e){}
+  sel.innerHTML='<option value="">Escoger…</option>'+lista.map(function(n){return '<option>'+n.replace(/</g,'&lt;')+'</option>';}).join('');
+  if(actual) sel.value=actual;
+}
+function cartVal(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
+function cartAviso(html,ok){
+  var m=document.getElementById('cart-msg');
+  m.style.display='block';
+  m.style.background=ok?'#10b98115':'#ef444415';
+  m.style.border='1px solid '+(ok?'#10b98140':'#ef444440');
+  m.style.color=ok?'var(--text)':'#ef4444';
+  m.innerHTML=html;
+}
+function cartLimpiar(){
+  ['cart-nombre','cart-correo','cart-tel','cart-dir','cart-ciudad','cart-zip','cart-precio','cart-notas'].forEach(function(id){document.getElementById(id).value='';});
+  ['cart-tam','cart-dia','cart-tec'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('cart-idioma').value='en';
+  document.getElementById('cart-cobro').value='2026-11-01';
+  document.getElementById('cart-enviar').checked=true;
+  document.getElementById('cart-msg').style.display='none';
+}
+async function cartDarDeAlta(){
+  var d={
+    full_name:cartVal('cart-nombre'), email:cartVal('cart-correo'), phone:cartVal('cart-tel'),
+    address:cartVal('cart-dir'), city:cartVal('cart-ciudad'), zip:cartVal('cart-zip'),
+    pool_size:cartVal('cart-tam'), monthly_price:Number(cartVal('cart-precio')),
+    service_day:cartVal('cart-dia'), technician:cartVal('cart-tec'), language:cartVal('cart-idioma'),
+    primer_cobro:cartVal('cart-cobro'), notes:cartVal('cart-notas'),
+    send_email:document.getElementById('cart-enviar').checked
+  };
+  var faltan=[];
+  if(!d.full_name)faltan.push('nombre');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email))faltan.push('correo válido');
+  if(!d.address)faltan.push('dirección');
+  if(!/^\d{5}$/.test(d.zip))faltan.push('zip de 5 números');
+  if(!d.pool_size)faltan.push('tamaño');
+  if(!(d.monthly_price>0))faltan.push('precio acordado');
+  if(!d.service_day)faltan.push('día de visita');
+  if(!d.technician)faltan.push('técnico');
+  if(faltan.length){cartAviso('Falta: '+faltan.join(', ')+'.',false);return;}
+  var resumen=d.full_name+'\n$'+d.monthly_price+' al mes · '+d.service_day+' · '+d.technician+'\nPrimer cobro: '+(d.primer_cobro||'1 del mes siguiente')+(d.send_email?'\n\nSe le enviará el correo a '+d.email+'.':'\n\nNo se enviará correo.');
+  if(!confirm('¿Dar de alta a este cliente?\n\n'+resumen))return;
+  var btn=document.getElementById('cart-btn'); btn.disabled=true; btn.textContent='Dando de alta…';
+  try{
+    var s=(await sb.auth.getSession()).data.session;
+    if(!s){cartAviso('La sesión del panel se venció. Recarga la página y vuelve a entrar.',false);return;}
+    var r=await fetch(SUPABASE_URL+'/functions/v1/alta-cliente-heredado',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+s.access_token,'apikey':SUPABASE_KEY},body:JSON.stringify(d)});
+    var j={}; try{j=await r.json();}catch(e){}
+    if(!r.ok||j.error){cartAviso('No se pudo: '+(j.error||('error '+r.status)),false);return;}
+    var url=String(j.url||'');
+    cartAviso('<b>Listo: '+d.full_name.replace(/</g,'&lt;')+' quedó dado de alta.</b><br>Primer cobro: '+(j.primer_cobro||d.primer_cobro)+'<br>'+(d.send_email?'Correo enviado a '+d.email.replace(/</g,'&lt;')+'.':'No se envió correo.')+(url?'<br><br>Enlace para dejar la tarjeta (por si hay que mandarlo por WhatsApp):<br><input readonly value="'+url.replace(/"/g,'&quot;')+'" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px" onclick="this.select()"> <button class="btn btn-sm btn-ghost" style="margin-top:8px" onclick="navigator.clipboard.writeText(this.previousElementSibling.value);showToast(\'Enlace copiado\')">Copiar enlace</button>':''),true);
+  }catch(e){cartAviso('No se pudo conectar: '+e.message,false);}
+  finally{btn.disabled=false;btn.textContent='Dar de alta';}
 }
 </script>
 </body>
