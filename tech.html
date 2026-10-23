@@ -281,6 +281,12 @@
       <div id="doneList"></div>
     </div>
 
+    <div id="pagosCard" class="partner-card" style="display:none">
+      <h4>Mis pagos</h4>
+      <p id="pagosTexto"></p>
+      <button class="btn" id="pagosBtn" onclick="pagosAbrir()" style="margin-top:10px">Configurar mis pagos</button>
+    </div>
+
     <div class="partner-card">
       <h4>🤝 Mi Partnership</h4>
       <p>Tu reparto crece con tu ruta. Se cuentan tus <b>piscinas recurrentes activas</b> (planes mensuales).</p>
@@ -1098,5 +1104,49 @@ let ppOrdenIds = [];
 })();
 </script>
 
+<script>
+// 23 oct 2026: cuenta de pagos del técnico en Stripe (función pagos-tecnico). Agregado; no toca lo anterior.
+async function pagosLlamar(accion){
+  const r = await fetch(SUPABASE_URL + '/functions/v1/pagos-tecnico', {method:'POST', headers: authHeaders(), body: JSON.stringify({accion})});
+  let j = {}; try{ j = await r.json(); }catch(e){}
+  if(!r.ok) throw new Error(j.error || ('Error ' + r.status));
+  return j;
+}
+async function pagosEstado(){
+  const card = document.getElementById('pagosCard'), txt = document.getElementById('pagosTexto'), btn = document.getElementById('pagosBtn');
+  if(!card || !session) return;
+  try{
+    const j = await pagosLlamar('estado');
+    card.style.display = 'block';
+    if(j.listo){
+      txt.textContent = 'Tu cuenta de pagos está lista. Tus pagos de PoolPlus te llegan directo a tu banco.';
+      btn.style.display = 'none';
+    }else if(j.tiene_cuenta){
+      txt.textContent = 'Tu cuenta de pagos está a medio llenar. Termínala para recibir tus pagos directo en tu banco.';
+      btn.textContent = 'Terminar mi cuenta de pagos';
+    }else{
+      txt.textContent = 'Para recibir tus pagos directo en tu banco, crea tu cuenta de pagos en Stripe. Toma unos 10 minutos: tus datos, tu número de seguro social (o el EIN de tu empresa) y tu cuenta de banco.';
+      btn.textContent = 'Configurar mis pagos';
+    }
+  }catch(e){}
+}
+async function pagosAbrir(){
+  const btn = document.getElementById('pagosBtn'); const antes = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Abriendo Stripe…';
+  try{
+    const j = await pagosLlamar('abrir');
+    if(j.url){ location.href = j.url; return; }
+    throw new Error('sin enlace');
+  }catch(e){
+    showToast('No se pudo abrir Stripe: ' + e.message);
+    btn.disabled = false; btn.textContent = antes;
+  }
+}
+(function(){
+  const original = enterApp;
+  enterApp = async function(){ const r = await original.apply(this, arguments); pagosEstado(); return r; };
+  if(session && !document.getElementById('appScreen').classList.contains('hidden')) pagosEstado();
+})();
+</script>
 </body>
 </html>
