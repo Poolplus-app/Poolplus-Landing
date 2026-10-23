@@ -255,7 +255,7 @@
     </div>
     <div id="loginError" class="error-msg hidden"></div>
     <button class="btn" id="loginBtn" onclick="login()">Entrar</button>
-    <a class="forgot-link" onclick="forgotPassword()">¿Olvidaste tu contraseña?</a>
+    <a class="forgot-link" onclick="forgotPassword()">¿Primera vez u olvidaste tu contraseña?</a>
   </div>
 </div>
 
@@ -407,14 +407,15 @@ async function forgotPassword(){
   const errBox = document.getElementById('loginError');
   errBox.classList.add('hidden');
   if(!email){
-    errBox.textContent = 'Escribe tu email arriba y vuelve a tocar "¿Olvidaste tu contraseña?".';
+    errBox.textContent = 'Escribe tu email arriba y vuelve a tocar "¿Primera vez u olvidaste tu contraseña?".';
     errBox.classList.remove('hidden');
     return;
   }
   try{
-    await fetch(SUPABASE_URL + '/auth/v1/recover?redirect_to=' + encodeURIComponent('https://poolplus.app/reset.html'),{
+    // 23 oct 2026: crea la cuenta del técnico registrado (si no existe) y le manda el enlace para su contraseña
+    await fetch(SUPABASE_URL + '/functions/v1/acceso-tecnico',{
       method:'POST',
-      headers:{'Content-Type':'application/json','apikey':ANON_KEY},
+      headers:{'Content-Type':'application/json','apikey':ANON_KEY,'Authorization':'Bearer ' + ANON_KEY},
       body: JSON.stringify({email})
     });
   }catch(e){}
@@ -422,7 +423,7 @@ async function forgotPassword(){
   errBox.style.background = '#E6F7EC';
   errBox.style.color = '#1F9D55';
   errBox.style.borderColor = '#BDE5C8';
-  errBox.textContent = '📬 Si ese email está registrado, te enviamos un enlace para crear una nueva contraseña. Revisa tu correo.';
+  errBox.textContent = 'Si ese correo está registrado como técnico, te enviamos un enlace para crear tu contraseña. Revisa tu correo, también la carpeta de spam.';
   errBox.classList.remove('hidden');
 }
 
