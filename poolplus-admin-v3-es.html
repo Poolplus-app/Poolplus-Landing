@@ -131,7 +131,7 @@ select option{background:#1a2235;}
   <button class="nav-btn" onclick="goTab('techs',this)"><span>🔧</span><span style="flex:1">Técnicos</span><span class="nav-badge" id="badge-tech" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('aplicaciones',this)"><span>📥</span><span style="flex:1">Aplicaciones</span><span class="nav-badge" id="badge-apps" style="display:none"></span></button>
   <button class="nav-btn" onclick="goTab('clients',this)"><span>👥</span><span style="flex:1">Clientes</span></button>
-  <button class="nav-btn" onclick="goTab('cartera',this);cartLlenarTecnicos()"><span>➕</span><span style="flex:1">Clientes de cartera</span></button>
+  <button class="nav-btn" onclick="goTab('cartera',this);cartLlenarTecnicos();cartCargarLista()"><span>➕</span><span style="flex:1">Clientes de cartera</span></button>
   <button class="nav-btn" onclick="goTab('promos',this)"><span>🏷</span><span style="flex:1">Promociones</span></button>
   <button class="nav-btn" onclick="goTab('pagos',this)"><span>💰</span><span style="flex:1">Pagos a Técnicos</span></button>
   <button class="nav-btn" onclick="goTab('config',this)"><span>⚙️</span><span style="flex:1">Configuración</span></button>
@@ -337,13 +337,23 @@ select option{background:#1a2235;}
         <label class="cart-f">Idioma del cliente<select id="cart-idioma"><option value="en">Inglés</option><option value="es">Español</option></select></label>
         <label class="cart-f">Primer cobro<input id="cart-cobro" type="date" value="2026-11-01"></label>
         <label class="cart-f cart-full">Notas internas (opcional)<textarea id="cart-notas" rows="2" placeholder="Acceso, mascotas, código de la puerta…"></textarea></label>
-        <label class="cart-full" style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)"><input id="cart-enviar" type="checkbox" checked style="width:auto"> Enviar al cliente el correo con el enlace para dejar su tarjeta</label>
+        <label class="cart-full" style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)"><input id="cart-enviar" type="checkbox" style="width:auto"> Enviar ahora al cliente el correo con el enlace para dejar su tarjeta (si no, queda guardado y se envía después desde la lista)</label>
       </div>
       <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
         <button class="btn btn-primary" id="cart-btn" onclick="cartDarDeAlta()">Dar de alta</button>
         <button class="btn btn-ghost" onclick="cartLimpiar()">Limpiar</button>
       </div>
       <div id="cart-msg" style="display:none;margin-top:16px;padding:14px;border-radius:10px;font-size:13px;line-height:1.6"></div>
+    </div>
+    <div class="card" style="margin-top:20px;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="font-weight:700;font-size:16px">Clientes de cartera guardados</div>
+        <div id="cart-resumen" style="font-size:13px;color:var(--muted)"></div>
+      </div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="text-align:left;color:var(--muted)"><th style="padding:8px">Cliente</th><th style="padding:8px">Dirección</th><th style="padding:8px">$/mes</th><th style="padding:8px">Día · Técnico</th><th style="padding:8px">Estado</th><th style="padding:8px">Último envío</th><th style="padding:8px"></th></tr></thead>
+        <tbody id="cart-lista"><tr><td colspan="7" style="padding:12px;color:var(--muted)">Cargando…</td></tr></tbody>
+      </table></div>
     </div>
   </div>
 
@@ -1656,18 +1666,33 @@ function cartLimpiar(){
   ['cart-tam','cart-dia','cart-tec'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('cart-idioma').value='en';
   document.getElementById('cart-cobro').value='2026-11-01';
-  document.getElementById('cart-enviar').checked=true;
+  document.getElementById('cart-enviar').checked=false;
   document.getElementById('cart-msg').style.display='none';
+}
+function cartEsc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+var CART_ROWS=[];
+async function cartEnviarEnlace(fila){
+  var s=(await sb.auth.getSession()).data.session;
+  if(!s) throw new Error('La sesión del panel se venció. Recarga la página y vuelve a entrar.');
+  var d={full_name:fila.full_name,email:fila.email,phone:fila.phone||'',address:fila.address,city:fila.city||'',zip:fila.zip||'',
+    pool_size:fila.pool_size,monthly_price:Number(fila.monthly_price),service_day:fila.service_day,technician:fila.technician,
+    language:fila.language||'en',primer_cobro:fila.primer_cobro||'',notes:fila.notes||'',send_email:true};
+  var r=await fetch(SUPABASE_URL+'/functions/v1/alta-cliente-heredado',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+s.access_token,'apikey':SUPABASE_KEY},body:JSON.stringify(d)});
+  var j={}; try{j=await r.json();}catch(e){}
+  if(!r.ok||j.error) throw new Error(j.error||('error '+r.status));
+  var up=await sb.from('cartera_altas').update({checkout_url:String(j.url||''),correo_enviado_at:new Date().toISOString(),envios:(Number(fila.envios)||0)+1}).eq('id',fila.id);
+  if(up.error) throw new Error('El correo salió, pero no se pudo anotar el envío: '+up.error.message);
+  return j;
 }
 async function cartDarDeAlta(){
   var d={
-    full_name:cartVal('cart-nombre'), email:cartVal('cart-correo'), phone:cartVal('cart-tel'),
+    full_name:cartVal('cart-nombre'), email:cartVal('cart-correo').toLowerCase(), phone:cartVal('cart-tel'),
     address:cartVal('cart-dir'), city:cartVal('cart-ciudad'), zip:cartVal('cart-zip'),
     pool_size:cartVal('cart-tam'), monthly_price:Number(cartVal('cart-precio')),
     service_day:cartVal('cart-dia'), technician:cartVal('cart-tec'), language:cartVal('cart-idioma'),
-    primer_cobro:cartVal('cart-cobro'), notes:cartVal('cart-notas'),
-    send_email:document.getElementById('cart-enviar').checked
+    primer_cobro:cartVal('cart-cobro')||null, notes:cartVal('cart-notas')
   };
+  var enviar=document.getElementById('cart-enviar').checked;
   var faltan=[];
   if(!d.full_name)faltan.push('nombre');
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email))faltan.push('correo válido');
@@ -1678,19 +1703,56 @@ async function cartDarDeAlta(){
   if(!d.service_day)faltan.push('día de visita');
   if(!d.technician)faltan.push('técnico');
   if(faltan.length){cartAviso('Falta: '+faltan.join(', ')+'.',false);return;}
-  var resumen=d.full_name+'\n$'+d.monthly_price+' al mes · '+d.service_day+' · '+d.technician+'\nPrimer cobro: '+(d.primer_cobro||'1 del mes siguiente')+(d.send_email?'\n\nSe le enviará el correo a '+d.email+'.':'\n\nNo se enviará correo.');
-  if(!confirm('¿Dar de alta a este cliente?\n\n'+resumen))return;
-  var btn=document.getElementById('cart-btn'); btn.disabled=true; btn.textContent='Dando de alta…';
+  var resumen=d.full_name+'\n'+d.address+'\n$'+d.monthly_price+' al mes · '+d.service_day+' · '+d.technician+'\nPrimer cobro: '+(d.primer_cobro||'1 del mes siguiente')+(enviar?'\n\nSe le enviará AHORA el correo a '+d.email+'.':'\n\nQueda guardado. No se envía correo todavía.');
+  if(!confirm('¿Guardar este cliente de cartera?\n\n'+resumen))return;
+  var btn=document.getElementById('cart-btn'); btn.disabled=true; btn.textContent='Guardando…';
   try{
     var s=(await sb.auth.getSession()).data.session;
     if(!s){cartAviso('La sesión del panel se venció. Recarga la página y vuelve a entrar.',false);return;}
-    var r=await fetch(SUPABASE_URL+'/functions/v1/alta-cliente-heredado',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+s.access_token,'apikey':SUPABASE_KEY},body:JSON.stringify(d)});
-    var j={}; try{j=await r.json();}catch(e){}
-    if(!r.ok||j.error){cartAviso('No se pudo: '+(j.error||('error '+r.status)),false);return;}
-    var url=String(j.url||'');
-    cartAviso('<b>Listo: '+d.full_name.replace(/</g,'&lt;')+' quedó dado de alta.</b><br>Primer cobro: '+(j.primer_cobro||d.primer_cobro)+'<br>'+(d.send_email?'Correo enviado a '+d.email.replace(/</g,'&lt;')+'.':'No se envió correo.')+(url?'<br><br>Enlace para dejar la tarjeta (por si hay que mandarlo por WhatsApp):<br><input readonly value="'+url.replace(/"/g,'&quot;')+'" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px" onclick="this.select()"> <button class="btn btn-sm btn-ghost" style="margin-top:8px" onclick="navigator.clipboard.writeText(this.previousElementSibling.value);showToast(\'Enlace copiado\')">Copiar enlace</button>':''),true);
-  }catch(e){cartAviso('No se pudo conectar: '+e.message,false);}
+    var ins=await sb.from('cartera_altas').insert(d).select().single();
+    if(ins.error){
+      if(String(ins.error.code)==='23505'){cartAviso('Ese cliente ya está guardado con ese correo y esa dirección. Búscalo en la lista de abajo.',false);}
+      else{cartAviso('No se pudo guardar: '+cartEsc(ins.error.message),false);}
+      return;
+    }
+    var fila=ins.data, url='';
+    if(enviar){
+      try{var j=await cartEnviarEnlace(fila); url=String(j.url||'');}
+      catch(e){cartAviso('<b>'+cartEsc(d.full_name)+' quedó guardado</b>, pero el correo no salió: '+cartEsc(e.message)+'<br>Puedes reenviarlo desde la lista de abajo.',false); await cartCargarLista(); return;}
+    }
+    cartAviso('<b>Listo: '+cartEsc(d.full_name)+' quedó guardado.</b><br>'+(enviar?'Correo enviado a '+cartEsc(d.email)+'.':'Todavía no se le ha enviado el correo; se envía desde la lista de abajo.')+(url?'<br><br>Enlace para dejar la tarjeta (por si hay que mandarlo por WhatsApp):<br><input readonly value="'+cartEsc(url)+'" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px" onclick="this.select()"> <button class="btn btn-sm btn-ghost" style="margin-top:8px" onclick="navigator.clipboard.writeText(this.previousElementSibling.value);showToast(\'Enlace copiado\')">Copiar enlace</button>':''),true);
+    cartLimpiarCampos();
+    await cartCargarLista();
+  }catch(e){cartAviso('No se pudo conectar: '+cartEsc(e.message),false);}
   finally{btn.disabled=false;btn.textContent='Dar de alta';}
+}
+function cartLimpiarCampos(){
+  ['cart-nombre','cart-correo','cart-tel','cart-dir','cart-ciudad','cart-zip','cart-precio','cart-notas'].forEach(function(id){document.getElementById(id).value='';});
+  ['cart-tam','cart-dia','cart-tec'].forEach(function(id){document.getElementById(id).value='';});
+}
+async function cartCargarLista(){
+  var tb=document.getElementById('cart-lista'); if(!tb) return;
+  var r=await sb.from('cartera_altas').select('*').neq('estado','descartado').order('created_at',{ascending:true});
+  if(r.error){tb.innerHTML='<tr><td colspan="7" style="padding:12px;color:#ef4444">No se pudo leer la lista: '+cartEsc(r.error.message)+'</td></tr>';return;}
+  CART_ROWS=r.data||[];
+  var act=CART_ROWS.filter(function(x){return x.estado==='activo';}).length;
+  var env=CART_ROWS.filter(function(x){return x.correo_enviado_at;}).length;
+  var tot=CART_ROWS.reduce(function(a,x){return a+Number(x.monthly_price||0);},0);
+  document.getElementById('cart-resumen').textContent=CART_ROWS.length+' guardados · '+env+' con correo enviado · '+act+' activos · $'+tot.toLocaleString('en-US')+' al mes';
+  if(!CART_ROWS.length){tb.innerHTML='<tr><td colspan="7" style="padding:12px;color:var(--muted)">Todavía no hay clientes de cartera guardados.</td></tr>';return;}
+  tb.innerHTML=CART_ROWS.map(function(x){
+    var est=x.estado==='activo'?'<span style="color:#10b981;font-weight:600">Activo</span>':'<span style="color:#f59e0b;font-weight:600">Esperando tarjeta</span>';
+    var envio=x.correo_enviado_at?new Date(x.correo_enviado_at).toLocaleString('es-US',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})+(x.envios>1?' ('+x.envios+' envíos)':''):'Sin enviar';
+    var acc=x.estado==='activo'?'':'<button class="btn btn-sm btn-primary" onclick="cartReenviar(\''+x.id+'\')">'+(x.correo_enviado_at?'Reenviar enlace':'Enviar enlace')+'</button>';
+    return '<tr style="border-top:1px solid var(--border)"><td style="padding:8px"><b>'+cartEsc(x.full_name)+'</b><br><span style="color:var(--muted)">'+cartEsc(x.email)+'</span></td><td style="padding:8px">'+cartEsc(x.address)+'<br><span style="color:var(--muted)">'+cartEsc(x.city)+' '+cartEsc(x.zip)+'</span></td><td style="padding:8px">$'+cartEsc(x.monthly_price)+'</td><td style="padding:8px">'+cartEsc(x.service_day)+'<br><span style="color:var(--muted)">'+cartEsc(x.technician)+'</span></td><td style="padding:8px">'+est+'</td><td style="padding:8px">'+envio+'</td><td style="padding:8px">'+acc+'</td></tr>';
+  }).join('');
+}
+async function cartReenviar(id){
+  var fila=CART_ROWS.find(function(x){return x.id===id;}); if(!fila) return;
+  if(!confirm('¿Enviar ahora a '+fila.full_name+' ('+fila.email+') el correo con un enlace nuevo para dejar su tarjeta?\n\n'+fila.address+' · $'+fila.monthly_price+' al mes'))return;
+  try{await cartEnviarEnlace(fila); showToast('Correo enviado a '+fila.email);}
+  catch(e){alert('No se pudo enviar: '+e.message);}
+  await cartCargarLista();
 }
 </script>
 </body>
