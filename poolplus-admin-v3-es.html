@@ -330,7 +330,7 @@ select option{background:#1a2235;}
         <label class="cart-f cart-full">Dirección de la piscina<input id="cart-dir" type="text" placeholder="Calle y número"></label>
         <label class="cart-f">Ciudad<input id="cart-ciudad" type="text"></label>
         <label class="cart-f">Zip<input id="cart-zip" type="text" inputmode="numeric" maxlength="5"></label>
-        <label class="cart-f">Tamaño<select id="cart-tam"><option value="">Escoger…</option><option value="small">Compacta</option><option value="medium">Estándar</option><option value="large">Grande</option></select></label>
+        <label class="cart-f">Tamaño<select id="cart-tam"><option value="">Escoger…</option><option value="small">Compacta</option><option value="medium" selected>Estándar</option><option value="large">Grande</option></select></label>
         <label class="cart-f">Precio acordado (USD al mes)<input id="cart-precio" type="number" min="1" step="1"></label>
         <label class="cart-f">Día de visita<select id="cart-dia"><option value="">Escoger…</option><option value="lunes">Lunes</option><option value="martes">Martes</option><option value="miercoles">Miércoles</option><option value="jueves">Jueves</option><option value="viernes">Viernes</option><option value="sabado">Sábado</option></select></label>
         <label class="cart-f">Técnico<select id="cart-tec"><option value="">Escoger…</option></select></label>
@@ -1663,7 +1663,7 @@ function cartAviso(html,ok){
 }
 function cartLimpiar(){
   ['cart-nombre','cart-correo','cart-tel','cart-dir','cart-ciudad','cart-zip','cart-precio','cart-notas'].forEach(function(id){document.getElementById(id).value='';});
-  ['cart-tam','cart-dia','cart-tec'].forEach(function(id){document.getElementById(id).value='';});
+  ['cart-dia','cart-tec'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('cart-tam').value='medium';
   document.getElementById('cart-idioma').value='en';
   document.getElementById('cart-cobro').value='2026-11-01';
   document.getElementById('cart-enviar').checked=false;
@@ -1728,7 +1728,7 @@ async function cartDarDeAlta(){
 }
 function cartLimpiarCampos(){
   ['cart-nombre','cart-correo','cart-tel','cart-dir','cart-ciudad','cart-zip','cart-precio','cart-notas'].forEach(function(id){document.getElementById(id).value='';});
-  ['cart-tam','cart-dia','cart-tec'].forEach(function(id){document.getElementById(id).value='';});
+  ['cart-dia','cart-tec'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('cart-tam').value='medium';
 }
 async function cartCargarLista(){
   var tb=document.getElementById('cart-lista'); if(!tb) return;
