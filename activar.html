@@ -35,35 +35,29 @@
   <div class="card" id="cargando">
     <div class="spin"></div>
     <h1>Preparing your secure payment page…</h1>
-    <p class="es">Preparando su página de pago seguro…</p>
   </div>
 
   <div class="card oculto" id="ir">
     <h1 id="ir-titulo">Hi! Your secure payment page is ready.</h1>
-    <p class="es" id="ir-es">Su página de pago seguro está lista.</p>
-    <p>If it does not open by itself, tap the button.<br><span style="color:var(--gris)">Si no se abre sola, toque el botón.</span></p>
-    <a class="btn" id="ir-btn" href="#">Continue / Continuar</a>
+    <p>If it does not open by itself, tap the button.</p>
+    <a class="btn" id="ir-btn" href="#">Continue</a>
   </div>
 
   <div class="card oculto" id="activo">
     <div class="ok">&#10003;</div>
     <h1 id="activo-titulo">Your PoolPlus account is active.</h1>
-    <p class="es">Su cuenta de PoolPlus está activa.</p>
     <p id="activo-dir" style="font-weight:600"></p>
     <div class="caja">
-      Nothing is charged before November 1. Your technician and visit day stay the same, and after every visit you will receive a photo of your pool.<br><br>
-      <span style="color:var(--gris)">No se cobra nada antes del 1 de noviembre. Su técnico y su día de visita siguen iguales, y después de cada visita recibirá una foto de su piscina.</span>
+      Nothing is charged before November 1. Your technician and visit day stay the same, and after every visit you will receive a photo of your pool.
     </div>
-    <p style="margin-top:16px;font-size:14px;color:var(--gris)">Questions / Preguntas: Daniel <a href="tel:+17549466043">(754) 946-6043</a> · PoolPlus <a href="tel:+17542543322">(754) 254-3322</a></p>
+    <p style="margin-top:16px;font-size:14px;color:var(--gris)">Questions: Daniel <a href="tel:+17549466043">(754) 946-6043</a> · PoolPlus <a href="tel:+17542543322">(754) 254-3322</a></p>
   </div>
 
   <div class="card oculto" id="error">
     <h1>We could not open your activation link.</h1>
-    <p class="es">No pudimos abrir su enlace de activación.</p>
     <p id="error-detalle" style="font-size:14px;color:var(--gris)"></p>
-    <p>Please call or text Daniel at <a href="tel:+17549466043">(754) 946-6043</a>, or call PoolPlus at <a href="tel:+17542543322">(754) 254-3322</a>.<br>
-    <span style="color:var(--gris)">Por favor llame o escriba a Daniel al (754) 946-6043, o llame a PoolPlus al (754) 254-3322.</span></p>
-    <button class="btn" onclick="location.reload()">Try again / Intentar de nuevo</button>
+    <p>Please call or text Daniel at <a href="tel:+17549466043">(754) 946-6043</a>, or call PoolPlus at <a href="tel:+17542543322">(754) 254-3322</a>.</p>
+    <button class="btn" onclick="location.reload()">Try again</button>
   </div>
 </main>
 <footer>PoolPlus LLC · (754) 254-3322 · <a href="https://poolplus.app">poolplus.app</a></footer>
@@ -87,7 +81,7 @@
     return fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + KEY, 'apikey': KEY }, body: JSON.stringify(cuerpo) })
       .then(function(r){ return r.json().then(function(j){ return { status: r.status, j: j || {} }; }, function(){ return { status: r.status, j: {} }; }); });
   }
-  if (!/^[0-9a-fA-F-]{36}$/.test(c)) { fallo('Invalid link / Enlace no válido'); return; }
+  if (!/^[0-9a-fA-F-]{36}$/.test(c)) { fallo('Invalid link'); return; }
 
   if (listo) {
     // Vuelve de Stripe: se confirma y se marca activo. Se reintenta unas veces por si Stripe tarda.
@@ -96,8 +90,8 @@
       llamar({ accion: 'confirmar', c: c, session_id: listo }).then(function(res){
         if (res.j && res.j.estado === 'activo') { activo(res.j); return; }
         if (++n < 4) { setTimeout(confirmar, 2500); return; }
-        fallo('We received your information but could not confirm it yet. / Recibimos su información, pero aún no pudimos confirmarla.');
-      }).catch(function(){ if (++n < 4) setTimeout(confirmar, 2500); else fallo('Connection error / Error de conexión'); });
+        fallo('We received your information but could not confirm it yet.');
+      }).catch(function(){ if (++n < 4) setTimeout(confirmar, 2500); else fallo('Connection error'); });
     })();
     return;
   }
@@ -107,14 +101,13 @@
     if (j.estado === 'activo') { activo(j); return; }
     if (j.url) {
       if (j.nombre) document.getElementById('ir-titulo').textContent = 'Hi ' + j.nombre + '! Your secure payment page is ready.';
-      if (j.nombre) document.getElementById('ir-es').textContent = 'Hola ' + j.nombre + ', su página de pago seguro está lista.';
       document.getElementById('ir-btn').href = j.url;
       ver('ir');
       location.href = j.url;
       return;
     }
-    fallo(j.error === 'not_found' ? 'This link is no longer valid. / Este enlace ya no es válido.' : (j.error || ''));
-  }).catch(function(){ fallo('Connection error / Error de conexión'); });
+    fallo(j.error === 'not_found' ? 'This link is no longer valid.' : (j.error || ''));
+  }).catch(function(){ fallo('Connection error'); });
 })();
 </script>
 </body>
