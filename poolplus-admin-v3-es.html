@@ -1829,5 +1829,83 @@ async function cartReenviar(id){
   };
 })();
 </script>
+<!-- 4 nov 2026: Clientes con filtro Todos/Activos/Prospectos/Inactivos, inactivos al final, y botones Inactivar / Reactivar / Borrar. Bloque aditivo. -->
+<script>
+(function(){
+  if (typeof renderClients !== 'function') return;
+  var filtro = 'all';
+  var confirmando = null;
+  var ORDEN = {activo:0, prospecto:1, incompleto:2, inactivo:3, descartado:3};
+  function grupo(s){ s = s || 'prospecto'; return (s === 'inactivo' || s === 'descartado') ? 'inactivo' : (s === 'activo' ? 'activo' : 'prospecto'); }
+  function poner(id, estado){
+    return sb.from('clients').update({status: estado}).eq('id', id).select('id').then(function(r){
+      if (r.error || !r.data || !r.data.length) { showToast('No se pudo cambiar el estado', '#ef4444'); return false; }
+      var c = CLIENTS.find(function(x){ return x.id === id; }); if (c) c.status = estado;
+      showToast(estado === 'inactivo' ? 'Cliente inactivado' : 'Cliente reactivado'); renderClients(); return true;
+    });
+  }
+  async function borrar(id){
+    var res = await sb.from('booking_requests').select('id,paid_at').eq('client_id', id);
+    if (res.error) { showToast('No se pudo revisar el cliente', '#ef4444'); return; }
+    var conCobro = (res.data || []).some(function(b){ return !!b.paid_at; });
+    if (conCobro) { showToast('Tiene cobros registrados: se queda inactivo, no se borra', '#f59e0b'); confirmando = null; renderClients(); return; }
+    if ((res.data || []).length) {
+      var d = await sb.from('booking_requests').delete().eq('client_id', id).select('id');
+      if (d.error || (d.data || []).length !== res.data.length) { showToast('No se pudieron borrar sus reservas de prueba', '#ef4444'); return; }
+    }
+    var c = await sb.from('clients').delete().eq('id', id).eq('status', 'inactivo').select('id');
+    if (c.error || !c.data || !c.data.length) { showToast('No se pudo borrar el cliente', '#ef4444'); return; }
+    CLIENTS = CLIENTS.filter(function(x){ return x.id !== id; });
+    confirmando = null; showToast('Cliente borrado'); renderClients();
+  }
+  window.ppCliAccion = function(accion, id){
+    if (accion === 'inactivar') return poner(id, 'inactivo');
+    if (accion === 'reactivar') return poner(id, 'prospecto');
+    if (accion === 'borrar') { confirmando = id; return renderClients(); }
+    if (accion === 'cancelar') { confirmando = null; return renderClients(); }
+    if (accion === 'confirmar') return borrar(id);
+  };
+  window.setClientFilter = function(f, btn){
+    filtro = f;
+    document.querySelectorAll('#page-clients .tab-btn').forEach(function(b){ b.classList.remove('on'); });
+    if (btn) btn.classList.add('on');
+    renderClients();
+  };
+  var original = renderClients;
+  window.renderClients = function(){
+    var guardado = CLIENTS;
+    var q = (typeof clientSearch === 'string' ? clientSearch : '').toLowerCase();
+    var lista = guardado.filter(function(c){
+      var okF = filtro === 'all' || grupo(c.status) === filtro;
+      var okQ = !q || (c.name || '').toLowerCase().includes(q) || (c.addr || '').toLowerCase().includes(q);
+      return okF && okQ;
+    }).sort(function(a, b){ return (ORDEN[a.status||'prospecto'] ?? 1) - (ORDEN[b.status||'prospecto'] ?? 1) || String(a.name).localeCompare(String(b.name)); });
+    try { clientFilter = 'all'; clientSearch = ''; CLIENTS = lista; original(); } finally { CLIENTS = guardado; clientSearch = q; }
+    var filas = document.querySelectorAll('#clients-tbody tr');
+    lista.forEach(function(c, i){
+      var td = filas[i] && filas[i].lastElementChild; if (!td) return;
+      var g = grupo(c.status), html = '';
+      if (g !== 'inactivo') html = '<button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="ppCliAccion(\'inactivar\',\'' + c.id + '\')">Inactivar</button>';
+      else if (confirmando === c.id) html = '<button class="btn btn-danger btn-sm" style="margin-left:6px" onclick="ppCliAccion(\'confirmar\',\'' + c.id + '\')">Sí, borrar</button><button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="ppCliAccion(\'cancelar\',\'' + c.id + '\')">No</button>';
+      else html = '<button class="btn btn-ghost btn-sm" style="margin-left:6px" onclick="ppCliAccion(\'reactivar\',\'' + c.id + '\')">Reactivar</button><button class="btn btn-danger btn-sm" style="margin-left:6px" onclick="ppCliAccion(\'borrar\',\'' + c.id + '\')">Borrar</button>';
+      td.style.whiteSpace = 'nowrap';
+      td.insertAdjacentHTML('beforeend', html);
+      if (g === 'inactivo') filas[i].style.opacity = '0.6';
+    });
+    var cont = document.querySelector('#page-clients .page-title + div');
+    if (cont) cont.textContent = guardado.length + ' total · ' + guardado.filter(function(c){ return grupo(c.status) === 'activo'; }).length + ' activos · ' + guardado.filter(function(c){ return grupo(c.status) === 'inactivo'; }).length + ' inactivos';
+  };
+  function botones(){
+    var bar = document.querySelector('#page-clients .filters'); if (!bar) return;
+    bar.querySelectorAll('.tab-btn').forEach(function(b){ b.remove(); });
+    [['all','Todos'],['activo','Activos'],['prospecto','Prospectos'],['inactivo','Inactivos']].forEach(function(p, i){
+      var b = document.createElement('button'); b.className = 'tab-btn' + (i === 0 ? ' on' : ''); b.textContent = p[1];
+      b.onclick = function(){ setClientFilter(p[0], b); }; bar.appendChild(b);
+    });
+  }
+  botones();
+  try { renderClients(); } catch(x) {}
+})();
+</script>
 </body>
 </html>
