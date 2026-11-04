@@ -1755,5 +1755,79 @@ async function cartReenviar(id){
   await cartCargarLista();
 }
 </script>
+<!-- 4 nov 2026: Visitas y fotos en la ficha del cliente. Bloque aditivo: envuelve openClientModal sin modificarla. -->
+<script>
+(function(){
+  var original = window.openClientModal;
+  if (typeof original !== 'function') return;
+  function e(t){ return String(t==null?'':t).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
+  function dia(d){ try{ return new Date(String(d).slice(0,10)+'T12:00:00').toLocaleDateString('es-US',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); }catch(x){ return String(d||''); } }
+  function hora(v){ try{ return new Date(v).toLocaleTimeString('es-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'}); }catch(x){ return ''; } }
+  function fechaDe(b){ return String(b.service_date||'').match(/^\d{4}-\d{2}-\d{2}/) ? String(b.service_date).slice(0,10) : (b.completed_at ? new Date(b.completed_at).toLocaleDateString('en-CA',{timeZone:'America/New_York'}) : ''); }
+  function tarjeta(b, grande){
+    var estado = b.completed_at ? 'Hecha · '+hora(b.completed_at) : 'Sin cerrar';
+    var color = b.completed_at ? '#10b981' : '#f59e0b';
+    var foto = b.photo_url
+      ? '<a href="'+e(b.photo_url)+'" target="_blank" rel="noopener"><img src="'+e(b.photo_url)+'" alt="Foto del servicio" style="width:'+(grande?'100%':'64px')+';height:'+(grande?'auto':'64px')+';max-height:'+(grande?'360px':'64px')+';object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block"></a>'
+      : '<div style="width:'+(grande?'100%':'64px')+';height:64px;border-radius:8px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:10.5px;color:var(--muted)">Sin foto</div>';
+    var nov = b.novedad_tipo ? '<div style="font-size:11.5px;color:#f59e0b;margin-top:2px">Novedad: '+e(b.novedad_tipo)+'</div>' : '';
+    var novFoto = (grande && b.novedad_foto_url) ? '<a href="'+e(b.novedad_foto_url)+'" target="_blank" rel="noopener" style="font-size:11.5px">Ver foto de la novedad</a>' : '';
+    if (grande) return '<div style="background:var(--surface2);border-radius:10px;padding:12px">'
+      + '<div style="font-size:13px;font-weight:700">'+e(dia(fechaDe(b)))+'</div>'
+      + '<div style="font-size:11.5px;color:var(--muted);margin:2px 0 8px">'+e(b.assigned_technician||'Sin técnico')+' · <span style="color:'+color+'">'+e(estado)+'</span></div>'
+      + nov + foto + novFoto + '</div>';
+    return '<div class="pp-vis-fila" data-fecha="'+e(fechaDe(b))+'" style="display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--border);cursor:pointer">'
+      + foto + '<div><div style="font-size:12.5px;font-weight:600">'+e(dia(fechaDe(b)))+'</div>'
+      + '<div style="font-size:11.5px;color:var(--muted)">'+e(b.assigned_technician||'Sin técnico')+' · <span style="color:'+color+'">'+e(estado)+'</span></div>'+nov+'</div></div>';
+  }
+  window.openClientModal = function(id){
+    var r = original.apply(this, arguments);
+    try{
+      var body = document.getElementById('modal-client-body');
+      if (!body) return r;
+      var caja = document.createElement('div');
+      caja.id = 'pp-visitas';
+      caja.style.cssText = 'border-top:1px solid var(--border);margin-top:16px;padding-top:16px';
+      caja.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Visitas y fotos</div><div style="font-size:12px;color:var(--muted)">Cargando visitas…</div>';
+      body.appendChild(caja);
+      var hoy = new Date().toLocaleDateString('en-CA',{timeZone:'America/New_York'});
+      sb.from('booking_requests')
+        .select('id,service_date,completed_at,photo_url,assigned_technician,status,novedad_tipo,novedad_foto_url')
+        .eq('client_id', id)
+        .then(function(res){
+          var filas = (res.data||[]).filter(function(b){ return b.completed_at || (fechaDe(b) && fechaDe(b) <= hoy); });
+          filas.sort(function(a,b){ return fechaDe(a) < fechaDe(b) ? 1 : fechaDe(a) > fechaDe(b) ? -1 : 0; });
+          if (!filas.length){ caja.innerHTML = caja.firstChild.outerHTML + '<div style="font-size:12px;color:var(--muted)">Todavía no tiene visitas registradas.</div>'; return; }
+          var ultima = filas.find(function(b){ return b.completed_at; }) || filas[0];
+          caja.innerHTML = caja.firstChild.outerHTML
+            + '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><label style="font-size:12px;color:var(--muted)">Día</label>'
+            + '<input type="date" id="pp-vis-dia" value="'+e(fechaDe(ultima))+'" max="'+e(hoy)+'" style="flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:inherit"></div>'
+            + '<div id="pp-vis-sel"></div>'
+            + '<div style="font-size:11px;color:var(--muted);margin:14px 0 2px;text-transform:uppercase;letter-spacing:.04em">Últimas visitas</div>'
+            + filas.slice(0,8).map(function(b){ return tarjeta(b,false); }).join('');
+          function mostrar(f){
+            var exacta = filas.filter(function(b){ return fechaDe(b) === f; });
+            var sel = document.getElementById('pp-vis-sel');
+            if (exacta.length){ sel.innerHTML = exacta.map(function(b){ return tarjeta(b,true); }).join('<div style="height:8px"></div>'); return; }
+            var t = new Date(f+'T12:00:00').getTime();
+            var cerca = filas.slice().sort(function(a,b){ return Math.abs(new Date(fechaDe(a)+'T12:00:00')-t) - Math.abs(new Date(fechaDe(b)+'T12:00:00')-t); })[0];
+            sel.innerHTML = '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">Ese día no hubo visita. La más cercana:</div>' + tarjeta(cerca,true);
+          }
+          mostrar(fechaDe(ultima));
+          document.getElementById('pp-vis-dia').addEventListener('change', function(ev){ if (ev.target.value) mostrar(ev.target.value); });
+          caja.querySelectorAll('.pp-vis-fila').forEach(function(fila){
+            fila.addEventListener('click', function(ev){
+              if (ev.target.closest('a')) return;
+              var f = fila.getAttribute('data-fecha');
+              document.getElementById('pp-vis-dia').value = f;
+              mostrar(f);
+            });
+          });
+        }, function(){ caja.innerHTML = caja.firstChild.outerHTML + '<div style="font-size:12px;color:#ef4444">No se pudieron cargar las visitas.</div>'; });
+    }catch(x){ console.error('visitas', x); }
+    return r;
+  };
+})();
+</script>
 </body>
 </html>
