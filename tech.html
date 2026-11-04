@@ -552,7 +552,12 @@ function mapsLink(b){
 }
 
 function renderBookings(rows){
-  const pending = rows.filter(r => !r.completed_at);
+  // 4 nov 2026: solo visitas de hoy y atrasadas, ordenadas por fecha de visita.
+  // Antes salian tambien las de las proximas semanas (lo mas nuevo arriba) y Roger cerro visitas del 18 en vez de las del 4.
+  const hoyStr = new Date().toLocaleDateString('en-CA');
+  const fechaDe = r => /^\d{4}-\d{2}-\d{2}/.test(String(r.service_date||'')) ? String(r.service_date).slice(0,10) : '';
+  const pending = rows.filter(r => !r.completed_at && (!fechaDe(r) || fechaDe(r) <= hoyStr))
+                      .sort((a,b)=> (fechaDe(a)||'9999') < (fechaDe(b)||'9999') ? -1 : (fechaDe(a)||'9999') > (fechaDe(b)||'9999') ? 1 : 0);
   const done = rows.filter(r => r.completed_at)
                    .sort((a,b)=> new Date(b.completed_at) - new Date(a.completed_at))
                    .slice(0,5);
