@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoolPlus · Rutas</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&family=Inter:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/brand.css">
+<link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  /* Mismo aspecto del panel de administración */
+  :root{--pool:#0ea5e9;--deep:#0369a1;--bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;--muted:#64748b;--text:#e2e8f0;--ok:#22c55e;--tarde:#f59e0b;--r:14px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+  .hidden{display:none!important}
+  header{position:sticky;top:0;z-index:5;background:#0d1424;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:14px}
+  header .titulo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px}
+  header .sub{color:var(--muted);font-size:13px}
+  header .der{margin-left:auto;display:flex;gap:10px;align-items:center}
+  header button{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer}
+  main{max-width:980px;margin:0 auto;padding:18px 16px 60px}
+  .semana{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px}
+  .semana .flecha{background:none;border:0;color:var(--muted);font-size:22px;padding:0 8px;cursor:pointer}
+  .dias{flex:1;display:flex;justify-content:space-between;gap:4px}
+  .dia{flex:1;background:none;border:0;color:var(--text);font:inherit;border-radius:10px;padding:7px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center}
+  .dia small{font-size:11px;color:var(--muted);text-transform:capitalize}
+  .dia b{font-size:17px}
+  .dia i{font-style:normal;font-size:10px;font-weight:700;color:var(--pool);min-height:12px}
+  .dia.hoy b{color:var(--pool)}
+  .dia.sel{background:var(--deep)}
+  .dia.sel small,.dia.sel i{color:#e0f2fe}
+  .resumen{display:flex;gap:12px;margin:14px 0;flex-wrap:wrap}
+  .resumen .kpi{flex:1;min-width:140px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+  .kpi b{display:block;font-size:22px;font-family:'Syne',sans-serif}
+  .kpi span{font-size:12px;color:var(--muted)}
+  .tec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+  .tec-cab{display:flex;align-items:center;gap:14px;padding:12px 14px;cursor:pointer}
+  .anillo{width:58px;height:58px;border-radius:50%;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .anillo .in{width:48px;height:48px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .anillo b{font-size:15px}
+  .anillo small{font-size:9px;color:var(--muted)}
+  .tec-cab .nom b{display:block;font-size:17px}
+  .tec-cab .nom span{font-size:13px;color:var(--muted)}
+  .tec-cab .flecha{margin-left:auto;color:var(--muted);font-size:20px;transition:transform .2s}
+  .tec.abierta .tec-cab .flecha{transform:rotate(90deg)}
+  .paradas{display:none;border-top:1px solid var(--border)}
+  .tec.abierta .paradas{display:block}
+  .parada{display:flex;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid var(--border)}
+  .parada:first-child{border-top:0}
+  .parada .num{width:30px;height:30px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--surface2);font-weight:700;color:var(--muted)}
+  .parada.hecha .num{background:var(--ok);color:#06210f}
+  .parada .info{flex:1;min-width:0}
+  .parada .info b{display:block;font-size:15px}
+  .parada .info span{display:block;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .parada .info em{font-style:normal;font-size:12px;font-weight:700}
+  .parada .info em.ok{color:var(--ok)} .parada .info em.tarde{color:var(--tarde)} .parada .info em.pend{color:var(--pool)}
+  .parada img{width:56px;height:56px;border-radius:8px;object-fit:cover;flex:none;cursor:pointer}
+  .vacio{color:var(--muted);text-align:center;padding:30px;border:1px dashed var(--border);border-radius:var(--r)}
+  .nota{color:var(--muted);font-size:12px;margin-top:6px}
+  #visor{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:20;display:flex;align-items:center;justify-content:center;padding:20px}
+  #visor img{max-width:100%;max-height:100%;border-radius:10px}
+  #puerta{max-width:420px;margin:80px auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;text-align:center}
+  #puerta a{color:var(--pool)}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="titulo">Rutas</div>
+    <div class="sub" id="subtitulo">Cómo va el recorrido de cada técnico</div>
+  </div>
+  <div class="der">
+    <span class="sub" id="actualizado"></span>
+    <button onclick="cargar()">Actualizar</button>
+  </div>
+</header>
+
+<div id="puerta" class="hidden">
+  <p>Esta pantalla usa la sesión del panel de administración.</p>
+  <p style="margin-top:10px">Entra primero al <a href="/poolplus-admin-v3-es.html">panel de administración</a> y vuelve a abrir Rutas desde el menú.</p>
+</div>
+
+<main id="app" class="hidden">
+  <div class="semana">
+    <button class="flecha" onclick="cambiarSemana(-7)" aria-label="Semana anterior">&#8249;</button>
+    <div class="dias" id="dias"></div>
+    <button class="flecha" onclick="cambiarSemana(7)" aria-label="Semana siguiente">&#8250;</button>
+  </div>
+  <div class="resumen" id="resumen"></div>
+  <div id="lista"></div>
+  <p class="nota">El orden de cada ruta es el que dejó el técnico en su app. Las visitas sin completar con más de 3 días de atraso no salen aquí.</p>
+</main>
+
+<div id="visor" class="hidden" onclick="this.classList.add('hidden')"><img id="visorImg" alt="Foto del servicio"></div>
+
+<script>
+const SUPABASE_URL = 'https://sshbhmfsjyddynfwerpk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const TZ = 'America/New_York';
+const DIAS_VENCIDA = 3;
+
+let filas = [];           // reservas y visitas
+let tecnicos = [];        // {name, email}
+let ordenes = {};         // {email: {'dow:5': [...], 'fecha:...': [...]}}
+let diaSel = null, inicioSemana = null;
+let abiertos = new Set();
+
+/* ---- fechas (iguales a la app del técnico) ---- */
+function ymdNY(f){ return f.toLocaleDateString('en-CA', {timeZone: TZ}); }
+function hoyNY(){ return ymdNY(new Date()); }
+function sumarDias(ymd, n){ const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0,10); }
+function domingoDe(ymd){ return sumarDias(ymd, -new Date(ymd + 'T12:00:00Z').getUTCDay()); }
+function nombreDia(ymd, largo){
+  return new Date(ymd + 'T12:00:00Z').toLocaleDateString('es-US', largo
+    ? {weekday:'long', month:'long', day:'numeric', timeZone:'UTC'} : {weekday:'short', timeZone:'UTC'}).replace('.', '');
+}
+function fechaVisita(r){ return /^\d{4}-\d{2}-\d{2}/.test(String(r.service_date||'')) ? String(r.service_date).slice(0,10) : ''; }
+function fechaHecha(r){ return r.completed_at ? ymdNY(new Date(r.completed_at)) : ''; }
+function diaDeRuta(r){
+  if(r.completed_at) return fechaHecha(r);
+  if(fechaVisita(r)) return fechaVisita(r);
+  return r.created_at ? ymdNY(new Date(r.created_at)) : hoyNY();
+}
+function normDir(r){ return String(r.address||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+function esc(t){ return (t==null?'':String(t)).replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+function hora(iso){ try{ return new Date(iso).toLocaleTimeString('en-US',{timeZone:TZ,hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+
+/* ---- la ruta de un técnico en un día (misma regla que su app) ---- */
+function paradas(tec, ymd){
+  const hoy = hoyNY();
+  const lista = [];
+  filas.filter(r=> (r.assigned_technician||'').trim().toLowerCase() === tec.name.trim().toLowerCase()).forEach(r=>{
+    if(r.completed_at){ if(fechaHecha(r) === ymd) lista.push({r, estado:'hecha'}); return; }
+    const dia = diaDeRuta(r);
+    if(dia === ymd){ lista.push({r, estado: ymd < hoy ? 'atrasada' : 'pendiente'}); return; }
+    if(ymd === hoy && dia < hoy && dia >= sumarDias(hoy, -DIAS_VENCIDA)) lista.push({r, estado:'atrasada'});
+  });
+  const peso = {atrasada:0, pendiente:1, hecha:2};
+  lista.sort((a,b)=> peso[a.estado]-peso[b.estado]
+    || String(a.r.arrival_promised_at||a.r.created_at||'').localeCompare(String(b.r.arrival_promised_at||b.r.created_at||'')));
+  const o = ordenes[(tec.email||'').toLowerCase()] || {};
+  const orden = o['fecha:' + ymd] || o['dow:' + new Date(ymd + 'T12:00:00Z').getUTCDay()];
+  if(orden){
+    // En la vista de administración, las completadas quedan en su lugar de la ruta
+    const pos = p=>{ const i = orden.indexOf(normDir(p.r)); return i < 0 ? 1000 : i; };
+    const base = lista.slice();
+    lista.sort((a,b)=> (pos(a)-pos(b)) || (base.indexOf(a)-base.indexOf(b)));
+  }
+  return lista;
+}
+
+/* ---- carga ---- */
+async function cargar(){
+  const sel = 'id,full_name,address,city,service,service_label,service_date,status,photo_url,completed_at,assigned_technician,arrival_window,arrival_promised_at,created_at';
+  const desde = sumarDias(inicioSemana || domingoDe(hoyNY()), -10);
+  const [r1, r2, r3] = await Promise.all([
+    sb.from('booking_requests').select(sel).or('completed_at.gte.' + desde + ',completed_at.is.null').limit(3000),
+    sb.from('technicians').select('name,email'),
+    sb.from('ruta_orden').select('tech_email,clave,orden')
+  ]);
+  if(r1.error){ alert('No se pudieron leer las rutas: ' + r1.error.message); return; }
+  filas = r1.data || [];
+  tecnicos = (r2.data || []).filter(t=> t.name);
+  ordenes = {};
+  (r3.data || []).forEach(x=>{ const k = (x.tech_email||'').toLowerCase(); (ordenes[k] = ordenes[k] || {})[x.clave] = x.orden; });
+  document.getElementById('actualizado').textContent = 'Actualizado ' + hora(new Date().toISOString());
+  pintar();
+}
+
+function pintar(){
+  // Semana
+  const cont = document.getElementById('dias'); cont.innerHTML = '';
+  for(let i=0;i<7;i++){
+    const ymd = sumarDias(inicioSemana, i);
+    const total = tecnicos.reduce((s,t)=> s + paradas(t, ymd).length, 0);
+    const b = document.createElement('button');
+    b.className = 'dia' + (ymd === hoyNY() ? ' hoy' : '') + (ymd === diaSel ? ' sel' : '');
+    b.innerHTML = '<small>'+nombreDia(ymd)+'</small><b>'+Number(ymd.slice(8))+'</b><i>'+(total||'')+'</i>';
+    b.onclick = ()=>{ diaSel = ymd; pintar(); };
+    cont.appendChild(b);
+  }
+  const largo = nombreDia(diaSel, true);
+  document.getElementById('subtitulo').textContent = (diaSel === hoyNY() ? 'Hoy, ' : '') + largo;
+
+  // Técnicos con ruta ese día
+  const conRuta = tecnicos.map(t=> ({t, p: paradas(t, diaSel)})).filter(x=> x.p.length)
+    .sort((a,b)=> a.t.name.localeCompare(b.t.name));
+  const tot = conRuta.reduce((s,x)=> s + x.p.length, 0);
+  const hechas = conRuta.reduce((s,x)=> s + x.p.filter(p=> p.estado==='hecha').length, 0);
+  const atr = conRuta.reduce((s,x)=> s + x.p.filter(p=> p.estado==='atrasada').length, 0);
+  document.getElementById('resumen').innerHTML =
+    '<div class="kpi"><b>'+conRuta.length+'</b><span>técnicos en ruta</span></div>'
+    + '<div class="kpi"><b>'+hechas+' / '+tot+'</b><span>piscinas completadas</span></div>'
+    + '<div class="kpi"><b>'+(tot-hechas)+'</b><span>por hacer'+(atr ? ' · '+atr+' atrasadas' : '')+'</span></div>';
+
+  const lista = document.getElementById('lista'); lista.innerHTML = '';
+  if(!conRuta.length){ lista.innerHTML = '<div class="vacio">Ningún técnico tiene piscinas este día.</div>'; return; }
+  conRuta.forEach(({t, p})=>{
+    const h = p.filter(x=> x.estado==='hecha').length;
+    const pct = Math.round(h * 100 / p.length);
+    const color = h === p.length ? 'var(--ok)' : 'var(--pool)';
+    const caja = document.createElement('div');
+    caja.className = 'tec' + (abiertos.has(t.name) ? ' abierta' : '');
+    const ultima = p.filter(x=> x.estado==='hecha').map(x=> x.r.completed_at).sort().pop();
+    caja.innerHTML =
+      '<div class="tec-cab">'
+      + '<div class="anillo" style="background:conic-gradient('+color+' '+pct+'%, var(--surface2) 0)"><div class="in"><b>'+h+'/'+p.length+'</b><small>piscinas</small></div></div>'
+      + '<div class="nom"><b>'+esc(t.name)+'</b><span>'
+      + (h === p.length ? 'Ruta completa' : (p.length-h)+' por hacer')
+      + (ultima ? ' · último cierre '+hora(ultima) : ' · todavía sin cierres') + '</span></div>'
+      + '<span class="flecha">&#8250;</span></div><div class="paradas"></div>';
+    caja.querySelector('.tec-cab').onclick = ()=>{
+      abiertos.has(t.name) ? abiertos.delete(t.name) : abiertos.add(t.name);
+      caja.classList.toggle('abierta');
+    };
+    const cont2 = caja.querySelector('.paradas');
+    p.forEach((x, i)=>{
+      const r = x.r;
+      const d = document.createElement('div');
+      d.className = 'parada' + (x.estado==='hecha' ? ' hecha' : '');
+      const est = x.estado==='hecha' ? '<em class="ok">Completada '+esc(hora(r.completed_at))+'</em>'
+        : x.estado==='atrasada' ? '<em class="tarde">Atrasada · '+esc(fechaVisita(r) || diaDeRuta(r))+'</em>'
+        : '<em class="pend">Pendiente</em>';
+      d.innerHTML = '<div class="num">'+(x.estado==='hecha' ? '&#10003;' : (i+1))+'</div>'
+        + '<div class="info"><b>'+esc(r.full_name || 'Cliente')+'</b><span>'+esc([r.address, r.city].filter(Boolean).join(', '))+'</span>'+est+'</div>'
+        + (r.photo_url ? '<img src="'+esc(r.photo_url)+'" alt="Foto">' : '');
+      const img = d.querySelector('img');
+      if(img) img.onclick = ()=>{ document.getElementById('visorImg').src = r.photo_url; document.getElementById('visor').classList.remove('hidden'); };
+      cont2.appendChild(d);
+    });
+    lista.appendChild(caja);
+  });
+}
+
+function cambiarSemana(n){ inicioSemana = sumarDias(inicioSemana, n); diaSel = sumarDias(diaSel, n); cargar(); }
+
+(async function(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ document.getElementById('puerta').classList.remove('hidden'); return; }
+  document.getElementById('app').classList.remove('hidden');
+  diaSel = hoyNY(); inicioSemana = domingoDe(diaSel);
+  await cargar();
+  setInterval(()=>{ if(document.visibilityState === 'visible') cargar(); }, 60000);
+})();
+</script>
+</body>
+</html>
