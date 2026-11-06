@@ -115,5 +115,49 @@ sendBtn.addEventListener('click',async()=>{
   }
 });
 </script>
+<script>
+/* 6 nov 2026: one tap from the email saves the rating (?stars=N), then an optional comment. */
+(function(){
+  if(!booking) return;
+  async function guardar(rating, comentario){
+    const r = await fetch(SUPA_URL + '/rest/v1/rpc/pp_calificar', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY},
+      body: JSON.stringify({p_booking: booking, p_rating: rating, p_comentario: comentario || null})
+    });
+    return r.ok;
+  }
+  // Optional comment box on the thank-you view
+  const done = document.getElementById('view-done');
+  const box = document.createElement('div');
+  box.style.cssText = 'margin-top:18px;text-align:left';
+  box.innerHTML = '<label style="display:block;font-size:14px;font-weight:600;margin-bottom:6px">Anything you want to tell us? (optional)</label>'
+    + '<textarea id="ppComent" rows="3" style="width:100%;padding:10px;border:1px solid #d7e6ef;border-radius:10px;font:inherit;font-size:15px;box-sizing:border-box"></textarea>'
+    + '<button id="ppComentBtn" type="button" style="margin-top:10px;width:100%;padding:12px;border:none;border-radius:10px;background:#146C94;color:#fff;font-weight:700;font-size:15px;cursor:pointer">Send comment</button>'
+    + '<p id="ppComentOk" style="display:none;margin-top:10px;font-size:14px;color:#1F9D55">Thank you, we received your comment.</p>';
+  done.appendChild(box);
+  document.getElementById('ppComentBtn').onclick = async function(){
+    const txt = document.getElementById('ppComent').value.trim();
+    if(!txt || !chosen) return;
+    this.disabled = true; this.textContent = 'Sending…';
+    if(await guardar(chosen, txt)){ box.querySelector('textarea').disabled = true; this.style.display = 'none'; document.getElementById('ppComentOk').style.display = 'block'; }
+    else { this.disabled = false; this.textContent = 'Send comment'; }
+  };
+  // One tap from the email: save right away
+  const n = parseInt(params.get('stars'), 10);
+  if(n >= 1 && n <= 5){
+    stars[n-1].click();
+    sendBtn.disabled = true; sendBtn.textContent = 'Saving…';
+    guardar(n).then(ok=>{
+      if(ok){
+        if(n <= 3) document.getElementById('done-msg').textContent = 'Thank you for your honesty. Our team will review your service and reach out to make things right.';
+        show('view-done');
+      }else{
+        sendBtn.disabled = false; sendBtn.textContent = 'Send rating';
+      }
+    }).catch(()=>{ sendBtn.disabled = false; sendBtn.textContent = 'Send rating'; });
+  }
+})();
+</script>
 </body>
 </html>
