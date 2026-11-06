@@ -180,6 +180,15 @@
     font-weight:700;font-size:13.5px;text-decoration:none;
     padding:10px 16px;border-radius:10px;
   }
+  #visorFoto{position:fixed;inset:0;z-index:80;background:rgba(5,15,30,.94);display:flex;align-items:center;justify-content:center}
+  #visorFoto img{max-width:100%;max-height:100%;object-fit:contain}
+  #visorFoto button{position:absolute;top:14px;right:14px;width:46px;height:46px;border-radius:50%;border:none;
+    background:rgba(255,255,255,.18);color:#fff;font-size:28px;line-height:46px;cursor:pointer}
+  .en-revision{margin-top:10px;padding:12px;border-radius:12px;background:#FFF7E6;border:1px solid #F3D9A0;color:#7A5C12;font-size:14px}
+  .parada .info em.revision{color:var(--amber)}
+  .cancelar-caja{margin-top:10px;padding:12px;border:1px solid #F3C7C7;background:#FFF5F5;border-radius:12px}
+  .cancelar-caja textarea{width:100%;margin-top:8px;padding:10px;border:1px solid #e2e8f0;border-radius:10px;font:inherit;font-size:14px}
+  .btn-cancelar{background:none;border:none;color:var(--red);font-weight:700;font-size:14px;padding:12px;width:100%;cursor:pointer}
   .btn-reject{
     background:transparent;color:var(--red);
     font-weight:600;font-size:13.5px;
@@ -538,6 +547,7 @@
   </div>
 </div>
 
+<div id="visorFoto" class="hidden" onclick="cerrarFoto()"><img alt="Foto del servicio"><button type="button" aria-label="Cerrar foto" onclick="cerrarFoto()">&times;</button></div>
 <div id="toast" class="hidden"></div>
 
 <script>
@@ -684,7 +694,7 @@ async function loadBookings(){
   loading.classList.remove('hidden');
   try{
     const url = SUPABASE_URL + '/rest/v1/booking_requests'
-      + '?select=id,full_name,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at,price,arrival_window,arrival_promised_at,created_at'
+      + '?select=id,full_name,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at,price,arrival_window,arrival_promised_at,created_at,cancel_pedido_at,cancel_motivo,cancel_resuelto'
       + '&order=created_at.desc';
     const res = await fetch(url,{headers: authHeaders()});
     if(res.status === 401){ logout(); return; }
@@ -758,6 +768,28 @@ function fechaVisita(r){
   if(/^\d{4}-\d{2}-\d{2}/.test(String(r.service_date||''))) return String(r.service_date).slice(0,10);
   return '';
 }
+function horaNY(iso){
+  try{ return new Date(iso).toLocaleTimeString('es-US',{timeZone:'America/New_York', hour:'numeric', minute:'2-digit'}); }catch(e){ return ''; }
+}
+// Foto ampliada dentro de la app: se cierra con la X, tocando fuera o con "atrás"
+function verFoto(url){
+  const v = document.getElementById('visorFoto');
+  v.querySelector('img').src = url;
+  v.classList.remove('hidden');
+  try{ history.pushState({visorFoto:true}, ''); }catch(e){}
+}
+function cerrarFoto(ev){
+  if(ev) ev.stopPropagation();
+  const v = document.getElementById('visorFoto');
+  if(v.classList.contains('hidden')) return;
+  v.classList.add('hidden');
+  v.querySelector('img').removeAttribute('src');
+  try{ if(history.state && history.state.visorFoto) history.back(); }catch(e){}
+}
+window.addEventListener('popstate', ()=>{
+  const v = document.getElementById('visorFoto');
+  if(v && !v.classList.contains('hidden')){ v.classList.add('hidden'); v.querySelector('img').removeAttribute('src'); }
+});
 function fechaHecha(r){ return r.completed_at ? ymdNY(new Date(r.completed_at)) : ''; }
 // El día en que una reserva cuenta en la ruta
 function diaDeRuta(r){
@@ -896,7 +928,7 @@ async function guardarOrden(siempre){
 }
 
 function renderBookings(rows){
-  rutaRows = Array.isArray(rows) ? rows : [];
+  rutaRows = (Array.isArray(rows) ? rows : []).filter(x=> !/^(cancelad|cancelled|canceled)/i.test(String(x.status || '')));
   if(!rutaDiaSel) rutaDiaSel = hoyNY();
   if(!rutaInicioSemana) rutaInicioSemana = domingoDe(rutaDiaSel);
   pintarSemana();
@@ -963,6 +995,7 @@ function pintarDia(){
     div.className = 'parada' + (p.estado === 'hecha' ? ' hecha' : '');
     let etiqueta = '';
     if(p.estado === 'hecha') etiqueta = '<em class="ok">Completada</em>';
+    else if(enRevision(r)) etiqueta = '<em class="revision">Cancelación en revisión</em>';
     else if(p.estado === 'atrasada') etiqueta = '<em class="tarde">Atrasada · ' + esc(fmtDate(fechaVisita(r) || diaDeRuta(r))) + '</em>';
     else if(r.arrival_window && typeof PP_VENT_TXT !== 'undefined') etiqueta = '<em>Llegada: ' + esc(PP_VENT_TXT[r.arrival_window] || r.arrival_window) + '</em>';
     else if(!fechaVisita(r)) etiqueta = '<em>' + esc(r.service_label || r.service || 'Servicio') + '</em>';
@@ -1056,7 +1089,20 @@ function abrirFicha(id){
     const bR = document.createElement('button');
     bR.className = 'btn btn-reject'; bR.textContent = 'No puedo tomar este servicio';
     bR.onclick = ()=> rejectService(r);
-    acc.appendChild(bC); acc.appendChild(bN); acc.appendChild(bR);
+    if(enRevision(r)){
+      // Cancelación pedida: no se puede completar hasta que administración decida
+      const av = document.createElement('div');
+      av.className = 'en-revision';
+      av.innerHTML = '<b>Cancelación en revisión.</b> Administración está revisando tu pedido. Mientras tanto este servicio no se puede completar.'
+        + (r.cancel_motivo ? '<br><span style="color:var(--gray)">Motivo: ' + esc(r.cancel_motivo) + '</span>' : '');
+      acc.appendChild(bN); acc.appendChild(av);
+    }else{
+      acc.appendChild(bC); acc.appendChild(bN); acc.appendChild(bR);
+      const bX = document.createElement('button');
+      bX.className = 'btn-cancelar'; bX.textContent = 'Pedir cancelación de este servicio';
+      bX.onclick = ()=> pedirCancelacion(acc, r, bX);
+      acc.appendChild(bX);
+    }
     cuerpo.appendChild(acc);
   }
 
@@ -1075,9 +1121,10 @@ function abrirFicha(id){
     lista.forEach(x=>{
       const fila = document.createElement('div');
       fila.className = 'hist';
-      fila.innerHTML = (x.foto ? '<a href="'+esc(x.foto)+'" target="_blank" rel="noopener"><img src="'+esc(x.foto)+'" alt="Foto"></a>' : '<div class="sinfoto"></div>')
-        + '<span><b>' + esc(fmtDate(ymdNY(new Date(x.completado)))) + '</b><br>'
+      fila.innerHTML = (x.foto ? '<img src="'+esc(x.foto)+'" alt="Foto" style="cursor:zoom-in">' : '<div class="sinfoto"></div>')
+        + '<span><b>' + esc(fmtDate(ymdNY(new Date(x.completado)))) + ', ' + esc(horaNY(x.completado)) + '</b><br>'
         + esc(x.tecnico || 'Sin técnico') + ' · ' + esc(x.servicio || 'Servicio') + '</span>';
+      if(x.foto) fila.querySelector('img').onclick = ()=> verFoto(x.foto);
       h.appendChild(fila);
     });
   };
@@ -1099,6 +1146,41 @@ function abrirFicha(id){
 function cerrarFicha(){
   fichaId = null;
   document.getElementById('fichaOverlay').classList.add('hidden');
+}
+
+// Cancelación en dos pasos (6 nov 2026): el técnico la PIDE con un motivo; queda "en revisión"
+// y no se puede completar; administración la aprueba o la rechaza desde el panel.
+// Nada se borra: queda quién la pidió, el motivo y quién decidió.
+function enRevision(r){ return !!(r && r.cancel_pedido_at && !r.cancel_resuelto); }
+function pedirCancelacion(acc, r, boton){
+  boton.classList.add('hidden');
+  const c = document.createElement('div');
+  c.className = 'cancelar-caja';
+  c.innerHTML = '<b>¿Pedir que se cancele este servicio?</b><div style="font-size:13px;color:var(--gray);margin-top:4px">Administración lo revisa y decide. Mientras tanto queda en revisión y no se puede completar.</div>'
+    + '<textarea rows="2" placeholder="Motivo (obligatorio), por ejemplo: era una prueba"></textarea>'
+    + '<button class="btn btn-reject" style="margin-top:8px">Enviar pedido</button>'
+    + '<button class="btn btn-secondary">No, volver</button>';
+  const [bSi, bNo] = c.querySelectorAll('button');
+  bNo.onclick = ()=>{ c.remove(); boton.classList.remove('hidden'); };
+  bSi.onclick = async ()=>{
+    const motivo = c.querySelector('textarea').value.trim();
+    if(motivo.length < 4){ showToast('Escribe el motivo de la cancelación.'); return; }
+    bSi.disabled = true; bSi.textContent = 'Enviando…';
+    try{
+      const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/pp_pedir_cancelacion', {
+        method:'POST', headers: authHeaders(), body: JSON.stringify({p_booking: r.id, p_motivo: motivo})
+      });
+      const d = await res.json().catch(()=> ({}));
+      if(!res.ok) throw new Error(d.message || ('Error ' + res.status));
+      showToast('Pedido enviado. Administración lo va a revisar.');
+      await loadBookings();
+      abrirFicha(r.id);
+    }catch(e){
+      showToast('No se pudo enviar el pedido. ' + e.message);
+      bSi.disabled = false; bSi.textContent = 'Enviar pedido';
+    }
+  };
+  acc.appendChild(c);
 }
 
 // Nombre y correo en el perfil
@@ -1134,6 +1216,7 @@ function rejectService(b){
 
 /* ---------------- COMPLETAR SERVICIO ---------------- */
 function openComplete(b){
+  if(enRevision(b)){ showToast('Este servicio tiene una cancelación en revisión.'); return; }
   currentBooking = b;
   compressedBase64 = null;
   fotosExtra = [];
@@ -1176,10 +1259,41 @@ function comprimirFoto(file, listo){
     else if(h >= w && h > MAX){ w = Math.round(w * MAX / h); h = MAX; }
     const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, w, h);
+    estamparFoto(ctx, w, h);
     listo(canvas.toDataURL('image/jpeg', 0.8));
   };
   reader.readAsDataURL(file);
+}
+// Fecha, hora (de Nueva York) y dirección dentro de la foto, en el momento de tomarla.
+// Queda en los píxeles de la imagen: el técnico no lo puede editar, y el cliente puede
+// compararlo con sus cámaras.
+function estamparFoto(ctx, w, h){
+  try{
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-US', {timeZone:'America/New_York', month:'short', day:'numeric', year:'numeric'}).replace('.', '');
+    const hora = ahora.toLocaleTimeString('es-US', {timeZone:'America/New_York', hour:'numeric', minute:'2-digit', second:'2-digit'});
+    const b = currentBooking || {};
+    const lineas = [fecha + ', ' + hora];
+    if(b.address) lineas.push(String(b.address));
+    const lugar = [b.city, b.zip || b.zip_code].filter(Boolean).join(' ');
+    if(lugar) lineas.push(lugar);
+    lineas.push('PoolPlus');
+    const tam = Math.max(16, Math.round(Math.min(w, h) / 22));
+    ctx.font = '600 ' + tam + 'px -apple-system, Segoe UI, Roboto, Arial, sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    const margen = Math.round(tam * 0.8), paso = Math.round(tam * 1.25);
+    // Franja oscura detrás del texto para que se lea sobre cualquier fondo
+    const ancho = Math.max(...lineas.map(l=> ctx.measureText(l).width)) + tam;
+    ctx.fillStyle = 'rgba(0,0,0,.45)';
+    ctx.fillRect(w - margen - ancho + tam/2, margen - tam*0.35, ancho, paso * lineas.length + tam*0.3);
+    ctx.shadowColor = 'rgba(0,0,0,.75)'; ctx.shadowBlur = Math.round(tam / 4);
+    ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1;
+    ctx.fillStyle = '#FFFFFF';
+    lineas.forEach((l, i)=> ctx.fillText(l, w - margen, margen + i * paso));
+    ctx.shadowColor = 'transparent';
+  }catch(e){}
 }
 function photoSelected(ev){
   const file = ev.target.files && ev.target.files[0];
