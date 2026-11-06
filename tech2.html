@@ -216,6 +216,13 @@
   }
   .photo-slot small{display:block;font-weight:500;color:var(--gray);margin-top:4px;font-size:12.5px}
   #photoPreview{width:100%;border-radius:14px;margin-top:16px;display:block}
+  #fotosExtra{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  #fotosExtra .mini{position:relative;width:calc(50% - 4px)}
+  #fotosExtra .mini img{width:100%;border-radius:12px;display:block}
+  #fotosExtra .mini button{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:50%;
+    border:none;background:rgba(11,37,69,.75);color:#fff;font-size:18px;line-height:30px;cursor:pointer}
+  .otra-foto{margin-top:10px;width:100%;padding:12px;border:1px dashed var(--aqua);border-radius:12px;
+    background:var(--white);color:var(--aqua-deep);font-weight:700;font-size:14px;cursor:pointer}
   .confirm-box{
     margin-top:16px;background:#FFF9E8;border:1px solid #F3DFA6;
     border-radius:12px;padding:14px;font-size:14px;color:#7A5C12;
@@ -273,10 +280,17 @@
     background:var(--white);border:1px solid var(--line);border-radius:14px;padding:12px 14px;
   }
   .anillo{
-    width:62px;height:62px;border-radius:50%;flex:none;
+    width:62px;height:62px;border-radius:50%;flex:none;position:relative;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    border:4px solid var(--line);
+    --av:0%;
+    background:conic-gradient(var(--aqua) var(--av), var(--line) 0);
   }
+  .anillo::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--white)}
+  .anillo b,.anillo small{position:relative}
+  .avance.completa{border-color:var(--aqua);background:#DDF1FA}
+  .avance.completa .anillo::before{background:var(--aqua)}
+  .avance.completa .anillo b,.avance.completa .anillo small{color:var(--white)}
+  .avance.completa .txt span{color:var(--aqua-deep);font-weight:700}
   .anillo b{font-size:17px;color:var(--aqua-deep)}
   .anillo small{font-size:10px;color:var(--gray)}
   .avance .txt b{display:block;font-size:16px}
@@ -290,13 +304,17 @@
     width:46px;flex:none;display:flex;align-items:center;justify-content:center;
     background:var(--foam);font-weight:800;font-size:18px;color:var(--gray);
   }
-  .parada.hecha .num{background:var(--green);color:var(--white)}
+  .parada.hecha .num{background:var(--aqua);color:var(--white)}
+  .parada.hecha{background:#DDF1FA;border-color:#8FD0EA}
+  .parada.hecha .info span{color:var(--aqua-deep)}
+  .parada.recien{animation:recien 1.6s ease}
+  @keyframes recien{0%{box-shadow:0 0 0 0 rgba(25,167,206,.55)}100%{box-shadow:0 0 0 14px rgba(25,167,206,0)}}
   .parada .info{padding:11px 12px;flex:1;min-width:0}
   .parada .info b{display:block;font-size:16px}
   .parada .info span{display:block;font-size:13.5px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .parada .info em{font-style:normal;font-size:12px;font-weight:700;color:var(--aqua-deep)}
   .parada .info em.tarde{color:var(--amber)}
-  .parada .info em.ok{color:var(--green)}
+  .parada .info em.ok{color:var(--aqua-deep)}
   .siguiente{
     position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));z-index:25;
     background:var(--aqua-deep);color:var(--white);border:0;font:inherit;cursor:pointer;
@@ -461,6 +479,10 @@
       </div>
       <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" onchange="photoSelected(event)">
       <img id="photoPreview" class="hidden" alt="Foto del servicio">
+      <!-- Fotos adicionales (opcionales): solo con la cámara, para piscinas que no caben en una -->
+      <div id="fotosExtra"></div>
+      <button type="button" id="otraFotoBtn" class="otra-foto hidden" onclick="document.getElementById('photoInputExtra').click()">+ Agregar otra foto</button>
+      <input type="file" id="photoInputExtra" accept="image/*" capture="environment" class="hidden" onchange="fotoExtraTomada(event)">
 
       <!-- ===== Novedad del servicio (opcional, nunca bloquea) ===== -->
       <div id="novedadToggle" class="hidden" onclick="ppToggleNovedad()"
@@ -505,7 +527,7 @@
     <div id="modalStep2" class="hidden">
       <h3>¿Confirmas que el servicio está completo?</h3>
       <div class="confirm-box">
-        ⚠️ Al confirmar se cierra el servicio y esta foto se le envía al cliente.
+        ⚠️ Al confirmar se cierra el servicio y las fotos se le envían al cliente.
         Si el servicio se cobra aparte, el cobro sale ahora. Esta acción
         <b>no se puede deshacer</b>.
       </div>
@@ -526,6 +548,8 @@ let session = null;      // {access_token, expires_at}
 let techName = null;
 let currentBooking = null;   // booking being completed
 let compressedBase64 = null; // photo ready to send
+let fotosExtra = [];        // fotos adicionales opcionales (base64), hasta FOTOS_MAX en total
+const FOTOS_MAX = 3;
 
 /* ---------------- SESSION ---------------- */
 function saveSession(s){
@@ -537,7 +561,8 @@ function loadSession(){
     if(!raw) return null;
     const s = JSON.parse(raw);
     if(!s.access_token || !s.expires_at) return null;
-    if(Date.now()/1000 > s.expires_at - 60) return null; // expirada
+    // La sesión vencida ya no obliga a entrar de nuevo: si hay llave de renovación, se renueva sola
+    if(Date.now()/1000 > s.expires_at - 60 && !s.refresh_token) return null; // expirada
     return s;
   }catch(e){ return null; }
 }
@@ -609,7 +634,8 @@ async function login(){
     }
     session = {
       access_token: data.access_token,
-      expires_at: Math.floor(Date.now()/1000) + (data.expires_in || 3600)
+      expires_at: Math.floor(Date.now()/1000) + (data.expires_in || 3600),
+      refresh_token: data.refresh_token || null
     };
     saveSession(session);
     await enterApp();
@@ -915,6 +941,9 @@ function pintarDia(){
   const hechas = lista.filter(p=> p.estado === 'hecha').length;
   const esHoy = rutaDiaSel === hoyNY();
   document.getElementById('avNum').textContent = hechas + '/' + lista.length;
+  const anillo = document.querySelector('.anillo');
+  anillo.style.setProperty('--av', (lista.length ? Math.round(hechas * 100 / lista.length) : 0) + '%');
+  anillo.parentElement.classList.toggle('completa', lista.length > 0 && hechas === lista.length);
   const largo = nombreDia(rutaDiaSel, true);
   document.getElementById('avDia').textContent = esHoy ? 'Hoy, ' + largo : largo.charAt(0).toUpperCase() + largo.slice(1);
   const atr = lista.filter(p=> p.estado === 'atrasada').length;
@@ -1107,6 +1136,9 @@ function rejectService(b){
 function openComplete(b){
   currentBooking = b;
   compressedBase64 = null;
+  fotosExtra = [];
+  document.getElementById('fotosExtra').innerHTML = '';
+  document.getElementById('otraFotoBtn').classList.add('hidden');
   document.getElementById('modalServiceInfo').textContent =
     (b.service_label || b.service || 'Servicio') + ' · ' + (b.full_name || '') + ' · ' + [b.address, b.city].filter(Boolean).join(', ');
   document.getElementById('photoPreview').classList.add('hidden');
@@ -1132,14 +1164,12 @@ function showConfirm(){
   document.getElementById('confirmBtn').disabled = false;
 }
 
-function photoSelected(ev){
-  const file = ev.target.files && ev.target.files[0];
-  if(!file) return;
+// Comprimir a máx 1280px lado mayor, JPEG 80%
+function comprimirFoto(file, listo){
   const img = new Image();
   const reader = new FileReader();
   reader.onload = e => { img.src = e.target.result; };
   img.onload = () => {
-    // Comprimir a máx 1280px lado mayor, JPEG 80%
     const MAX = 1280;
     let w = img.width, h = img.height;
     if(w > h && w > MAX){ h = Math.round(h * MAX / w); w = MAX; }
@@ -1147,14 +1177,42 @@ function photoSelected(ev){
     const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    listo(canvas.toDataURL('image/jpeg', 0.8));
+  };
+  reader.readAsDataURL(file);
+}
+function photoSelected(ev){
+  const file = ev.target.files && ev.target.files[0];
+  if(!file) return;
+  comprimirFoto(file, dataUrl=>{
     compressedBase64 = dataUrl.split(',')[1]; // solo el base64, sin prefijo
     const prev = document.getElementById('photoPreview');
     prev.src = dataUrl;
     prev.classList.remove('hidden');
     document.getElementById('toConfirmBtn').classList.remove('hidden');
-  };
-  reader.readAsDataURL(file);
+    pintarFotosExtra();
+  });
+}
+// Fotos adicionales: opcionales, para piscinas grandes
+function fotoExtraTomada(ev){
+  const file = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if(!file || 1 + fotosExtra.length >= FOTOS_MAX) return;
+  comprimirFoto(file, dataUrl=>{ fotosExtra.push(dataUrl); pintarFotosExtra(); });
+}
+function quitarFotoExtra(i){ fotosExtra.splice(i, 1); pintarFotosExtra(); }
+function pintarFotosExtra(){
+  const cont = document.getElementById('fotosExtra');
+  cont.innerHTML = '';
+  fotosExtra.forEach((u, i)=>{
+    const d = document.createElement('div'); d.className = 'mini';
+    d.innerHTML = '<img alt="Foto adicional"><button type="button" aria-label="Quitar foto">&times;</button>';
+    d.querySelector('img').src = u;
+    d.querySelector('button').onclick = ()=> quitarFotoExtra(i);
+    cont.appendChild(d);
+  });
+  const btn = document.getElementById('otraFotoBtn');
+  btn.classList.toggle('hidden', !compressedBase64 || 1 + fotosExtra.length >= FOTOS_MAX);
 }
 
 async function submitComplete(){
@@ -1172,14 +1230,27 @@ async function submitComplete(){
       headers: authHeaders(),
       body: JSON.stringify({
         booking_id: currentBooking.id,
-        photo_base64: compressedBase64
+        photo_base64: compressedBase64,
+        // Fotos adicionales: la primera sigue yendo en photo_base64, como siempre
+        photos_extra_base64: fotosExtra.map(u=> u.split(',')[1])
       })
     });
     const data = await res.json().catch(()=> ({}));
     if(res.ok){
+      // Al terminar se vuelve a la ruta del día: la piscina queda en verde y no se abre nada solo
+      const hechaId = currentBooking.id;
       closeModal();
-      showToast('✅ Servicio completado. El cliente fue notificado.');
+      cerrarFicha();
+      rutaDiaSel = hoyNY();
+      rutaInicioSemana = domingoDe(rutaDiaSel);
       await loadBookings();
+      verVista('Ruta');
+      const lista = paradasDelDia(rutaDiaSel);
+      const hechas = lista.filter(p=> p.estado === 'hecha').length;
+      showToast('Listo: ' + hechas + ' de ' + lista.length + ' piscinas de hoy. El cliente fue notificado.');
+      const idx = lista.findIndex(p=> p.r.id === hechaId);
+      const tarjeta = idx >= 0 ? document.querySelectorAll('#paradas .parada')[idx] : null;
+      if(tarjeta){ tarjeta.classList.add('recien'); tarjeta.scrollIntoView({block:'center', behavior:'smooth'}); }
     }else{
       prog.textContent = '❌ ' + (data.error || 'No se pudo completar. Intenta de nuevo o avisa al administrador.');
       btn.disabled = false; back.disabled = false;
@@ -1201,6 +1272,56 @@ function showToast(msg){
 }
 
 /* ---------------- INIT ---------------- */
+/* ---------------- SESIÓN QUE SE RENUEVA SOLA ----------------
+   6 nov 2026: la sesión dura 1 hora. Si el técnico dejaba la app abierta más de una hora,
+   al terminar el servicio el sistema respondía "no autorizado" y no lo dejaba cerrar
+   (le pasó a Bryan con Nomar Cabrera). Ahora, antes de cada llamada, si la sesión
+   está por vencer se renueva sola; y si aun así llega un "no autorizado", se renueva
+   y se reintenta una vez. */
+let ppRenovando = null;
+async function ppRenovarSesion(){
+  if(!session || !session.refresh_token) return false;
+  if(!ppRenovando){
+    ppRenovando = (async ()=>{
+      try{
+        const r = await ppFetchOriginal(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+          method:'POST',
+          headers:{'Content-Type':'application/json','apikey':ANON_KEY},
+          body: JSON.stringify({refresh_token: session.refresh_token})
+        });
+        const d = await r.json().catch(()=> ({}));
+        if(!r.ok || !d.access_token) return false;
+        session = {
+          access_token: d.access_token,
+          expires_at: Math.floor(Date.now()/1000) + (d.expires_in || 3600),
+          refresh_token: d.refresh_token || session.refresh_token
+        };
+        saveSession(session);
+        return true;
+      }catch(e){ return false; }
+      finally{ setTimeout(()=>{ ppRenovando = null; }, 0); }
+    })();
+  }
+  return ppRenovando;
+}
+const ppFetchOriginal = window.fetch.bind(window);
+window.fetch = async function(url, opts){
+  const u = String(url || '');
+  const esNuestro = u.indexOf(SUPABASE_URL) === 0 && u.indexOf('/auth/v1/token') < 0;
+  if(!esNuestro || !session) return ppFetchOriginal(url, opts);
+  const conToken = o=>{
+    const h = Object.assign({}, (o && o.headers) || {});
+    if(h['Authorization'] || h.Authorization) h['Authorization'] = 'Bearer ' + session.access_token;
+    return Object.assign({}, o || {}, {headers: h});
+  };
+  if(Date.now()/1000 > session.expires_at - 300) await ppRenovarSesion();
+  let res = await ppFetchOriginal(url, conToken(opts));
+  if(res.status === 401 && await ppRenovarSesion()){
+    res = await ppFetchOriginal(url, conToken(opts));
+  }
+  return res;
+};
+
 (function init(){
   const s = loadSession();
   if(s){ session = s; enterApp(); }
