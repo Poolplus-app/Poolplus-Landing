@@ -390,7 +390,8 @@ function loadSession(){
     if(!raw) return null;
     const s = JSON.parse(raw);
     if(!s.access_token || !s.expires_at) return null;
-    if(Date.now()/1000 > s.expires_at - 60) return null; // expirada
+    // La sesión vencida ya no obliga a entrar de nuevo: si hay llave de renovación, se renueva sola
+    if(Date.now()/1000 > s.expires_at - 60 && !s.refresh_token) return null; // expirada
     return s;
   }catch(e){ return null; }
 }
@@ -462,7 +463,8 @@ async function login(){
     }
     session = {
       access_token: data.access_token,
-      expires_at: Math.floor(Date.now()/1000) + (data.expires_in || 3600)
+      expires_at: Math.floor(Date.now()/1000) + (data.expires_in || 3600),
+      refresh_token: data.refresh_token || null
     };
     saveSession(session);
     await enterApp();
@@ -771,6 +773,56 @@ function showToast(msg){
 }
 
 /* ---------------- INIT ---------------- */
+/* ---------------- SESIÓN QUE SE RENUEVA SOLA ----------------
+   6 nov 2026: la sesión dura 1 hora. Si el técnico dejaba la app abierta más de una hora,
+   al terminar el servicio el sistema respondía "no autorizado" y no lo dejaba cerrar
+   (le pasó a Bryan con Nomar Cabrera). Ahora, antes de cada llamada, si la sesión
+   está por vencer se renueva sola; y si aun así llega un "no autorizado", se renueva
+   y se reintenta una vez. */
+let ppRenovando = null;
+async function ppRenovarSesion(){
+  if(!session || !session.refresh_token) return false;
+  if(!ppRenovando){
+    ppRenovando = (async ()=>{
+      try{
+        const r = await ppFetchOriginal(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+          method:'POST',
+          headers:{'Content-Type':'application/json','apikey':ANON_KEY},
+          body: JSON.stringify({refresh_token: session.refresh_token})
+        });
+        const d = await r.json().catch(()=> ({}));
+        if(!r.ok || !d.access_token) return false;
+        session = {
+          access_token: d.access_token,
+          expires_at: Math.floor(Date.now()/1000) + (d.expires_in || 3600),
+          refresh_token: d.refresh_token || session.refresh_token
+        };
+        saveSession(session);
+        return true;
+      }catch(e){ return false; }
+      finally{ setTimeout(()=>{ ppRenovando = null; }, 0); }
+    })();
+  }
+  return ppRenovando;
+}
+const ppFetchOriginal = window.fetch.bind(window);
+window.fetch = async function(url, opts){
+  const u = String(url || '');
+  const esNuestro = u.indexOf(SUPABASE_URL) === 0 && u.indexOf('/auth/v1/token') < 0;
+  if(!esNuestro || !session) return ppFetchOriginal(url, opts);
+  const conToken = o=>{
+    const h = Object.assign({}, (o && o.headers) || {});
+    if(h['Authorization'] || h.Authorization) h['Authorization'] = 'Bearer ' + session.access_token;
+    return Object.assign({}, o || {}, {headers: h});
+  };
+  if(Date.now()/1000 > session.expires_at - 300) await ppRenovarSesion();
+  let res = await ppFetchOriginal(url, conToken(opts));
+  if(res.status === 401 && await ppRenovarSesion()){
+    res = await ppFetchOriginal(url, conToken(opts));
+  }
+  return res;
+};
+
 (function init(){
   const s = loadSession();
   if(s){ session = s; enterApp(); }
