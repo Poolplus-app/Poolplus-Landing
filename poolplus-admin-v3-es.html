@@ -1908,5 +1908,45 @@ async function cartReenviar(id){
   try { renderClients(); } catch(x) {}
 })();
 </script>
+<!-- 6 nov 2026: aviso de cancelaciones pedidas por los técnicos. Se pega antes de </body> del panel. -->
+<div id="ppCancelAviso" style="display:none;position:fixed;right:18px;bottom:18px;z-index:9999;max-width:420px;width:calc(100% - 36px);
+  background:#1b2433;color:#e8eef6;border:1px solid #F59E0B;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.45);font-size:14px">
+  <div style="padding:12px 14px;border-bottom:1px solid #2d3a4f;display:flex;justify-content:space-between;align-items:center">
+    <b style="color:#FBBF24">Cancelaciones por revisar</b>
+    <button onclick="document.getElementById('ppCancelAviso').style.display='none'" style="background:none;border:none;color:#9fb0c6;font-size:20px;cursor:pointer">&times;</button>
+  </div>
+  <div id="ppCancelLista" style="max-height:60vh;overflow:auto"></div>
+</div>
+<script>
+(function(){
+  function esc(t){ return String(t||'').replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); }
+  async function cargar(){
+    if(typeof sb === 'undefined') return;
+    const r = await sb.rpc('pp_cancelaciones_pendientes');
+    const lista = (r && r.data) || [];
+    const caja = document.getElementById('ppCancelAviso'), cont = document.getElementById('ppCancelLista');
+    if(!lista.length){ caja.style.display = 'none'; return; }
+    cont.innerHTML = lista.map(x=> '<div style="padding:12px 14px;border-bottom:1px solid #2d3a4f">'
+      + '<b>' + esc(x.full_name) + '</b> · ' + esc(x.service_label) + '<br><span style="color:#9fb0c6">' + esc(x.address)
+      + (x.service_date ? ' · ' + esc(x.service_date) : '') + '</span><br>'
+      + 'Pide: ' + esc(x.assigned_technician || x.cancel_pedido_por) + ' · ' + new Date(x.cancel_pedido_at).toLocaleString('es-US',{timeZone:'America/New_York'}) + '<br>'
+      + '<i>"' + esc(x.cancel_motivo) + '"</i>'
+      + '<div style="display:flex;gap:8px;margin-top:8px">'
+      + '<button data-id="'+x.id+'" data-ok="1" style="flex:1;padding:8px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-weight:700;cursor:pointer">Aprobar cancelación</button>'
+      + '<button data-id="'+x.id+'" data-ok="0" style="flex:1;padding:8px;border-radius:8px;border:1px solid #3b4a63;background:none;color:#e8eef6;cursor:pointer">Rechazar</button>'
+      + '</div></div>').join('');
+    cont.querySelectorAll('button[data-id]').forEach(b=> b.onclick = async ()=>{
+      b.disabled = true;
+      const res = await sb.rpc('pp_resolver_cancelacion', {p_booking: b.dataset.id, p_aprobar: b.dataset.ok === '1'});
+      if(res.error){ b.disabled = false; (window.showToast||console.log)('No se pudo: ' + res.error.message); return; }
+      (window.showToast||console.log)(b.dataset.ok === '1' ? 'Cancelación aprobada' : 'Pedido rechazado');
+      cargar();
+    });
+    caja.style.display = 'block';
+  }
+  setTimeout(cargar, 2500);
+  setInterval(cargar, 60000);
+})();
+</script>
 </body>
 </html>
