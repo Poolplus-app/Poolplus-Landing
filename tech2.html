@@ -323,9 +323,14 @@
   .hist img{width:64px;height:64px;object-fit:cover;border-radius:8px;flex:none}
   .hist .sinfoto{width:64px;height:64px;border-radius:8px;background:var(--foam);flex:none}
   .hist span{font-size:14px}
-  .parada .mover{display:flex;flex-direction:column;justify-content:center;border-left:1px solid var(--line)}
-  .parada .mover button{background:none;border:0;font-size:18px;line-height:1;color:var(--aqua-deep);padding:9px 14px;cursor:pointer}
-  .parada .mover button:disabled{color:var(--line)}
+  .parada .agarre{
+    display:flex;align-items:center;justify-content:center;width:52px;flex:none;
+    border-left:1px solid var(--line);touch-action:none;cursor:grab;color:var(--gray);
+    -webkit-user-select:none;user-select:none;
+  }
+  .parada .agarre svg{width:22px;height:22px;stroke:currentColor;stroke-width:2.2;fill:none}
+  .parada.arrastrando{position:relative;z-index:5;box-shadow:0 10px 24px rgba(11,37,69,.28);transition:none}
+  .parada.corre{transition:transform .15s ease}
   .orden-aviso{background:#FFF9E8;border:1px solid #F3DFA6;border-radius:14px;padding:12px 14px;margin-bottom:10px}
   .orden-aviso b{display:block;font-size:15px;color:#7A5C12;margin-bottom:8px}
   .orden-aviso .fila{display:flex;gap:8px}
@@ -786,14 +791,54 @@ async function cargarOrdenes(){
     (Array.isArray(filas) ? filas : []).forEach(f=>{ if(Array.isArray(f.orden)) rutaOrdenes[f.clave] = f.orden; });
   }catch(e){}
 }
-function moverParada(i, paso){
+function moverParada(de, a){
   const sin = paradasDelDia(rutaDiaSel).filter(p=> p.estado !== 'hecha');
-  const j = i + paso;
-  if(j < 0 || j >= sin.length) return;
+  if(de === a || a < 0 || a >= sin.length) return;
   const claves = sin.map(p=> normDir(p.r));
-  const x = claves[i]; claves[i] = claves[j]; claves[j] = x;
+  const [x] = claves.splice(de, 1);
+  claves.splice(a, 0, x);
   rutaOrdenLocal[rutaDiaSel] = claves;
   pintarDia();
+}
+// Arrastre con el dedo desde la agarradera (funciona igual con el mouse)
+function iniciarArrastre(ev, agarre, i){
+  ev.preventDefault(); ev.stopPropagation();
+  const cont = document.getElementById('paradas');
+  const tarjetas = Array.from(cont.querySelectorAll('.parada:not(.hecha)'));
+  const mia = tarjetas[i];
+  if(!mia) return;
+  const cajas = tarjetas.map(c=> c.getBoundingClientRect());
+  const paso = cajas.length > 1 ? (cajas[1].top - cajas[0].top) : cajas[0].height + 8;
+  const y0 = ev.clientY;
+  let destino = i;
+  mia.classList.add('arrastrando');
+  tarjetas.forEach((c, k)=>{ if(k !== i) c.classList.add('corre'); });
+  try{ agarre.setPointerCapture(ev.pointerId); }catch(e){}
+  if(navigator.vibrate) try{ navigator.vibrate(15); }catch(e){}
+  const mover = e=>{
+    const dy = e.clientY - y0;
+    mia.style.transform = 'translateY(' + dy + 'px)';
+    const centro = cajas[i].top + cajas[i].height / 2 + dy;
+    destino = 0;
+    cajas.forEach((r, k)=>{ if(k !== i && centro > r.top + r.height / 2) destino++; });
+    tarjetas.forEach((c, k)=>{
+      if(k === i) return;
+      let d = 0;
+      if(i < destino && k > i && k <= destino) d = -paso;
+      if(i > destino && k < i && k >= destino) d = paso;
+      c.style.transform = d ? 'translateY(' + d + 'px)' : '';
+    });
+  };
+  const soltar = ()=>{
+    agarre.removeEventListener('pointermove', mover);
+    agarre.removeEventListener('pointerup', soltar);
+    agarre.removeEventListener('pointercancel', soltar);
+    tarjetas.forEach(c=>{ c.style.transform = ''; c.classList.remove('arrastrando','corre'); });
+    moverParada(i, destino);
+  };
+  agarre.addEventListener('pointermove', mover);
+  agarre.addEventListener('pointerup', soltar);
+  agarre.addEventListener('pointercancel', soltar);
 }
 async function guardarOrden(siempre){
   const ymd = rutaDiaSel;
@@ -897,15 +942,13 @@ function pintarDia(){
       + '<span>' + esc([r.address, r.city].filter(Boolean).join(', ')) + '</span>' + etiqueta + '</div>';
     div.onclick = ()=> abrirFicha(r.id);
     if(p.estado !== 'hecha' && sinHacer > 1){
-      const m = document.createElement('div');
-      m.className = 'mover';
-      const up = document.createElement('button'); up.innerHTML = '&#9650;'; up.setAttribute('aria-label','Subir');
-      const dn = document.createElement('button'); dn.innerHTML = '&#9660;'; dn.setAttribute('aria-label','Bajar');
-      up.disabled = i === 0; dn.disabled = i === sinHacer - 1;
-      up.onclick = e=>{ e.stopPropagation(); moverParada(i, -1); };
-      dn.onclick = e=>{ e.stopPropagation(); moverParada(i, 1); };
-      m.appendChild(up); m.appendChild(dn);
-      div.appendChild(m);
+      const g = document.createElement('div');
+      g.className = 'agarre';
+      g.setAttribute('aria-label', 'Arrastrar para cambiar el orden');
+      g.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
+      g.addEventListener('pointerdown', e=> iniciarArrastre(e, g, i));
+      g.addEventListener('click', e=> e.stopPropagation());
+      div.appendChild(g);
     }
     cont.appendChild(div);
   });
