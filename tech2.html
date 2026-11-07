@@ -504,6 +504,18 @@
   </div>
   <div class="ficha-cuerpo" id="fichaCuerpo"></div>
 </div>
+<!-- ================= OFERTA: TOMAR UN SERVICIO NUEVO ================= -->
+<div id="ofertaOverlay" class="overlay hidden">
+  <div class="modal">
+    <h3 id="ofertaTitulo">Servicio nuevo</h3>
+    <div id="ofertaCuerpo" style="margin-top:8px"></div>
+    <div id="ofertaBotones" style="margin-top:14px">
+      <button class="btn btn-complete" id="ofertaHoy">Lo hago hoy, en las próximas horas</button>
+      <button class="btn" id="ofertaManana" style="margin-top:8px">Lo hago mañana</button>
+    </div>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="cerrarOferta()">Ahora no</button>
+  </div>
+</div>
 <!-- ================= MODAL COMPLETAR ================= -->
 <div id="completeOverlay" class="overlay hidden">
   <div class="modal">
@@ -707,6 +719,75 @@ async function enterApp(){
 
   pintarPerfil();
   await loadBookings();
+  revisarOferta();
+}
+
+/* ---------------- OFERTA DE SERVICIO (7 nov 2026) ----------------
+   El correo de "Servicio nuevo" trae un enlace tech2.html?tomar=<id>. La app muestra la
+   oferta (zona, servicio, tu parte) y el técnico escoge hoy o mañana. El primero que lo
+   toma se lo queda: la base lo comprueba, así que dos técnicos no pueden quedarse con el mismo. */
+(function(){
+  try{
+    const id = new URLSearchParams(location.search).get('tomar');
+    if(id) sessionStorage.setItem('pp_tomar', id);
+  }catch(e){}
+})();
+function cerrarOferta(){
+  document.getElementById('ofertaOverlay').classList.add('hidden');
+  try{ sessionStorage.removeItem('pp_tomar'); history.replaceState(null, '', location.pathname); }catch(e){}
+}
+async function revisarOferta(){
+  let id = null;
+  try{ id = sessionStorage.getItem('pp_tomar'); }catch(e){}
+  if(!id) return;
+  const ov = document.getElementById('ofertaOverlay'), cuerpo = document.getElementById('ofertaCuerpo');
+  const botones = document.getElementById('ofertaBotones');
+  ov.classList.remove('hidden');
+  cuerpo.innerHTML = 'Cargando…'; botones.style.display = 'none';
+  try{
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/pp_ver_oferta', {method:'POST', headers: authHeaders(), body: JSON.stringify({p_booking: id})});
+    const o = res.ok ? await res.json() : null;
+    if(!o || !o.existe){ cuerpo.innerHTML = 'Este servicio ya no está disponible.'; return; }
+    if(o.tomado){
+      document.getElementById('ofertaTitulo').textContent = o.mio ? 'Este servicio ya es tuyo' : 'Ya lo tomó otro técnico';
+      cuerpo.innerHTML = o.mio ? 'Lo encuentras en tu ruta.' : 'Otro técnico lo tomó primero. Gracias por responder rápido; el próximo puede ser tuyo.';
+      return;
+    }
+    document.getElementById('ofertaTitulo').textContent = 'Servicio nuevo';
+    cuerpo.innerHTML = '<b style="font-size:17px">' + esc(o.servicio || 'Servicio') + '</b><br>'
+      + '<span style="color:var(--gray)">' + esc([o.ciudad, o.zip].filter(Boolean).join(' ')) + '</span>'
+      + (o.tu_parte ? '<div style="margin-top:10px;font-size:15px">Tu parte: <b>$' + Number(o.tu_parte).toFixed(2) + '</b></div>' : '')
+      + (o.notas ? '<div style="margin-top:8px;font-size:13.5px;color:var(--gray)">' + esc(o.notas) + '</div>' : '')
+      + '<div style="margin-top:10px;font-size:13px;color:var(--gray)">La dirección exacta y el teléfono del cliente te aparecen cuando lo tomes.</div>';
+    botones.style.display = '';
+    const tomar = async (cuando, btn)=>{
+      btn.disabled = true; const txt = btn.textContent; btn.textContent = 'Tomando…';
+      try{
+        const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/pp_tomar_servicio', {method:'POST', headers: authHeaders(), body: JSON.stringify({p_booking: id, p_cuando: cuando})});
+        const d = await r.json().catch(()=> ({}));
+        if(!r.ok) throw new Error(d.message || ('Error ' + r.status));
+        if(!d.ok){
+          document.getElementById('ofertaTitulo').textContent = 'Ya lo tomó otro técnico';
+          cuerpo.innerHTML = 'Otro técnico lo tomó primero. Gracias por responder rápido; el próximo puede ser tuyo.';
+          botones.style.display = 'none';
+          return;
+        }
+        cerrarOferta();
+        await loadBookings();
+        rutaDiaSel = d.fecha || hoyNY();
+        rutaInicioSemana = domingoDe(rutaDiaSel);
+        verVista('Ruta');
+        showToast(cuando === 'hoy' ? 'Listo, quedó en tu ruta de hoy. El cliente ya sabe que vas.' : 'Listo, quedó en tu ruta de mañana. El cliente ya sabe que vas.');
+      }catch(e){
+        btn.disabled = false; btn.textContent = txt;
+        showToast('No se pudo tomar. ' + e.message);
+      }
+    };
+    document.getElementById('ofertaHoy').onclick = function(){ tomar('hoy', this); };
+    document.getElementById('ofertaManana').onclick = function(){ tomar('manana', this); };
+  }catch(e){
+    cuerpo.innerHTML = 'No se pudo cargar el servicio. Intenta de nuevo.';
+  }
 }
 
 function authHeaders(){
