@@ -195,6 +195,10 @@
   #visorFoto img{max-width:100%;max-height:100%;object-fit:contain}
   #visorFoto button{position:absolute;top:14px;right:14px;width:46px;height:46px;border-radius:50%;border:none;
     background:rgba(255,255,255,.18);color:#fff;font-size:28px;line-height:46px;cursor:pointer}
+  .parada.app{border:2px solid #F59E0B;background:#FFFBF2}
+  .parada.app .num{background:#F59E0B;color:#fff}
+  .parada .info .chip-app{display:inline-block;width:auto;color:#fff;line-height:1.5;background:#F59E0B;color:#fff;font-size:11px;font-weight:800;letter-spacing:.3px;
+    padding:2px 7px;border-radius:999px;margin-right:4px;vertical-align:1px}
   .en-revision{margin-top:10px;padding:12px;border-radius:12px;background:#FFF7E6;border:1px solid #F3D9A0;color:#7A5C12;font-size:14px}
   .parada .info em.revision{color:var(--amber)}
   .cancelar-caja{margin-top:10px;padding:12px;border:1px solid #F3C7C7;background:#FFF5F5;border-radius:12px}
@@ -718,7 +722,7 @@ async function loadBookings(){
   loading.classList.remove('hidden');
   try{
     const url = SUPABASE_URL + '/rest/v1/booking_requests'
-      + '?select=id,full_name,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at,price,arrival_window,arrival_promised_at,created_at,cancel_pedido_at,cancel_motivo,cancel_resuelto'
+      + '?select=id,full_name,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at,price,arrival_window,arrival_promised_at,created_at,cancel_pedido_at,cancel_motivo,cancel_resuelto,booking_type,source'
       + '&order=created_at.desc';
     const res = await fetch(url,{headers: authHeaders()});
     if(res.status === 401){ logout(); return; }
@@ -814,6 +818,13 @@ window.addEventListener('popstate', ()=>{
   const v = document.getElementById('visorFoto');
   if(v && !v.classList.contains('hidden')){ v.classList.add('hidden'); v.querySelector('img').removeAttribute('src'); }
 });
+// Servicio que llegó por la página (no es visita de plan ni de cartera)
+function esDeApp(r){
+  if(!r) return false;
+  if(r.booking_type === 'plan_visit') return false;
+  if(['cartera','plan'].indexOf(String(r.source || '')) >= 0) return false;
+  return true;
+}
 function fechaHecha(r){ return r.completed_at ? ymdNY(new Date(r.completed_at)) : ''; }
 // El día en que una reserva cuenta en la ruta
 function diaDeRuta(r){
@@ -1016,13 +1027,15 @@ function pintarDia(){
   lista.forEach((p, i)=>{
     const r = p.r;
     const div = document.createElement('div');
-    div.className = 'parada' + (p.estado === 'hecha' ? ' hecha' : '');
+    div.className = 'parada' + (p.estado === 'hecha' ? ' hecha' : (esDeApp(r) ? ' app' : ''));
     let etiqueta = '';
     if(p.estado === 'hecha') etiqueta = '<em class="ok">Completada</em>';
     else if(enRevision(r)) etiqueta = '<em class="revision">Cancelación en revisión</em>';
     else if(p.estado === 'atrasada') etiqueta = '<em class="tarde">Atrasada · ' + esc(fmtDate(fechaVisita(r) || diaDeRuta(r))) + '</em>';
     else if(r.arrival_window && typeof PP_VENT_TXT !== 'undefined') etiqueta = '<em>Llegada: ' + esc(PP_VENT_TXT[r.arrival_window] || r.arrival_window) + '</em>';
     else if(!fechaVisita(r)) etiqueta = '<em>' + esc(r.service_label || r.service || 'Servicio') + '</em>';
+    // Clientes que llegan por la página: etiqueta naranja con el tipo de servicio
+    if(p.estado !== 'hecha' && esDeApp(r)) etiqueta = '<span class="chip-app">Nuevo · App</span> ' + (etiqueta || '<em>' + esc(r.service_label || r.service || 'Servicio') + '</em>');
     div.innerHTML = '<div class="num">' + (p.estado === 'hecha' ? '&#10003;' : (i+1)) + '</div>'
       + '<div class="info"><b>' + esc(r.full_name || 'Cliente') + '</b>'
       + '<span>' + esc([r.address, r.city].filter(Boolean).join(', ')) + '</span>' + etiqueta + '</div>';
