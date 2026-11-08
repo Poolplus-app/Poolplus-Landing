@@ -185,6 +185,17 @@
   .coment{border-top:1px solid rgba(255,255,255,.15);padding:8px 0;font-size:13.5px}
   .coment small{display:block;opacity:.7;margin-top:2px}
   .partner-card .lvl.active{background:#F5B301;color:var(--navy)}
+  .dinero-tot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+  .dinero-tot div{background:rgba(255,255,255,.10);border-radius:10px;padding:8px}
+  .dinero-tot span{display:block;font-size:11.5px;opacity:.85;line-height:1.25}
+  .dinero-tot b{display:block;font-size:18px;margin-top:4px}
+  .din-item{border-top:1px solid rgba(255,255,255,.15);padding:8px 0;font-size:13.5px;display:flex;justify-content:space-between;gap:10px}
+  .din-item small{display:block;opacity:.7;margin-top:2px}
+  .din-item .der{text-align:right;white-space:nowrap}
+  .din-est{display:inline-block;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;margin-top:3px}
+  .din-est.por_cobrar{background:rgba(255,255,255,.18)}
+  .din-est.por_consignar{background:#F5B301;color:var(--navy)}
+  .din-est.consignado{background:#22C55E;color:#06240f}
   .partner-card a{
     display:inline-block;margin-top:12px;
     color:var(--navy);background:var(--white);
@@ -445,9 +456,23 @@
       </div>
 
       <div id="pagosCard" class="partner-card" style="display:none">
-        <h4>Mis pagos</h4>
+        <h4>Mi cuenta de Stripe</h4>
         <p id="pagosTexto"></p>
-        <button class="btn" id="pagosBtn" onclick="pagosAbrir()" style="margin-top:10px">Configurar mis pagos</button>
+        <button class="btn" id="pagosBtn" onclick="pagosAbrir()" style="margin-top:10px">Conectar mi cuenta</button>
+      </div>
+
+      <div id="dineroCard" class="partner-card">
+        <h4>Mi dinero</h4>
+        <div class="dinero-tot">
+          <div><span>Por cobrar al cliente</span><b id="dinCobrar">—</b></div>
+          <div><span>Por consignarte</span><b id="dinConsignar">—</b></div>
+          <div><span>Consignado</span><b id="dinConsignado">—</b></div>
+        </div>
+        <p id="dineroTxt" style="margin-top:8px">Cargando…</p>
+        <details class="mas" id="dineroMas" style="display:none">
+          <summary>Ver servicio por servicio</summary>
+          <div id="dineroLista"></div>
+        </details>
       </div>
 
       <div class="partner-card">
@@ -1164,7 +1189,7 @@ function verVista(cual){
     document.getElementById('vista'+v).classList.toggle('activa', v === cual);
     document.getElementById('tab'+v).classList.toggle('activa', v === cual);
   });
-  if(cual === 'Ruta') pintarDia(); else { document.getElementById('siguiente').classList.add('hidden'); pintarResumenPerfil(); }
+  if(cual === 'Ruta') pintarDia(); else { document.getElementById('siguiente').classList.add('hidden'); pintarResumenPerfil(); pintarDinero(); }
   window.scrollTo(0,0);
 }
 
@@ -1907,14 +1932,14 @@ async function pagosEstado(){
     const j = await pagosLlamar('estado');
     card.style.display = 'block';
     if(j.listo){
-      txt.textContent = 'Tu cuenta de pagos está lista. Tus pagos de PoolPlus te llegan directo a tu banco.';
+      txt.textContent = 'Conectada. Aquí es donde PoolPlus te consigna tu parte.';
       btn.style.display = 'none';
     }else if(j.tiene_cuenta){
-      txt.textContent = 'Tu cuenta de pagos está a medio llenar. Termínala para recibir tus pagos directo en tu banco.';
-      btn.textContent = 'Terminar mi cuenta de pagos';
+      txt.textContent = 'Tu cuenta está a medio llenar. Termínala para poder recibir tus consignaciones.';
+      btn.textContent = 'Terminar de conectar';
     }else{
-      txt.textContent = 'Para recibir tus pagos directo en tu banco, crea tu cuenta de pagos en Stripe. Toma unos 10 minutos: tus datos, tu número de seguro social (o el EIN de tu empresa) y tu cuenta de banco.';
-      btn.textContent = 'Configurar mis pagos';
+      txt.textContent = 'Sin conectar. Para recibir tus consignaciones, conecta tu cuenta de Stripe. Toma unos 10 minutos: tus datos, tu número de seguro social (o el EIN de tu empresa) y tu cuenta de banco.';
+      btn.textContent = 'Conectar mi cuenta';
     }
   }catch(e){}
 }
@@ -1930,10 +1955,43 @@ async function pagosAbrir(){
     btn.disabled = false; btn.textContent = antes;
   }
 }
+// 8 nov 2026: "Mi dinero" — por cobrar al cliente, por consignarte y consignado (rpc pp_mi_dinero)
+function dinFmt(n){ return '$' + Number(n || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+async function pintarDinero(){
+  const txt = document.getElementById('dineroTxt');
+  if(!txt || !session) return;
+  try{
+    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/pp_mi_dinero', {method:'POST', headers: authHeaders(), body:'{}'});
+    if(!res.ok) throw new Error('Error ' + res.status);
+    const d = await res.json() || {};
+    document.getElementById('dinCobrar').textContent = dinFmt(d.por_cobrar);
+    document.getElementById('dinConsignar').textContent = dinFmt(d.por_consignar);
+    document.getElementById('dinConsignado').textContent = dinFmt(d.consignado);
+    const lista = d.lista || [];
+    if(!lista.length){
+      txt.textContent = 'Todavía no tienes servicios cerrados. Aquí vas a ver tu parte de cada uno.';
+      document.getElementById('dineroMas').style.display = 'none';
+      return;
+    }
+    const pct = Math.round(Number(d.tasa || 0.7) * 100);
+    txt.innerHTML = 'Tu parte es el <b>' + pct + '%</b> de cada servicio. En cartera y planes, el ' + pct + '% de la mensualidad repartida por visita.';
+    const nombres = {por_cobrar:'Por cobrar', por_consignar:'Por consignarte', consignado:'Consignado'};
+    document.getElementById('dineroLista').innerHTML = lista.map(x=> {
+      const fecha = esc(fmtDate(ymdNY(new Date(x.fecha))));
+      const extra = x.estado === 'consignado' && x.consignado_at ? ' el ' + esc(fmtDate(ymdNY(new Date(x.consignado_at)))) : '';
+      return '<div class="din-item"><div>' + esc(x.cliente || 'Cliente') + '<small>' + fecha + ' · ' + esc(x.servicio || (x.tipo === 'suelto' ? 'Servicio' : 'Visita de plan')) + '</small></div>'
+        + '<div class="der"><b>' + dinFmt(x.parte) + '</b><small>de ' + dinFmt(x.monto) + '</small>'
+        + '<span class="din-est ' + esc(x.estado) + '">' + nombres[x.estado] + extra + '</span></div></div>';
+    }).join('');
+    document.getElementById('dineroMas').style.display = '';
+  }catch(e){
+    txt.textContent = 'No se pudo cargar tu dinero.';
+  }
+}
 (function(){
   const original = enterApp;
-  enterApp = async function(){ const r = await original.apply(this, arguments); pagosEstado(); return r; };
-  if(session && !document.getElementById('appScreen').classList.contains('hidden')) pagosEstado();
+  enterApp = async function(){ const r = await original.apply(this, arguments); pagosEstado(); pintarDinero(); return r; };
+  if(session && !document.getElementById('appScreen').classList.contains('hidden')){ pagosEstado(); pintarDinero(); }
 })();
 </script>
 </body>
