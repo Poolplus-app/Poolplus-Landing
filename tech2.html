@@ -448,6 +448,17 @@
       <div id="paradas"></div>
     </section>
 
+    <!-- ===== MAPA ===== -->
+    <section id="vistaMapa" class="vista">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 2px 8px">
+        <b id="mapaDia" style="font-size:16px;color:var(--navy)">Hoy</b>
+        <small id="mapaEstado" style="color:var(--gray);text-align:right"></small>
+      </div>
+      <div id="mapa" style="height:calc(100vh - 290px);min-height:320px;border-radius:14px;border:1px solid var(--line);overflow:hidden;background:var(--foam)"></div>
+      <button id="btnCercania" class="btn" onclick="ordenarPorCercania()" style="margin-top:10px;background:var(--navy);color:#fff">Ordenar por cercanía</button>
+      <div style="font-size:12px;color:var(--gray);margin-top:6px;text-align:center">Para ver otro día, escógelo en "Mi ruta".</div>
+    </section>
+
     <!-- ===== PERFIL ===== -->
     <section id="vistaPerfil" class="vista">
       <div class="perfil-cab">
@@ -513,6 +524,10 @@
     <button id="tabRuta" class="activa" onclick="verVista('Ruta')">
       <svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
       Mi ruta
+    </button>
+    <button id="tabMapa" onclick="verVista('Mapa')">
+      <svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
+      Mapa
     </button>
     <button id="tabPerfil" onclick="verVista('Perfil')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -1185,11 +1200,13 @@ function rutaIrSiguiente(){
 }
 
 function verVista(cual){
-  ['Ruta','Perfil'].forEach(v=>{
+  ['Ruta','Mapa','Perfil'].forEach(v=>{
     document.getElementById('vista'+v).classList.toggle('activa', v === cual);
     document.getElementById('tab'+v).classList.toggle('activa', v === cual);
   });
-  if(cual === 'Ruta') pintarDia(); else { document.getElementById('siguiente').classList.add('hidden'); pintarResumenPerfil(); pintarDinero(); }
+  if(cual === 'Ruta') pintarDia();
+  else if(cual === 'Mapa'){ document.getElementById('siguiente').classList.add('hidden'); pintarMapa(); }
+  else { document.getElementById('siguiente').classList.add('hidden'); pintarResumenPerfil(); pintarDinero(); }
   window.scrollTo(0,0);
 }
 
@@ -2243,6 +2260,173 @@ ppqRefrescarCache().then(()=>{
   }
   setTimeout(ppqVaciar, 3000);
 });
+</script>
+
+<script>
+/* ===== Mapa de la ruta (9 nov 2026) ===========================================
+   Idea de Roger. Tercera pestaña: las piscinas del día en el mapa, numeradas en
+   el orden de la ruta. Blancas las que faltan, azules las hechas, borde ámbar
+   las atrasadas. Al tocar una: ver ficha o cómo llegar.
+   "Ordenar por cercanía" arma la ruta desde donde está el técnico, la piscina
+   más cercana primero; después se guarda con los botones de siempre
+   ("Siempre" / "Solo hoy").
+   Las direcciones se ubican una vez (OpenStreetMap) y quedan guardadas en el
+   teléfono, así que la segunda vez el mapa sale al instante.
+============================================================================== */
+let ppMapa = null, ppCapa = null, ppYo = null, ppLeaflet = null, ppGeoCola = Promise.resolve();
+
+function ppCargarLeaflet(){
+  if(window.L) return Promise.resolve();
+  if(ppLeaflet) return ppLeaflet;
+  ppLeaflet = new Promise((ok, ko)=>{
+    const css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    document.head.appendChild(css);
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    s.onload = ok; s.onerror = ()=>{ ppLeaflet = null; ko(new Error('sin conexión')); };
+    document.head.appendChild(s);
+  });
+  return ppLeaflet;
+}
+
+function ppGeoGuardadas(){ try{ return JSON.parse(localStorage.getItem('pp_geo') || '{}'); }catch(e){ return {}; } }
+function ppGeoClave(r){ return normDir(r) + '|' + String(r.zip || r.zip_code || '').slice(0,5); }
+// Ubica una dirección (una por segundo, como pide OpenStreetMap) y la guarda en el teléfono
+function ppUbicar(r){
+  const clave = ppGeoClave(r);
+  const ya = ppGeoGuardadas()[clave];
+  if(ya) return Promise.resolve(ya);
+  const tarea = ppGeoCola.then(async ()=>{
+    const otra = ppGeoGuardadas()[clave];
+    if(otra) return otra;
+    const zip = String(r.zip || r.zip_code || '').slice(0,5);
+    const intentos = [
+      [r.address, r.city, 'FL', zip].filter(Boolean).join(', '),
+      [r.address, zip || r.city, 'FL'].filter(Boolean).join(', ')
+    ];
+    let punto = null;
+    for(const q of intentos){
+      try{
+        const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=' + encodeURIComponent(q), {headers:{'Accept-Language':'es'}});
+        const j = await res.json();
+        await new Promise(x=> setTimeout(x, 1100));
+        if(Array.isArray(j) && j[0]){ punto = {lat: +j[0].lat, lng: +j[0].lon}; break; }
+      }catch(e){ break; }
+    }
+    if(punto){
+      const todas = ppGeoGuardadas(); todas[clave] = punto;
+      try{ localStorage.setItem('pp_geo', JSON.stringify(todas)); }catch(e){}
+    }
+    return punto;
+  });
+  ppGeoCola = tarea.catch(()=>{});
+  return tarea;
+}
+
+function ppIcono(texto, estado){
+  const fondo = estado === 'hecha' ? 'var(--aqua-deep)' : '#fff';
+  const color = estado === 'hecha' ? '#fff' : 'var(--navy)';
+  const borde = estado === 'atrasada' ? 'var(--amber)' : (estado === 'hecha' ? 'var(--aqua-deep)' : 'var(--navy)');
+  return L.divIcon({
+    className: '',
+    iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -16],
+    html: '<div style="width:34px;height:34px;border-radius:50%;background:' + fondo + ';color:' + color
+      + ';border:3px solid ' + borde + ';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;'
+      + 'box-shadow:0 2px 6px rgba(0,0,0,.35)">' + texto + '</div>'
+  });
+}
+
+async function pintarMapa(){
+  const est = document.getElementById('mapaEstado');
+  const dia = rutaDiaSel || hoyNY();
+  document.getElementById('mapaDia').textContent = dia === hoyNY() ? 'Hoy, ' + nombreDia(dia, true) : nombreDia(dia, true);
+  try{ await ppCargarLeaflet(); }
+  catch(e){ est.textContent = 'El mapa necesita señal para cargar. Tu ruta sigue disponible en "Mi ruta".'; return; }
+  if(!ppMapa){
+    ppMapa = L.map('mapa', {zoomControl: true}).setView([26.1, -80.25], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap'}).addTo(ppMapa);
+    ppCapa = L.layerGroup().addTo(ppMapa);
+  }
+  setTimeout(()=> ppMapa.invalidateSize(), 50);
+  ppCapa.clearLayers();
+  const lista = paradasDelDia(dia);
+  if(!lista.length){ est.textContent = 'No tienes piscinas este día.'; return; }
+  const puntos = [];
+  let faltan = 0, n = 0;
+  est.textContent = 'Ubicando las piscinas…';
+  const sinHacer = lista.filter(p=> p.estado !== 'hecha');
+  for(const p of lista){
+    const pos = await ppUbicar(p.r);
+    if(dia !== (rutaDiaSel || hoyNY())) return;     // cambió de día mientras ubicaba
+    if(!pos){ faltan++; continue; }
+    const num = p.estado === 'hecha' ? '&#10003;' : (sinHacer.indexOf(p) + 1);
+    const m = L.marker([pos.lat, pos.lng], {icon: ppIcono(num, p.estado)}).addTo(ppCapa);
+    const caja = document.createElement('div');
+    caja.style.minWidth = '180px';
+    caja.innerHTML = '<b>' + esc(p.r.full_name || 'Cliente') + '</b><br><span style="color:var(--gray)">' + esc([p.r.address, p.r.city].filter(Boolean).join(', ')) + '</span>'
+      + (p.estado === 'hecha' ? '<br><b style="color:var(--aqua-deep)">Completada</b>' : (p.estado === 'atrasada' ? '<br><b style="color:var(--amber)">Atrasada</b>' : ''))
+      + '<div style="display:flex;gap:6px;margin-top:8px"><button type="button" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--line);background:#fff;font-weight:700">Ver ficha</button>'
+      + '<button type="button" style="flex:1;padding:8px;border-radius:8px;border:0;background:var(--navy);color:#fff;font-weight:700">Cómo llegar</button></div>';
+    const [bF, bL] = caja.querySelectorAll('button');
+    bF.onclick = ()=> abrirFicha(p.r.id);
+    bL.onclick = ()=> window.open(mapsLink(p.r), '_blank');
+    m.bindPopup(caja);
+    puntos.push([pos.lat, pos.lng]);
+    n++;
+    if(n === 1) ppMapa.setView([pos.lat, pos.lng], 13);
+  }
+  if(ppYo) puntos.push(ppYo);
+  if(puntos.length > 1) ppMapa.fitBounds(puntos, {padding: [40, 40], maxZoom: 15});
+  const hechas = lista.filter(p=> p.estado === 'hecha').length;
+  est.textContent = hechas + ' de ' + lista.length + ' hechas'
+    + (faltan ? ' · ' + faltan + (faltan === 1 ? ' dirección no se pudo ubicar' : ' direcciones no se pudieron ubicar') : '');
+}
+
+function ppMiPosicion(){
+  return new Promise(ok=>{
+    if(!navigator.geolocation) return ok(null);
+    navigator.geolocation.getCurrentPosition(
+      p=> ok([p.coords.latitude, p.coords.longitude]),
+      ()=> ok(null),
+      {enableHighAccuracy: true, timeout: 10000, maximumAge: 60000});
+  });
+}
+function ppDist(a, b){
+  const R = 6371, rad = x=> x * Math.PI / 180;
+  const dLa = rad(b[0] - a[0]), dLo = rad(b[1] - a[1]);
+  const h = Math.sin(dLa/2)**2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLo/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+// La más cercana primero, y desde ahí la siguiente más cercana
+async function ordenarPorCercania(){
+  const btn = document.getElementById('btnCercania');
+  btn.disabled = true; btn.textContent = 'Buscando tu ubicación…';
+  try{
+    const dia = rutaDiaSel || hoyNY();
+    const sin = paradasDelDia(dia).filter(p=> p.estado !== 'hecha');
+    if(sin.length < 2){ showToast('Hay menos de dos piscinas por hacer: no hay nada que ordenar.'); return; }
+    const yo = await ppMiPosicion();
+    btn.textContent = 'Ordenando…';
+    const con = [], sinPos = [];
+    for(const p of sin){ const pos = await ppUbicar(p.r); if(pos) con.push({p, pos:[pos.lat, pos.lng]}); else sinPos.push(p); }
+    if(!con.length){ showToast('No se pudieron ubicar las direcciones. Revisa la señal.'); return; }
+    let actual = yo || con[0].pos;
+    const orden = [];
+    while(con.length){
+      let k = 0;
+      con.forEach((c, i)=>{ if(ppDist(actual, c.pos) < ppDist(actual, con[k].pos)) k = i; });
+      const [c] = con.splice(k, 1);
+      orden.push(c.p); actual = c.pos;
+    }
+    rutaOrdenLocal[dia] = orden.concat(sinPos).map(p=> normDir(p.r));
+    if(yo) ppYo = yo;
+    verVista('Ruta');
+    showToast((yo ? 'Ordenada desde donde estás.' : 'Sin tu ubicación: ordenada desde la primera piscina.') + ' Guarda el orden con "Siempre" o "Solo hoy".');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Ordenar por cercanía';
+  }
+}
 </script>
 
 </body>
