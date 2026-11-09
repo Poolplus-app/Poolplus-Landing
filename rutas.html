@@ -63,6 +63,16 @@
   #visor img{max-width:100%;max-height:100%;border-radius:10px}
   #puerta{max-width:420px;margin:80px auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px;text-align:center}
   #puerta a{color:var(--pool)}
+  .modo{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .modo button{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:7px 12px;font:inherit;font-size:13px;cursor:pointer}
+  .modo button.activo{background:var(--deep);border-color:var(--deep)}
+  .modo .sep{width:1px;height:22px;background:var(--border);margin:0 4px}
+  #mapaRutas{height:calc(100vh - 330px);min-height:380px;border-radius:var(--r);border:1px solid var(--border)}
+  #mapaLeyenda{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .ley{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
+  .ley i{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .ley small{color:var(--muted)}
+  .ley.apagado{opacity:.4}
 </style>
 </head>
 <body>
@@ -90,7 +100,25 @@
     <button class="flecha" onclick="cambiarSemana(7)" aria-label="Semana siguiente">&#8250;</button>
   </div>
   <div class="resumen" id="resumen"></div>
+  <div class="modo">
+    <button id="btnLista" class="activo" onclick="verComo(false)">Lista</button>
+    <button id="btnMapa" onclick="verComo(true)">Mapa</button>
+  </div>
   <div id="lista"></div>
+  <div id="mapaCaja" class="hidden">
+    <div class="modo">
+      <span class="sub" style="color:var(--muted);font-size:13px">Colores por</span>
+      <button data-op="por:tecnico" class="activo" onclick="opcionMapa('por','tecnico')">Técnico</button>
+      <button data-op="por:dia" onclick="opcionMapa('por','dia')">Día</button>
+      <span class="sep"></span>
+      <button data-op="rango:dia" class="activo" onclick="opcionMapa('rango','dia')">Día escogido</button>
+      <button data-op="rango:semana" onclick="opcionMapa('rango','semana')">Toda la semana</button>
+      <span id="mapaEstado" style="margin-left:auto;color:var(--muted);font-size:13px"></span>
+    </div>
+    <div id="mapaRutas"></div>
+    <div id="mapaLeyenda"></div>
+    <p class="nota">Rellena = hecha · con borde = por hacer · borde ámbar = atrasada. En "Técnico", toca un nombre para ocultarlo o mostrarlo.</p>
+  </div>
   <p class="nota">El orden de cada ruta es el que dejó el técnico en su app. Las visitas sin completar con más de 3 días de atraso no salen aquí.</p>
 </main>
 
@@ -155,7 +183,7 @@ function paradas(tec, ymd){
 
 /* ---- carga ---- */
 async function cargar(){
-  const sel = 'id,full_name,address,city,service,service_label,service_date,status,photo_url,completed_at,assigned_technician,arrival_window,arrival_promised_at,created_at';
+  const sel = 'id,full_name,address,city,zip,zip_code,service,service_label,service_date,status,photo_url,completed_at,assigned_technician,arrival_window,arrival_promised_at,created_at';
   const desde = sumarDias(inicioSemana || domingoDe(hoyNY()), -10);
   const [r1, r2, r3] = await Promise.all([
     sb.from('booking_requests').select(sel).or('completed_at.gte.' + desde + ',completed_at.is.null').limit(3000),
@@ -247,5 +275,154 @@ function cambiarSemana(n){ inicioSemana = sumarDias(inicioSemana, n); diaSel = s
   setInterval(()=>{ if(document.visibilityState === 'visible') cargar(); }, 60000);
 })();
 </script>
+<script>
+/* ===== Mapa de rutas para administración (9 nov 2026) ==========================
+   Todas las piscinas en el mapa. Dos maneras de mirarlas:
+   - Colorear por TÉCNICO: cada técnico su color (la leyenda sirve para ocultar o mostrar).
+   - Colorear por DÍA: cada día de la semana su color.
+   Se ve el día escogido arriba o la semana entera. Rellenas = hechas, con borde = por hacer.
+   Las direcciones se ubican una vez (OpenStreetMap) y quedan guardadas en este navegador.
+============================================================================== */
+const PP_COLORES = ['#0ea5e9','#f97316','#a855f7','#22c55e','#ef4444','#eab308','#ec4899','#14b8a6','#6366f1','#84cc16'];
+const PP_COL_DIA = ['#ef4444','#0ea5e9','#22c55e','#eab308','#a855f7','#f97316','#14b8a6']; // dom..sáb
+let vistaMapa = false, mapaPor = 'tecnico', mapaRango = 'dia', ocultos = new Set();
+let ppMapa = null, ppCapa = null, ppLeaflet = null, ppGeoCola = Promise.resolve(), ppPintando = 0;
+
+function ppCargarLeaflet(){
+  if(window.L) return Promise.resolve();
+  if(ppLeaflet) return ppLeaflet;
+  ppLeaflet = new Promise((ok, ko)=>{
+    const css = document.createElement('link'); css.rel = 'stylesheet';
+    css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(css);
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    s.onload = ok; s.onerror = ()=>{ ppLeaflet = null; ko(new Error('sin conexión')); }; document.head.appendChild(s);
+  });
+  return ppLeaflet;
+}
+function ppGeoGuardadas(){ try{ return JSON.parse(localStorage.getItem('pp_geo') || '{}'); }catch(e){ return {}; } }
+function ppGeoClave(r){ return normDir(r) + '|' + String(r.zip || r.zip_code || '').slice(0,5); }
+function ppUbicar(r){
+  const clave = ppGeoClave(r);
+  const ya = ppGeoGuardadas()[clave];
+  if(ya) return Promise.resolve(ya);
+  const tarea = ppGeoCola.then(async ()=>{
+    const otra = ppGeoGuardadas()[clave]; if(otra) return otra;
+    const zip = String(r.zip || r.zip_code || '').slice(0,5);
+    let punto = null;
+    for(const q of [[r.address, r.city, 'FL', zip].filter(Boolean).join(', '), [r.address, zip || r.city, 'FL'].filter(Boolean).join(', ')]){
+      try{
+        const j = await (await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=' + encodeURIComponent(q))).json();
+        await new Promise(x=> setTimeout(x, 1100));
+        if(Array.isArray(j) && j[0]){ punto = {lat: +j[0].lat, lng: +j[0].lon}; break; }
+      }catch(e){ break; }
+    }
+    if(punto){ const t = ppGeoGuardadas(); t[clave] = punto; try{ localStorage.setItem('pp_geo', JSON.stringify(t)); }catch(e){} }
+    return punto;
+  });
+  ppGeoCola = tarea.catch(()=>{});
+  return tarea;
+}
+function colorTec(nombre){
+  const i = tecnicos.map(t=> t.name).sort((a,b)=> a.localeCompare(b)).indexOf(nombre);
+  return PP_COLORES[(i < 0 ? 0 : i) % PP_COLORES.length];
+}
+function colorDia(ymd){ return PP_COL_DIA[new Date(ymd + 'T12:00:00Z').getUTCDay()]; }
+
+function verComo(mapa){
+  vistaMapa = mapa;
+  document.getElementById('lista').classList.toggle('hidden', mapa);
+  document.getElementById('mapaCaja').classList.toggle('hidden', !mapa);
+  document.getElementById('btnLista').classList.toggle('activo', !mapa);
+  document.getElementById('btnMapa').classList.toggle('activo', mapa);
+  if(mapa) pintarMapaRutas();
+}
+function opcionMapa(clave, valor){
+  if(clave === 'por') mapaPor = valor; else mapaRango = valor;
+  document.querySelectorAll('[data-op]').forEach(b=> b.classList.toggle('activo', b.dataset.op === 'por:' + mapaPor || b.dataset.op === 'rango:' + mapaRango));
+  pintarMapaRutas();
+}
+
+async function pintarMapaRutas(){
+  if(!vistaMapa) return;
+  const yo = ++ppPintando;
+  const est = document.getElementById('mapaEstado');
+  try{ await ppCargarLeaflet(); }catch(e){ est.textContent = 'No se pudo cargar el mapa. Revisa la conexión.'; return; }
+  if(!ppMapa){
+    ppMapa = L.map('mapaRutas').setView([26.1, -80.25], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap'}).addTo(ppMapa);
+    ppCapa = L.layerGroup().addTo(ppMapa);
+  }
+  setTimeout(()=> ppMapa.invalidateSize(), 50);
+  ppCapa.clearLayers();
+
+  // Qué días entran
+  const dias = mapaRango === 'semana' ? [0,1,2,3,4,5,6].map(i=> sumarDias(inicioSemana, i)) : [diaSel];
+  const puntos = [];   // {t, x, ymd, i}
+  dias.forEach(ymd=> tecnicos.forEach(t=> paradas(t, ymd).forEach((x, i)=> puntos.push({t, x, ymd, i}))));
+
+  // Leyenda
+  const ley = document.getElementById('mapaLeyenda');
+  ley.innerHTML = '';
+  if(mapaPor === 'tecnico'){
+    const nombres = [...new Set(puntos.map(p=> p.t.name))].sort((a,b)=> a.localeCompare(b));
+    nombres.forEach(n=>{
+      const c = puntos.filter(p=> p.t.name === n);
+      const h = c.filter(p=> p.x.estado === 'hecha').length;
+      const b = document.createElement('button');
+      b.className = 'ley' + (ocultos.has(n) ? ' apagado' : '');
+      b.innerHTML = '<i style="background:' + colorTec(n) + '"></i>' + esc(n) + ' <small>' + h + '/' + c.length + '</small>';
+      b.onclick = ()=>{ ocultos.has(n) ? ocultos.delete(n) : ocultos.add(n); pintarMapaRutas(); };
+      ley.appendChild(b);
+    });
+  }else{
+    dias.forEach(ymd=>{
+      const c = puntos.filter(p=> p.ymd === ymd);
+      if(!c.length) return;
+      const s = document.createElement('span'); s.className = 'ley';
+      s.innerHTML = '<i style="background:' + colorDia(ymd) + '"></i>' + esc(nombreDia(ymd)) + ' ' + Number(ymd.slice(8)) + ' <small>' + c.filter(p=> p.x.estado==='hecha').length + '/' + c.length + '</small>';
+      ley.appendChild(s);
+    });
+  }
+  if(!puntos.length){ est.textContent = 'No hay piscinas en ' + (mapaRango === 'semana' ? 'esta semana.' : 'este día.'); return; }
+
+  const vis = puntos.filter(p=> mapaPor !== 'tecnico' || !ocultos.has(p.t.name));
+  const caja = [];
+  let faltan = 0, hechos = 0;
+  est.textContent = 'Ubicando ' + vis.length + ' piscinas…';
+  for(const p of vis){
+    const pos = await ppUbicar(p.x.r);
+    if(yo !== ppPintando) return;   // se pidió otro mapa mientras ubicaba
+    if(!pos){ faltan++; continue; }
+    const col = mapaPor === 'tecnico' ? colorTec(p.t.name) : colorDia(p.ymd);
+    const hecha = p.x.estado === 'hecha';
+    const borde = p.x.estado === 'atrasada' ? '#f59e0b' : col;
+    const icon = L.divIcon({className:'', iconSize:[30,30], iconAnchor:[15,15], popupAnchor:[0,-14],
+      html: '<div style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 13px DM Sans,sans-serif;'
+        + 'background:' + (hecha ? col : '#fff') + ';color:' + (hecha ? '#fff' : '#0a0f1e') + ';border:3px solid ' + borde + ';box-shadow:0 2px 6px rgba(0,0,0,.45)">'
+        + (hecha ? '&#10003;' : (p.i + 1)) + '</div>'});
+    const r = p.x.r;
+    L.marker([pos.lat, pos.lng], {icon}).addTo(ppCapa).bindPopup(
+      '<div style="min-width:200px;color:#0a0f1e"><b>' + esc(r.full_name || 'Cliente') + '</b><br>'
+      + '<span style="color:#475569">' + esc([r.address, r.city].filter(Boolean).join(', ')) + '</span><br>'
+      + '<b style="color:' + col + '">' + esc(p.t.name) + '</b> · ' + esc(nombreDia(p.ymd)) + ' ' + Number(p.ymd.slice(8)) + '<br>'
+      + (hecha ? 'Completada ' + esc(hora(r.completed_at)) : (p.x.estado === 'atrasada' ? '<b style="color:#b45309">Atrasada</b>' : 'Pendiente · parada ' + (p.i + 1)))
+      + (r.photo_url ? '<br><img src="' + esc(r.photo_url) + '" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-top:6px">' : '')
+      + '</div>');
+    caja.push([pos.lat, pos.lng]);
+    hechos++;
+    if(hechos === 1) ppMapa.setView([pos.lat, pos.lng], 12);
+  }
+  if(caja.length > 1) ppMapa.fitBounds(caja, {padding:[40,40], maxZoom: 15});
+  const h = vis.filter(p=> p.x.estado === 'hecha').length;
+  est.textContent = h + ' de ' + vis.length + ' hechas' + (faltan ? ' · ' + faltan + (faltan === 1 ? ' dirección sin ubicar' : ' direcciones sin ubicar') : '');
+}
+
+// El mapa se repinta solo cuando la pantalla se actualiza o se cambia de día
+(function(){
+  const original = pintar;
+  pintar = function(){ const r = original.apply(this, arguments); if(vistaMapa) pintarMapaRutas(); return r; };
+})();
+</script>
+
 </body>
 </html>
