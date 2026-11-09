@@ -1403,6 +1403,17 @@ function rejectService(b){
 
 /* ---------------- COMPLETAR SERVICIO ---------------- */
 function openComplete(b){
+  // 9 nov 2026: se pueden cerrar las visitas de la MISMA semana (lunes a domingo, hora de Florida):
+  // adelantar o atrasar unos días está bien; la semana pasada o la siguiente, no.
+  { const f = String((b && b.service_date) || '').slice(0,10);
+    const hoy = new Date().toLocaleDateString('en-CA',{timeZone:'America/New_York'});
+    const lunes = (ymd)=>{ const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0,10); };
+    if(/^\d{4}-\d{2}-\d{2}$/.test(f) && lunes(f) !== lunes(hoy)){
+      const dia = new Date(f + 'T12:00:00').toLocaleDateString('es-US',{weekday:'long', day:'numeric', month:'long'});
+      showToast(f < hoy ? 'Esta visita era del ' + dia + ', de la semana pasada. Avisa a administración para pasarla a esta semana.' : 'Esta visita es del ' + dia + ', de la próxima semana. Solo se cierran las visitas de esta semana.');
+      return;
+    }
+  }
   if(enRevision(b)){ showToast('Este servicio tiene una cancelación en revisión.'); return; }
   currentBooking = b;
   compressedBase64 = null;
