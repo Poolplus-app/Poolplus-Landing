@@ -1135,7 +1135,7 @@ function pintarDia(){
     const div = document.createElement('div');
     div.className = 'parada' + (p.estado === 'hecha' ? ' hecha' : (esDeApp(r) ? ' app' : ''));
     let etiqueta = '';
-    if(p.estado === 'hecha') etiqueta = '<em class="ok">Completada</em>';
+    if(p.estado === 'hecha') etiqueta = r.pp_en_cola ? (r.pp_error ? '<em class="tarde">No se pudo enviar · avisa a administración</em>' : '<em class="revision">Guardada en el teléfono · pendiente de enviar</em>') : '<em class="ok">Completada</em>';
     else if(enRevision(r)) etiqueta = '<em class="revision">Cancelación en revisión</em>';
     else if(p.estado === 'atrasada') etiqueta = '<em class="tarde">Atrasada · ' + esc(fmtDate(fechaVisita(r) || diaDeRuta(r))) + '</em>';
     else if(r.arrival_window && typeof PP_VENT_TXT !== 'undefined') etiqueta = '<em>Llegada: ' + esc(PP_VENT_TXT[r.arrival_window] || r.arrival_window) + '</em>';
@@ -2005,5 +2005,245 @@ async function pintarDinero(){
   if(session && !document.getElementById('appScreen').classList.contains('hidden')){ pagosEstado(); pintarDinero(); }
 })();
 </script>
+<script>
+/* ===== Cierre sin señal (9 nov 2026) ==========================================
+   Pedido de Roger: en sitios sin buena señal no podía cerrar el servicio.
+   Ahora el cierre (foto, fotos adicionales y novedad) se guarda PRIMERO en el
+   teléfono y después se intenta enviar. Si no hay señal, la piscina queda como
+   "Pendiente de enviar" y se manda sola cuando vuelve la señal: al recuperar
+   conexión, cada minuto y cada vez que se abre la app. Si cierra la app, no se
+   pierde: queda guardado en el teléfono (IndexedDB) hasta que se envíe.
+   La hora real del cierre queda estampada en la foto y viaja como cerrado_en.
+============================================================================== */
+const PPQ_DB = 'pp_cola_cierres', PPQ_ST = 'cierres';
+let ppqCache = [];      // {booking_id, cerrado_at, error} — sin fotos, para pintar la ruta
+let ppqCorriendo = false;
+
+function ppqDb(){
+  return new Promise((ok, ko)=>{
+    const r = indexedDB.open(PPQ_DB, 1);
+    r.onupgradeneeded = ()=> r.result.createObjectStore(PPQ_ST, {keyPath:'booking_id'});
+    r.onsuccess = ()=> ok(r.result);
+    r.onerror = ()=> ko(r.error);
+  });
+}
+async function ppqOp(modo, fn){
+  const db = await ppqDb();
+  return new Promise((ok, ko)=>{
+    const tx = db.transaction(PPQ_ST, modo);
+    const req = fn(tx.objectStore(PPQ_ST));
+    let res;
+    if(req) req.onsuccess = ()=>{ res = req.result; };
+    tx.oncomplete = ()=> ok(res);
+    tx.onerror = ()=> ko(tx.error);
+    tx.onabort = ()=> ko(tx.error);
+  });
+}
+const ppqPut = it => ppqOp('readwrite', st=> st.put(it));
+const ppqDel = id => ppqOp('readwrite', st=> st.delete(id));
+const ppqAll = ()=> ppqOp('readonly', st=> st.getAll()).then(x=> x || []).catch(()=> []);
+
+function ppqMiCorreo(){
+  try{ return String(JSON.parse(atob(session.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).email || '').toLowerCase(); }
+  catch(e){ return ''; }
+}
+async function ppqRefrescarCache(){
+  const yo = ppqMiCorreo();
+  ppqCache = (await ppqAll()).filter(it=> !it.email || !yo || it.email === yo)
+    .map(it=> ({booking_id: it.booking_id, cerrado_at: it.cerrado_at, error: it.error || ''}));
+}
+
+// Un intento de envío. Devuelve {ok} o {ok:false, red:true} si no hubo conexión.
+async function ppqEnviar(it){
+  try{
+    if(it.novedad && !it.novedad_ok){
+      const r = await fetch(SUPABASE_URL + '/functions/v1/reportar-novedad', {
+        method:'POST', headers: authHeaders(),
+        body: JSON.stringify({booking_id: it.booking_id, tipo: it.novedad.tipo, nota: it.novedad.nota, foto_base64: it.novedad.foto_base64})
+      });
+      const j = await r.json().catch(()=> ({}));
+      if(!r.ok || !j.ok) return {ok:false, error: 'No se pudo guardar la novedad. ' + (j.error || ('Error ' + r.status))};
+      it.novedad_ok = true;
+      await ppqPut(it).catch(()=>{});
+    }
+    const r = await fetch(SUPABASE_URL + '/functions/v1/complete-service', {
+      method:'POST', headers: authHeaders(),
+      body: JSON.stringify({
+        booking_id: it.booking_id,
+        photo_base64: it.photo_base64,
+        photos_extra_base64: it.photos_extra_base64 || [],
+        cerrado_en: it.cerrado_at
+      })
+    });
+    const d = await r.json().catch(()=> ({}));
+    if(r.ok) return {ok:true};
+    return {ok:false, error: d.error || ('Error ' + r.status)};
+  }catch(e){
+    return {ok:false, red:true, error:'Sin señal'};
+  }
+}
+// Si la respuesta se perdió pero el servicio sí quedó cerrado, no se vuelve a mandar
+async function ppqYaCompletado(id){
+  try{
+    const r = await fetch(SUPABASE_URL + '/rest/v1/booking_requests?id=eq.' + id + '&select=completed_at', {headers: authHeaders()});
+    const rows = await r.json();
+    return Array.isArray(rows) && rows[0] && !!rows[0].completed_at;
+  }catch(e){ return false; }
+}
+
+// Manda todo lo que está guardado en el teléfono
+async function ppqVaciar(){
+  if(ppqCorriendo || !session || navigator.onLine === false) return;
+  ppqCorriendo = true;
+  let enviados = 0;
+  try{
+    const yo = ppqMiCorreo();
+    for(const it of await ppqAll()){
+      if(it.email && yo && it.email !== yo) continue;
+      const r = await ppqEnviar(it);
+      if(r.red) break;
+      if(r.ok || await ppqYaCompletado(it.booking_id)){ await ppqDel(it.booking_id).catch(()=>{}); enviados++; continue; }
+      it.error = r.error; it.intentos = (it.intentos || 0) + 1;
+      await ppqPut(it).catch(()=>{});
+    }
+  }finally{
+    ppqCorriendo = false;
+    await ppqRefrescarCache();
+  }
+  if(enviados){
+    showToast(enviados === 1 ? 'Se envió 1 servicio que estaba guardado en el teléfono.' : 'Se enviaron ' + enviados + ' servicios que estaban guardados en el teléfono.');
+    loadBookings();
+  }else if(ppqCache.length && typeof loadBookings === 'function'){
+    // repinta para mostrar errores nuevos, sin pedir nada a la red
+    try{ ppqRepintar(); }catch(e){}
+  }
+}
+
+// Marca en la ruta las piscinas cerradas que aún no se han enviado
+function ppqMarcar(rows){
+  (rows || []).forEach(r=>{
+    const q = ppqCache.find(x=> x.booking_id === r.id);
+    if(q && !r.completed_at){
+      r.completed_at = q.cerrado_at; r.pp_en_cola = true; r.pp_error = q.error;
+      // App actual (tech.html): el aviso va junto al nombre del servicio
+      if(typeof pintarDia !== 'function') r.service_label = (r.service_label || r.service || 'Servicio') + ' (pendiente de enviar)';
+    }
+  });
+}
+(function(){
+  const original = window.renderBookings;
+  if(typeof original !== 'function') return;
+  window.renderBookings = function(rows){ window.__ppqUltimas = rows; ppqMarcar(rows); return original.apply(this, arguments); };
+})();
+function ppqRepintar(){
+  if(typeof pintarDia === 'function'){
+    (typeof rutaRows !== 'undefined' ? rutaRows : []).forEach(r=>{
+      const q = ppqCache.find(x=> x.booking_id === r.id);
+      if(r.pp_en_cola && q) r.pp_error = q.error;
+    });
+    pintarSemana(); pintarDia();
+  }
+}
+
+async function ppqTerminar(id, cerradoAt, enCola){
+  closeModal();
+  if(typeof cerrarFicha === 'function') cerrarFicha();
+  if(typeof pintarDia === 'function'){
+    // App nueva (tech2): vuelve a la ruta del día
+    if(enCola){
+      const r = rutaRows.find(x=> x.id === id);
+      if(r){ r.completed_at = cerradoAt; r.pp_en_cola = true; r.pp_error = ''; }
+    }else{
+      await loadBookings();
+    }
+    rutaDiaSel = hoyNY();
+    rutaInicioSemana = domingoDe(rutaDiaSel);
+    verVista('Ruta');
+    const lista = paradasDelDia(rutaDiaSel);
+    const hechas = lista.filter(p=> p.estado === 'hecha').length;
+    showToast(enCola
+      ? 'Sin señal: el servicio quedó guardado en el teléfono y se envía solo cuando vuelva la señal. Puedes seguir con la próxima piscina.'
+      : 'Listo: ' + hechas + ' de ' + lista.length + ' piscinas de hoy. El cliente fue notificado.');
+    const idx = lista.findIndex(p=> p.r.id === id);
+    const tarjeta = idx >= 0 ? document.querySelectorAll('#paradas .parada')[idx] : null;
+    if(tarjeta){ tarjeta.classList.add('recien'); tarjeta.scrollIntoView({block:'center', behavior:'smooth'}); }
+  }else{
+    // App actual (tech.html)
+    showToast(enCola
+      ? 'Sin señal: el servicio quedó guardado en el teléfono y se envía solo cuando vuelva la señal.'
+      : 'Servicio completado. El cliente fue notificado.');
+    if(enCola){
+      await ppqRefrescarCache();
+      if(window.__ppqUltimas) renderBookings(window.__ppqUltimas);
+    }else{
+      await loadBookings();
+    }
+  }
+}
+
+// Reemplaza el envío: guarda primero en el teléfono, después intenta mandar
+window.submitComplete = async function(){
+  if(!currentBooking || !compressedBase64) return;
+  const caja = document.getElementById('novedadBox');
+  const sel = document.getElementById('novedadTipo');
+  const abierta = caja && !caja.classList.contains('hidden');
+  const tipo = abierta && sel ? sel.value : '';
+  if(abierta && !tipo){ showToast('Elige qué encontraste, o cierra el reporte.'); return; }
+
+  const btn = document.getElementById('confirmBtn');
+  const back = document.getElementById('backBtn');
+  const prog = document.getElementById('submitProgress');
+  btn.disabled = true; back.disabled = true;
+  prog.textContent = 'Guardando el servicio…';
+  prog.classList.remove('hidden');
+
+  const it = {
+    booking_id: currentBooking.id,
+    email: ppqMiCorreo(),
+    cerrado_at: new Date().toISOString(),
+    photo_base64: compressedBase64,
+    photos_extra_base64: (typeof fotosExtra !== 'undefined' ? fotosExtra : []).map(u=> String(u).split(',')[1]),
+    novedad: tipo ? { tipo: tipo, nota: (document.getElementById('novedadNota') || {}).value || '',
+                      foto_base64: (typeof ppNovedadB64 !== 'undefined' ? ppNovedadB64 : null) } : null,
+    novedad_ok: false
+  };
+  let guardado = true;
+  try{ await ppqPut(it); }catch(e){ guardado = false; }
+
+  prog.textContent = 'Enviando foto y cerrando el servicio…';
+  const r = await ppqEnviar(it);
+  if(r.ok){
+    await ppqDel(it.booking_id).catch(()=>{});
+    await ppqRefrescarCache();
+    await ppqTerminar(it.booking_id, it.cerrado_at, false);
+    return;
+  }
+  if(r.red && guardado){
+    await ppqRefrescarCache();
+    await ppqTerminar(it.booking_id, it.cerrado_at, true);
+    return;
+  }
+  // El sistema respondió con un error (no es la señal): se muestra como antes
+  await ppqDel(it.booking_id).catch(()=>{});
+  await ppqRefrescarCache();
+  prog.textContent = r.red
+    ? 'Sin señal, y el teléfono no dejó guardar el servicio. Intenta de nuevo en un momento.'
+    : (r.error || 'No se pudo completar. Intenta de nuevo o avisa al administrador.');
+  btn.disabled = false; back.disabled = false;
+};
+
+window.addEventListener('online', ()=> setTimeout(ppqVaciar, 1500));
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') ppqVaciar(); });
+setInterval(ppqVaciar, 60000);
+ppqRefrescarCache().then(()=>{
+  // si la ruta ya se pintó antes de leer la cola, se repinta con las marcas
+  if(ppqCache.length){
+    if(typeof rutaRows !== 'undefined' && rutaRows.length){ ppqMarcar(rutaRows); ppqRepintar(); }
+    else if(typeof loadBookings === 'function' && session){ loadBookings().catch(()=>{}); }
+  }
+  setTimeout(ppqVaciar, 3000);
+});
+</script>
+
 </body>
 </html>
