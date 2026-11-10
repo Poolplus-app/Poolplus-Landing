@@ -2463,5 +2463,78 @@ async function ordenarPorCercania(){
 }
 </script>
 
+<script>
+/* ===== Abrir sin señal (9 nov 2026) ===========================================
+   1) Se registra sw-tecnico.js: guarda una copia de la app en el teléfono.
+   2) Cada vez que la ruta llega del sistema, se guarda una copia (piscinas, orden y
+      nombre del técnico). Si al abrir no hay señal, se muestra esa copia con un aviso
+      y la app sigue funcionando: se pueden tomar fotos y cerrar (queda "pendiente de
+      enviar"). Cuando vuelve la señal se recarga todo solo.
+============================================================================== */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('/sw-tecnico.js').catch(()=>{}); });
+}
+const PPO_CLAVE = 'pp_ruta_guardada';
+let ppoRecibio = false;
+function ppoCorreo(){ try{ return typeof ppqMiCorreo === 'function' ? ppqMiCorreo() : ''; }catch(e){ return ''; } }
+(function(){
+  const original = window.renderBookings;
+  if(typeof original !== 'function') return;
+  window.renderBookings = function(rows){
+    ppoRecibio = true;
+    if(!window.__ppoDesdeCopia){
+      try{
+        localStorage.setItem(PPO_CLAVE, JSON.stringify({
+          email: ppoCorreo(), at: new Date().toISOString(), rows: rows || [],
+          ordenes: (typeof rutaOrdenes !== 'undefined' ? rutaOrdenes : {}), nombre: techName || ''
+        }));
+      }catch(e){}
+      ppoAviso(null);
+    }
+    return original.apply(this, arguments);
+  };
+})();
+function ppoAviso(at){
+  let a = document.getElementById('ppoAviso');
+  if(!at){ if(a) a.remove(); return; }
+  if(!a){
+    a = document.createElement('div'); a.id = 'ppoAviso';
+    a.style.cssText = 'margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#FFF7E6;border:1px solid #F3D9A0;color:#7A5C12;font-size:13.5px';
+    const v = document.getElementById('vistaRuta');
+    v.insertBefore(a, v.querySelector('.avance') || v.firstChild);
+  }
+  a.innerHTML = '<b>Sin señal.</b> Estás viendo tu ruta guardada (' + esc(horaNY(at))
+    + '). Puedes cerrar servicios: se envían solos cuando vuelva la señal.';
+}
+function ppoUsarCopia(){
+  let c = null;
+  try{ c = JSON.parse(localStorage.getItem(PPO_CLAVE) || 'null'); }catch(e){}
+  const yo = ppoCorreo();
+  if(!c || !Array.isArray(c.rows) || (c.email && yo && c.email !== yo)) return false;
+  if(c.ordenes && typeof rutaOrdenes !== 'undefined' && !Object.keys(rutaOrdenes).length) rutaOrdenes = c.ordenes;
+  if(c.nombre && !techName){ techName = c.nombre; const n = document.getElementById('techName'); if(n) n.textContent = c.nombre; }
+  window.__ppoDesdeCopia = true;
+  try{ renderBookings(JSON.parse(JSON.stringify(c.rows))); }finally{ window.__ppoDesdeCopia = false; }
+  ppoAviso(c.at);
+  return true;
+}
+(function(){
+  const original = window.loadBookings;
+  if(typeof original !== 'function') return;
+  window.loadBookings = async function(){
+    if(navigator.onLine === false && ppoUsarCopia()){
+      const l = document.getElementById('listLoading'); if(l) l.classList.add('hidden');
+      return;
+    }
+    ppoRecibio = false;
+    const r = await original.apply(this, arguments);
+    if(!ppoRecibio) ppoUsarCopia();
+    return r;
+  };
+})();
+// Al volver la señal, se trae la ruta fresca
+window.addEventListener('online', ()=> setTimeout(()=>{ if(session && document.getElementById('ppoAviso')) loadBookings(); }, 2500));
+</script>
+
 </body>
 </html>
