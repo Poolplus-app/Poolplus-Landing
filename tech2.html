@@ -1989,13 +1989,13 @@ async function pagosAbrir(){
 }
 // 8 nov 2026: "Mi dinero" — por cobrar al cliente, por consignarte y consignado (rpc pp_mi_dinero)
 function dinFmt(n){ return '$' + Number(n || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
-// 9 nov 2026: se paga los viernes, por semana, con corte al viernes anterior.
-// Lo hecho de sábado a viernes se paga el viernes siguiente.
-// Ej.: sábado 31 oct a viernes 6 nov -> se paga el viernes 13 nov.
+// 9 nov 2026: se paga los viernes, por semana completa de lunes a domingo.
+// Lo hecho de lunes a domingo se paga el viernes siguiente.
+// Ej.: lunes 2 a domingo 8 nov -> se paga el viernes 13 nov.
 function viernesDePago(fecha){
   const ymd = /^\d{4}-\d{2}-\d{2}$/.test(String(fecha)) ? String(fecha) : ymdNY(new Date(fecha));
   const dow = new Date(ymd + 'T12:00:00Z').getUTCDay();          // 0 dom ... 5 vie, 6 sáb
-  return sumarDias(ymd, ((5 - dow + 7) % 7) + 7);                 // viernes de esa semana de trabajo + 7
+  return sumarDias(ymd, ((7 - dow) % 7) + 5);                     // domingo que cierra esa semana + 5 = viernes
 }
 function pintarProximoPago(lista){
   const caja = document.getElementById('dinViernes');
@@ -2009,7 +2009,7 @@ function pintarProximoPago(lista){
   const paraEste = suma(x=> x.estado === 'por_consignar' && viernesDePago(x.fecha) <= proximo);
   const paraSig = suma(x=> x.estado === 'por_consignar' && viernesDePago(x.fecha) === siguiente);
   const esperando = suma(x=> x.estado === 'por_cobrar');
-  const corte = sumarDias(proximo, -7);
+  const corte = sumarDias(proximo, -5);                           // domingo que cierra la semana que se paga
   caja.innerHTML = '<span>Te llega el ' + esc(nombreDia(proximo, true)) + '</span>'
     + '<b class="grande">' + dinFmt(paraEste) + '</b>'
     + '<small>Por lo que hiciste hasta el ' + esc(nombreDia(corte, true)) + '.</small>'
