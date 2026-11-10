@@ -196,6 +196,9 @@
   .din-est.por_cobrar{background:rgba(255,255,255,.18)}
   .din-est.por_consignar{background:#F5B301;color:var(--navy)}
   .din-est.consignado{background:#22C55E;color:#06240f}
+  .din-viernes{background:rgba(255,255,255,.12);border-radius:12px;padding:12px;margin:8px 0 10px}
+  .din-viernes .grande{font-size:26px;font-weight:800;display:block;margin:2px 0}
+  .din-viernes small{display:block;opacity:.8;font-size:12.5px;margin-top:4px}
   .partner-card a{
     display:inline-block;margin-top:12px;
     color:var(--navy);background:var(--white);
@@ -474,6 +477,7 @@
 
       <div id="dineroCard" class="partner-card">
         <h4>Mi dinero</h4>
+        <div id="dinViernes" class="din-viernes hidden"></div>
         <div class="dinero-tot">
           <div><span>Por cobrar al cliente</span><b id="dinCobrar">—</b></div>
           <div><span>Por consignarte</span><b id="dinConsignar">—</b></div>
@@ -1985,6 +1989,34 @@ async function pagosAbrir(){
 }
 // 8 nov 2026: "Mi dinero" — por cobrar al cliente, por consignarte y consignado (rpc pp_mi_dinero)
 function dinFmt(n){ return '$' + Number(n || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+// 9 nov 2026: se paga los viernes, por semana, con corte al viernes anterior.
+// Lo hecho de sábado a viernes se paga el viernes siguiente.
+// Ej.: sábado 31 oct a viernes 6 nov -> se paga el viernes 13 nov.
+function viernesDePago(fecha){
+  const ymd = /^\d{4}-\d{2}-\d{2}$/.test(String(fecha)) ? String(fecha) : ymdNY(new Date(fecha));
+  const dow = new Date(ymd + 'T12:00:00Z').getUTCDay();          // 0 dom ... 5 vie, 6 sáb
+  return sumarDias(ymd, ((5 - dow + 7) % 7) + 7);                 // viernes de esa semana de trabajo + 7
+}
+function pintarProximoPago(lista){
+  const caja = document.getElementById('dinViernes');
+  if(!caja) return;
+  const hoy = hoyNY();
+  const dow = new Date(hoy + 'T12:00:00Z').getUTCDay();
+  const proximo = sumarDias(hoy, (5 - dow + 7) % 7);              // este viernes (hoy si es viernes)
+  const siguiente = sumarDias(proximo, 7);
+  const pend = (lista || []).filter(x=> x.estado !== 'consignado');
+  const suma = (f)=> pend.filter(f).reduce((s, x)=> s + Number(x.parte || 0), 0);
+  const paraEste = suma(x=> x.estado === 'por_consignar' && viernesDePago(x.fecha) <= proximo);
+  const paraSig = suma(x=> x.estado === 'por_consignar' && viernesDePago(x.fecha) === siguiente);
+  const esperando = suma(x=> x.estado === 'por_cobrar');
+  const corte = sumarDias(proximo, -7);
+  caja.innerHTML = '<span>Te llega el ' + esc(nombreDia(proximo, true)) + '</span>'
+    + '<b class="grande">' + dinFmt(paraEste) + '</b>'
+    + '<small>Por lo que hiciste hasta el ' + esc(nombreDia(corte, true)) + '.</small>'
+    + (paraSig ? '<small>Para el ' + esc(nombreDia(siguiente, true)) + ' llevas ' + dinFmt(paraSig) + ' (lo de esta semana).</small>' : '')
+    + (esperando ? '<small>' + dinFmt(esperando) + ' esperan que el cliente pague; se suman cuando entre el pago.</small>' : '');
+  caja.classList.remove('hidden');
+}
 async function pintarDinero(){
   const txt = document.getElementById('dineroTxt');
   if(!txt || !session) return;
@@ -1996,6 +2028,7 @@ async function pintarDinero(){
     document.getElementById('dinConsignar').textContent = dinFmt(d.por_consignar);
     document.getElementById('dinConsignado').textContent = dinFmt(d.consignado);
     const lista = d.lista || [];
+    pintarProximoPago(lista);
     if(!lista.length){
       txt.textContent = 'Todavía no tienes servicios cerrados. Aquí vas a ver tu parte de cada uno.';
       document.getElementById('dineroMas').style.display = 'none';
@@ -2006,7 +2039,8 @@ async function pintarDinero(){
     const nombres = {por_cobrar:'Por cobrar', por_consignar:'Por consignarte', consignado:'Consignado'};
     document.getElementById('dineroLista').innerHTML = lista.map(x=> {
       const fecha = esc(fmtDate(ymdNY(new Date(x.fecha))));
-      const extra = x.estado === 'consignado' && x.consignado_at ? ' el ' + esc(fmtDate(ymdNY(new Date(x.consignado_at)))) : '';
+      const extra = x.estado === 'consignado' && x.consignado_at ? ' el ' + esc(fmtDate(ymdNY(new Date(x.consignado_at))))
+        : (x.estado === 'por_consignar' ? ' · vie ' + Number(viernesDePago(x.fecha).slice(8)) : '');
       return '<div class="din-item"><div>' + esc(x.cliente || 'Cliente') + '<small>' + fecha + ' · ' + esc(x.servicio || (x.tipo === 'suelto' ? 'Servicio' : 'Visita de plan')) + '</small></div>'
         + '<div class="der"><b>' + dinFmt(x.parte) + '</b><small>de ' + dinFmt(x.monto) + '</small>'
         + '<span class="din-est ' + esc(x.estado) + '">' + nombres[x.estado] + extra + '</span></div></div>';
