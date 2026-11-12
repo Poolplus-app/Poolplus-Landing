@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>PoolPlus Admin</title> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>PoolPlus Admin</title> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&family=Inter:wght@800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="/brand.css"/>
 <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml"/>
@@ -102,6 +102,29 @@ select option{background:#1a2235;}
 .avatar{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:white;flex-shrink:0;}
 /* scrollbar */
 ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#334155;border-radius:4px;}
+
+/* ===== Teléfono (12 nov 2026): menú angosto con íconos que se abre al tocarlo ===== */
+#menuToggle{display:none}
+@media(max-width:760px){
+  body{display:block!important}
+  #sidebar{position:fixed;left:0;top:0;bottom:0;height:100vh;width:58px;padding:12px 6px;z-index:900;transition:width .2s,box-shadow .2s;overflow-x:hidden}
+  #sidebar .logo-row,#sidebar .sidebar-footer{display:none}
+  #menuToggle{display:flex;align-items:center;justify-content:center;width:100%;min-height:40px;margin-bottom:6px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-size:20px;cursor:pointer}
+  .nav-btn{justify-content:center;padding:11px 0;gap:0;position:relative;font-size:18px}
+  .nav-btn > span:nth-child(2),.nav-btn > span:nth-child(3):not(.nav-badge){display:none}
+  .nav-btn .nav-badge{position:absolute;top:4px;right:4px;font-size:9px;padding:0 4px;margin:0}
+  #sidebar.abierto{width:236px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}
+  #sidebar.abierto .logo-row{display:flex;padding:6px 8px 12px}
+  #sidebar.abierto .nav-btn{justify-content:flex-start;padding:10px 12px;gap:10px;font-size:14px}
+  #sidebar.abierto .nav-btn > span:not(.nav-badge){display:inline!important}
+  #sidebar.abierto .nav-btn .nav-badge{position:static;margin-left:auto;font-size:10px;padding:1px 6px}
+  #content{margin-left:58px;min-width:0}
+  .page{padding:16px 12px}
+  .grid-2,.grid-3{grid-template-columns:1fr!important}
+  .grid-auto{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  table.tbl{display:block;overflow-x:auto;white-space:nowrap}
+  .page-title{font-size:19px}
+}
 </style>
 </head>
 <body>
@@ -1946,6 +1969,20 @@ async function cartReenviar(id){
   }
   setTimeout(cargar, 2500);
   setInterval(cargar, 60000);
+})();
+</script>
+<script>
+/* Teléfono (12 nov 2026): el menú se abre al tocar el botón y se cierra al escoger una sección o tocar fuera */
+(function(){
+  const sb = document.getElementById('sidebar');
+  if(!sb) return;
+  const b = document.createElement('button');
+  b.id = 'menuToggle'; b.type = 'button'; b.setAttribute('aria-label','Abrir o cerrar el menú'); b.innerHTML = '&#9776;';
+  const logo = sb.querySelector('.logo-row');
+  if(logo) logo.after(b); else sb.prepend(b);
+  b.onclick = (e)=>{ e.stopPropagation(); sb.classList.toggle('abierto'); };
+  sb.querySelectorAll('.nav-btn').forEach(n=> n.addEventListener('click', ()=> sb.classList.remove('abierto')));
+  document.addEventListener('click', (e)=>{ if(sb.classList.contains('abierto') && !sb.contains(e.target)) sb.classList.remove('abierto'); });
 })();
 </script>
 </body>
