@@ -438,7 +438,7 @@ table th{color:var(--muted)!important;}
   <!-- CLIENTES DE CARTERA -->
   <div class="page" id="page-cartera">
     <div class="page-title">Formulario de clientes de cartera</div>
-    <div class="page-sub">Alta uno a uno de los clientes que llegan con una cartera comprada. Cada uno conserva su precio acordado; no pasa por la página ni escoge precio.</div>
+    <div class="page-sub">Registro uno a uno de los clientes que llegan con una cartera comprada. Cada uno conserva su precio acordado; no pasa por la página ni escoge precio.</div>
     <div class="card card-p" style="max-width:760px">
       <div class="cart-grid">
         <label class="cart-f cart-full">Nombre completo<input id="cart-nombre" type="text"></label>
@@ -457,7 +457,7 @@ table th{color:var(--muted)!important;}
         <label class="cart-full" style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)"><input id="cart-enviar" type="checkbox" style="width:auto"> Enviar ahora al cliente el correo con el enlace para dejar su tarjeta (si no, queda guardado y se envía después desde la lista)</label>
       </div>
       <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
-        <button class="btn btn-primary" id="cart-btn" onclick="cartDarDeAlta()">Dar de alta</button>
+        <button class="btn btn-primary" id="cart-btn" onclick="cartDarDeAlta()">Agregar cliente</button>
         <button class="btn btn-ghost" onclick="cartLimpiar()">Limpiar</button>
       </div>
       <div id="cart-msg" style="display:none;margin-top:16px;padding:14px;border-radius:10px;font-size:13px;line-height:1.6"></div>
@@ -940,7 +940,7 @@ async function renderStats(){
 
   let h = '';
   h += '<div class="pgd-top"><div><h1>'+saludo+nombre+'</h1><div class="pgd-sub">Resumen de tu operación · '+mes+'</div></div>'
-     + '<button class="pgd-cta" onclick="pgIr(\'cartera\')">+ Alta de cliente</button></div>';
+     + '<button class="pgd-cta" onclick="pgIr(\'cartera\')">+ Agregar cliente</button></div>';
 
   // Cuatro números
   h += '<div class="pgd-kpis">'
@@ -1993,7 +1993,7 @@ async function cartDarDeAlta(){
     cartLimpiarCampos();
     await cartCargarLista();
   }catch(e){cartAviso('No se pudo conectar: '+cartEsc(e.message),false);}
-  finally{btn.disabled=false;btn.textContent='Dar de alta';}
+  finally{btn.disabled=false;btn.textContent='Agregar cliente';}
 }
 function cartLimpiarCampos(){
   ['cart-nombre','cart-correo','cart-tel','cart-dir','cart-ciudad','cart-zip','cart-precio','cart-notas'].forEach(function(id){document.getElementById(id).value='';});
@@ -2278,8 +2278,8 @@ async function cartReenviar(id){
   if(window.ResizeObserver){ new ResizeObserver(ajustar).observe(nav); }
   // los escondidos quedan al final, fuera de la vista
   ["'promos'", "'pagos'", "'config'"].forEach(function(k){ const b = find(k); if(b) poner(b); });
-  // nombre más claro para el alta de cartera
-  const c = find("'cartera'"); if(c){ const s = c.querySelectorAll('span')[1]; if(s) s.textContent = 'Alta de cartera'; }
+  // nombre del formulario de cartera en el menú
+  const c = find("'cartera'"); if(c){ const s = c.querySelectorAll('span')[1]; if(s) s.textContent = 'Clientes de cartera'; }
 })();
 </script>
 </body>
