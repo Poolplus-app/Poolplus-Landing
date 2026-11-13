@@ -132,10 +132,16 @@ select option{background:#1a2235;}
   <div style="background:#111a2e;border:1px solid #1e3a5f;border-radius:16px;padding:36px;max-width:400px;width:100%;text-align:center">
     <span class="pp-tile" style="font-size:17px;margin-bottom:14px"></span>
     <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:6px">PoolPlus Admin</div>
-    <p style="font-size:13px;color:#9ca3af;margin-bottom:20px;line-height:1.5">Acceso solo para administradores. Recibirás un link de acceso en tu email.</p>
+    <p style="font-size:13px;color:#9ca3af;margin-bottom:20px;line-height:1.5">Acceso solo para administradores. Te llega un código de 6 números a tu email.</p>
     <input id="gate-email" type="email" value="poolplusllcapp@gmail.com" style="width:100%;padding:12px;border-radius:10px;border:1px solid #1e3a5f;background:#0b1120;color:#fff;font-size:14px;margin-bottom:12px;font-family:inherit;box-sizing:border-box">
-    <button onclick="sendMagicLink()" id="gate-btn" style="width:100%;padding:12px;border-radius:10px;border:none;background:#0ea5e9;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">Enviarme el link de acceso</button>
-    <p id="gate-msg" style="font-size:12px;color:#10b981;margin-top:12px;display:none">✉️ Link enviado — revisa tu email y haz clic para entrar.</p>
+    <button onclick="sendMagicLink()" id="gate-btn" style="width:100%;padding:12px;border-radius:10px;border:none;background:#0ea5e9;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">Enviarme el código</button>
+    <p id="gate-msg" style="display:none"></p>
+    <div id="gate-code-box" style="display:none;margin-top:16px;text-align:left">
+      <p style="font-size:13px;color:#10b981;margin-bottom:10px;line-height:1.5">Te enviamos un correo. Escribe aquí el código que trae:</p>
+      <input id="gate-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Código" style="width:100%;padding:12px;border-radius:10px;border:1px solid #1e3a5f;background:#0b1120;color:#fff;font-size:22px;letter-spacing:6px;text-align:center;margin-bottom:12px;font-family:inherit;box-sizing:border-box">
+      <button onclick="verificarCodigo()" id="gate-entrar" style="width:100%;padding:12px;border-radius:10px;border:none;background:#10b981;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit">Entrar</button>
+      <p id="gate-err" style="font-size:12px;color:#f87171;margin-top:10px;display:none"></p>
+    </div>
   </div>
 </div>
 
@@ -1410,8 +1416,11 @@ async function sendMagicLink(){
   btn.disabled=true;btn.textContent='Enviando…';
   const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.href.split('#')[0]}});
   if(error){alert('Error: '+error.message);btn.disabled=false;btn.textContent='Enviarme el link de acceso';return;}
-  document.getElementById('gate-msg').style.display='block';
-  btn.textContent='Link enviado ✓';
+  // 12 nov 2026: código de 6 números en vez de link (en el iPhone el link se abría en otro navegador)
+  try{ localStorage.setItem('pp_admin_email', email); }catch(e){}
+  document.getElementById('gate-code-box').style.display='block';
+  btn.disabled=false; btn.textContent='Reenviar código';
+  document.getElementById('gate-code').focus();
 }
 async function checkAdminSession(){
   const {data:{session}}=await sb.auth.getSession();
@@ -1423,6 +1432,21 @@ async function checkAdminSession(){
 sb.auth.onAuthStateChange((_e,session)=>{
   if(session){document.getElementById('admin-gate').style.display='none';loadBookings();loadSubscriptions();}
 });
+async function verificarCodigo(){
+  const email=document.getElementById('gate-email').value.trim();
+  const token=document.getElementById('gate-code').value.replace(/\D/g,'');
+  const err=document.getElementById('gate-err'); const b=document.getElementById('gate-entrar');
+  err.style.display='none';
+  if(token.length<6){ err.textContent='Escribe el código completo que llegó al correo.'; err.style.display='block'; return; }
+  b.disabled=true; b.textContent='Entrando…';
+  const {error}=await sb.auth.verifyOtp({email, token, type:'email'});
+  if(error){ err.textContent='Ese código no sirve o ya venció. Pide uno nuevo.'; err.style.display='block'; b.disabled=false; b.textContent='Entrar'; return; }
+  b.textContent='Listo';
+}
+(function(){
+  try{ const e=localStorage.getItem('pp_admin_email'); if(e) document.getElementById('gate-email').value=e; }catch(x){}
+  const c=document.getElementById('gate-code'); if(c) c.addEventListener('keydown', ev=>{ if(ev.key==='Enter') verificarCodigo(); });
+})();
 checkAdminSession();
 
 /* ══════════ RESERVAS ══════════ */
