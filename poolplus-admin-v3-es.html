@@ -1414,7 +1414,10 @@ async function sendMagicLink(){
   const email=document.getElementById('gate-email').value.trim();
   const btn=document.getElementById('gate-btn');
   btn.disabled=true;btn.textContent='Enviando…';
-  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.href.split('#')[0]}});
+  // 12 nov 2026: solo los correos establecidos reciben código; nadie más puede crear cuenta desde aquí
+  const permitido=await sb.rpc('pp_puede_admin',{p_email:email});
+  if(permitido.error || permitido.data!==true){ alert('Ese correo no tiene acceso al panel de administración.'); btn.disabled=false; btn.textContent='Enviarme el código'; return; }
+  const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:window.location.href.split('#')[0]}});
   if(error){alert('Error: '+error.message);btn.disabled=false;btn.textContent='Enviarme el link de acceso';return;}
   // 12 nov 2026: código de 6 números en vez de link (en el iPhone el link se abría en otro navegador)
   try{ localStorage.setItem('pp_admin_email', email); }catch(e){}
@@ -1446,6 +1449,18 @@ async function verificarCodigo(){
 (function(){
   try{ const e=localStorage.getItem('pp_admin_email'); if(e) document.getElementById('gate-email').value=e; }catch(x){}
   const c=document.getElementById('gate-code'); if(c) c.addEventListener('keydown', ev=>{ if(ev.key==='Enter') verificarCodigo(); });
+  // Si alguien entra con un correo que no es de administración, se le cierra la sesión
+  async function ppGuardiaAdmin(session){
+    if(!session) return;
+    const r=await sb.rpc('es_admin');
+    if(r.error || r.data!==true){
+      await sb.auth.signOut();
+      document.getElementById('admin-gate').style.display='flex';
+      alert('Este correo no tiene acceso al panel de administración.');
+    }
+  }
+  sb.auth.onAuthStateChange((_e,ses)=>{ ppGuardiaAdmin(ses); });
+  sb.auth.getSession().then(r=>ppGuardiaAdmin(r.data.session));
 })();
 checkAdminSession();
 
