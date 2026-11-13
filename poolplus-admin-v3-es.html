@@ -2281,6 +2281,31 @@ async function cartReenviar(id){
   // nombre del formulario de cartera en el menú
   const c = find("'cartera'"); if(c){ const s = c.querySelectorAll('span')[1]; if(s) s.textContent = 'Clientes de cartera'; }
 })();
+
+// ── CERRAR SESIÓN (12 nov 2026): botón al pie del menú, visible en computador y teléfono ──
+async function pgSalir(){
+  try{ await sb.auth.signOut(); }catch(e){}
+  location.reload();
+}
+(function pgBotonSalir(){
+  const sbar = document.getElementById('sidebar');
+  if(!sbar || document.getElementById('pg-salir')) return;
+  const pie = sbar.querySelector('.sidebar-footer');
+  const sep = document.createElement('div');
+  sep.className = 'pg-grupo'; sep.dataset.nombre = ''; sep.style.cssText = 'margin:12px 10px 4px;border-top:1px solid var(--border)';
+  const b = document.createElement('button');
+  b.id = 'pg-salir'; b.type = 'button'; b.className = 'nav-btn'; b.title = 'Cerrar sesión';
+  b.setAttribute('onclick','pgSalir()');
+  b.innerHTML = '<span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H4"/></svg></span><span style="flex:1">Cerrar sesión</span>';
+  sbar.insertBefore(sep, pie);
+  sbar.insertBefore(b, pie);
+  // el pie dice quién entró de verdad, no un texto fijo
+  sb.auth.getUser().then(function(r){
+    const correo = r && r.data && r.data.user && r.data.user.email;
+    const n = pie && pie.querySelector('.name');
+    if(correo && n) n.textContent = correo;
+  });
+})();
 </script>
 </body>
 </html>
