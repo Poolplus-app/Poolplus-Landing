@@ -126,6 +126,93 @@ select option{background:#1a2235;}
   .page-title{font-size:19px}
 }
 </style>
+<style id="tema-claro">
+/* ── TEMA CLARO (12 nov 2026): el negro cansa para trabajar. Colores del libro de marca ── */
+:root{--bg:#F5F9FC;--surface:#FFFFFF;--surface2:#F1F5F9;--border:#E5EAF2;--muted:#6B7280;--text:#0F172A;--pool:#1E88C8;--deep:#1F2A7A;}
+html,body{background:var(--bg)!important;color:var(--text)!important;}
+#sidebar{background:#FFFFFF!important;border-right:1px solid var(--border)!important;}
+.nav-btn{color:#475569!important;}
+.nav-btn:hover{background:#F1F5F9!important;color:var(--text)!important;}
+.nav-btn.active{background:#E8F4FB!important;color:#1E88C8!important;border-color:transparent!important;}
+.stat-card,.card{background:#FFFFFF!important;border:1px solid var(--border)!important;box-shadow:0 1px 2px rgba(15,23,42,.04);}
+.page-title{color:var(--text)!important;}
+input,select,textarea{background:#FFFFFF!important;color:var(--text)!important;border-color:var(--border)!important;}
+table th{color:var(--muted)!important;}
+.btn-ghost{background:#FFFFFF!important;color:#334155!important;border:1px solid var(--border)!important;}
+.btn-primary{background:#1E88C8!important;border-color:#1E88C8!important;color:#fff!important;}
+.alert-danger{background:#FEF2F2!important;border-color:#FECACA!important;color:#B91C1C!important;}
+.alert-warn{background:#FFFBEB!important;border-color:#FDE68A!important;color:#B45309!important;}
+.sidebar-footer{color:var(--muted)!important;border-color:var(--border)!important;}
+
+/* ── PANEL GENERAL NUEVO ── */
+#page-dashboard.pgd-on > *:not(#pgd){display:none!important;}
+#pgd{max-width:1180px;font-family:'Inter',system-ui,sans-serif;color:var(--text);}
+#pgd .pgd-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+#pgd h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.15;}
+#pgd .pgd-sub{color:var(--muted);font-size:14px;margin-top:4px;}
+#pgd .pgd-cta{background:#1E88C8;color:#fff;border:0;border-radius:10px;padding:11px 18px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;}
+#pgd .pgd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+#pgd .pgd-kpi{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;gap:14px;align-items:flex-start;}
+#pgd .pgd-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none;}
+#pgd .pgd-ico svg{width:22px;height:22px;}
+#pgd .pgd-val{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.1;}
+#pgd .pgd-lbl{font-size:13px;font-weight:600;margin-top:4px;}
+#pgd .pgd-hint{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35;}
+#pgd h2{font-size:17px;font-weight:800;margin:0;}
+#pgd .pgd-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;}
+#pgd .pgd-link{white-space:nowrap;color:#1E88C8;font-size:13px;font-weight:600;cursor:pointer;background:none;border:0;font-family:inherit;padding:0;}
+#pgd .pgd-att{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:26px;}
+#pgd .pgd-acard{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:center;cursor:pointer;text-align:left;font-family:inherit;color:inherit;width:100%;}
+#pgd .pgd-acard:hover{border-color:#CBD5E1;}
+#pgd .pgd-acard b{display:block;font-size:14px;}
+#pgd .pgd-acard span{font-size:12.5px;color:var(--muted);}
+#pgd .pgd-arrow{margin-left:auto;color:#94A3B8;font-size:18px;}
+#pgd .pgd-ok{background:#F0FDF4;border:1px solid #BBF7D0;color:#15803D;border-radius:14px;padding:14px 16px;font-size:14px;margin-bottom:26px;}
+#pgd .pgd-two{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:26px;}
+#pgd .pgd-box{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;}
+#pgd .pgd-row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border);}
+#pgd .pgd-row:first-of-type{border-top:0;}
+#pgd .pgd-row .pgd-who{min-width:0;flex:1;}
+#pgd .pgd-row .pgd-who b{font-size:14px;}
+#pgd .pgd-row .pgd-who div{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#pgd .pgd-st{text-align:right;flex:none;}
+#pgd .pgd-chip{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+#pgd .pgd-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex:none;}
+#pgd .pgd-plans{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+#pgd .pgd-plan{background:var(--surface2);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;}
+#pgd .pgd-plan b{font-size:15px;}
+#pgd .pgd-plan small{display:block;font-size:12px;color:var(--muted);margin-top:2px;}
+#pgd .pgd-plan .pgd-p{text-align:right;font-weight:800;font-size:16px;}
+#pgd .pgd-all{display:none;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px;}
+#pgd .pgd-all div{background:var(--surface2);border-radius:10px;padding:9px 11px;font-size:12px;color:var(--muted);}
+#pgd .pgd-all div b{display:block;color:var(--text);font-size:15px;margin-top:2px;}
+
+/* Tableta */
+@media (max-width:1100px){
+  #pgd .pgd-kpis{grid-template-columns:repeat(2,1fr);}
+  #pgd .pgd-two{grid-template-columns:1fr;}
+}
+/* Teléfono */
+@media (max-width:640px){
+  #pgd h1{font-size:22px;}
+  #pgd .pgd-top{margin-bottom:16px;}
+  #pgd .pgd-cta{width:100%;}
+  #pgd .pgd-kpis{gap:10px;margin-bottom:20px;}
+  #pgd .pgd-kpi{flex-direction:column;gap:10px;padding:14px;}
+  #pgd .pgd-ico{width:36px;height:36px;border-radius:10px;}
+  #pgd .pgd-ico svg{width:18px;height:18px;}
+  #pgd .pgd-val{font-size:22px;}
+  #pgd .pgd-att{grid-template-columns:1fr;gap:10px;margin-bottom:20px;}
+  #pgd .pgd-plans{grid-template-columns:1fr;gap:10px;}
+  #pgd .pgd-box{padding:14px;}
+  #pgd .pgd-pay{flex-direction:column;align-items:flex-start;gap:6px;}
+  #pgd .pgd-pay .pgd-st{text-align:left;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  #pgd .pgd-pay .pgd-st .pgd-hint{margin:0;}
+  #pgd .pgd-row .pgd-who div{white-space:normal;}
+  #pgd .pgd-h{flex-wrap:wrap;}
+  #pgd h2{white-space:nowrap;}
+}
+</style>
 </head>
 <body>
 <div id="admin-gate" style="position:fixed;inset:0;background:#0b1120;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
@@ -782,121 +869,135 @@ function renderAvisos(){
   const bt=document.getElementById("badge-tech"); if(bt){bt.textContent=tecs; bt.style.display=tecs>0?"":"none";}
 }
 
-// ── PANEL GENERAL CON DATOS REALES (reemplaza la versión de maqueta) ──
+// ── PANEL GENERAL (12 nov 2026): datos reales, tema claro, pensado para computador y teléfono ──
 function pgEsPrueba(x){ return /prueba|test|demo/i.test(((x.full_name||'')+' '+(x.email||''))); }
 function pgUsd(n){ return '$'+Number(n||0).toLocaleString('en-US'); }
-
-async function renderStats(){
-  const grid = document.getElementById("stats-grid");
-  if(!grid) return;
-  const [subsR, cartR, bookR, priceR] = await Promise.all([
-    sb.from('subscriptions').select('full_name,email,monthly_price,status'),
-    sb.from('cartera_altas').select('full_name,email,monthly_price,estado,technician').neq('estado','descartado'),
-    sb.from('booking_requests').select('status,assigned_technician'),
-    sb.from('prices').select('label,price,promo_price,active,grupo,orden').eq('active',true)
-  ]);
-  const subs = (subsR.data||[]).filter(function(x){return !pgEsPrueba(x);});
-  const cart = (cartR.data||[]).filter(function(x){return !pgEsPrueba(x);});
-  const books = bookR.data||[];
-
-  const activas = subs.filter(function(x){return x.status==='active';});
-  const mrr = activas.reduce(function(a,x){return a+Number(x.monthly_price||0);},0);
-  const caidas = subs.filter(function(x){return x.status==='paused_payment' || x.status==='past_due';});
-  const caidasUsd = caidas.reduce(function(a,x){return a+Number(x.monthly_price||0);},0);
-  const esperando = cart.filter(function(x){return x.estado==='esperando_pago';});
-  const esperandoUsd = esperando.reduce(function(a,x){return a+Number(x.monthly_price||0);},0);
-  const sinTecnico = books.filter(function(x){return !x.assigned_technician && ['pending','confirmed','new'].indexOf(x.status)>=0;}).length;
-  const actTechs = TECHS.filter(function(t){return t.status==="active";}).length;
-
-  // Avisos de arriba (dinero primero, luego lo operativo)
-  let avisos = "";
-  if(caidas.length) avisos += `<div class="alert alert-danger">💳 <strong>${caidas.length} ${caidas.length===1?"cliente":"clientes"} con el pago caído</strong>&nbsp;(${pgUsd(caidasUsd)} al mes): ${caidas.map(function(x){return x.full_name;}).join(', ')}. <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="goTabById('suscripciones')">Revisar →</button></div>`;
-  if(sinTecnico) avisos += `<div class="alert alert-warn">📋 <strong>${sinTecnico} ${sinTecnico===1?"reserva":"reservas"} sin técnico</strong> asignado. <button class="btn btn-warning btn-sm" style="margin-left:auto" onclick="goTabById('reservas')">Revisar →</button></div>`;
-  renderAvisos();
-  const cont = document.getElementById("avisos-dashboard");
-  if(cont){
-    if(avisos && /Nada pendiente/.test(cont.innerText)) cont.innerHTML = "";
-    cont.innerHTML = avisos + cont.innerHTML;
-  }
-
-  const cards = [
-    {label:"Ingresos mensuales (cobrando)", val:pgUsd(mrr), sub:activas.length+" piscinas activas en Stripe", icon:"💵", color:"#0ea5e9"},
-    {label:"Esperando tarjeta", val:esperando.length, sub:pgUsd(esperandoUsd)+" al mes por entrar", icon:"⏳", color:"#f59e0b"},
-    {label:"Pago caído", val:caidas.length, sub:caidas.length?pgUsd(caidasUsd)+" al mes en riesgo":"Todo al día", icon:"💳", color:caidas.length?"#ef4444":"#10b981"},
-    {label:"Técnicos activos", val:actTechs, sub:TECHS.filter(function(t){return t.status==="active";}).map(function(t){return t.name;}).join(', '), icon:"🔧", color:"#8b5cf6"},
-    {label:"Reservas sin técnico", val:sinTecnico, sub:"De la página y de Sarah", icon:"📋", color:sinTecnico?"#f59e0b":"#10b981"},
-    {label:"Servicios completados", val:books.filter(function(x){return x.status==='completed'||x.status==='paid';}).length, sub:"Desde el lanzamiento", icon:"✅", color:"#10b981"}
-  ];
-  grid.innerHTML = cards.map(function(c){
-    return `<div class="stat-card"><div class="stat-icon">${c.icon}</div><div class="stat-val" style="color:${c.color}">${c.val}</div><div class="stat-label">${c.label}</div><div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4">${c.sub}</div></div>`;
-  }).join('');
-
-  // Precios activos: los reales de la tabla prices
-  const snap = document.getElementById("price-snapshot");
-  if(snap){
-    const ps = (priceR.data||[]).slice().sort(function(a,b){return (a.orden||999)-(b.orden||999) || String(a.label).localeCompare(String(b.label));});
-    snap.innerHTML = ps.length ? ps.map(function(p){
-      return `<div style="background:var(--surface2,#111827);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><div style="font-size:11px;color:var(--muted);line-height:1.3">${p.label}</div><div style="font-weight:800;font-size:17px;margin-top:4px">${pgUsd(p.promo_price||p.price)}</div></div>`;
-    }).join('') : '<p style="color:var(--muted);font-size:13px">No hay precios activos.</p>';
-  }
-
-  // Piscinas por técnico (cartera activa)
-  const dist = document.getElementById("plan-dist");
-  if(dist){
-    const t = dist.parentElement && dist.parentElement.querySelector('div');
-    if(t && /Distribuci/.test(t.textContent)) t.textContent = "Piscinas por técnico";
-    const porTec = {};
-    cart.filter(function(x){return x.estado==='activo'||x.estado==='esperando_pago';}).forEach(function(x){
-      const k = x.technician||'Sin técnico'; porTec[k] = porTec[k]||{n:0,usd:0,pagan:0,esperan:0}; porTec[k].n++; porTec[k].usd += Number(x.monthly_price||0); if(x.estado==='activo') porTec[k].pagan++; else porTec[k].esperan++;
-    });
-    const keys = Object.keys(porTec).sort(function(a,b){return porTec[b].n-porTec[a].n;});
-    dist.innerHTML = keys.length ? keys.map(function(k){
-      return `<div class="stat-card"><div class="stat-val">${porTec[k].n}</div><div class="stat-label">${k}</div><div style="font-size:11px;color:var(--muted);margin-top:6px">${pgUsd(porTec[k].usd)} al mes en ruta<br>${porTec[k].pagan} pagando${porTec[k].esperan?' · <span style="color:#f59e0b">'+porTec[k].esperan+' esperando tarjeta</span>':''}</div></div>`;
-    }).join('') : '<p style="color:var(--muted);font-size:13px">Sin piscinas activas.</p>';
-  }
-  await renderSeguimientoPagos();
-  pgPreciosPlegables();
-}
-
-// ── SEGUIMIENTO DE PAGOS: distintivo para las piscinas sin registro de pago ──
 function pgDias(f){ return f ? Math.floor((Date.now()-new Date(f).getTime())/86400000) : null; }
-function pgChip(texto,color){ return '<span style="display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;padding:3px 8px;border-radius:999px;background:'+color+'22;color:'+color+';border:1px solid '+color+'55;white-space:nowrap">'+texto+'</span>'; }
-// Devuelve el distintivo de una piscina de cartera, o null si está al día
+function pgChip(texto,color){ return '<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;background:'+color+'18;color:'+color+';border:1px solid '+color+'40">'+texto+'</span>'; }
+// Distintivo de pago de una piscina de cartera, o null si está al día
 function pgEstadoPago(x, caidosEmails){
-  if(x.estado==='activo' && caidosEmails.indexOf(String(x.email||'').toLowerCase())>=0) return {chip:pgChip('PAGO CAÍDO','#ef4444'), detalle:'El cobro de la tarjeta no pasó', orden:0};
+  if(x.estado==='activo' && caidosEmails.indexOf(String(x.email||'').toLowerCase())>=0) return {chip:pgChip('Pago caído','#DC2626'), detalle:'El cobro de la tarjeta no pasó', orden:0};
   if(x.estado!=='esperando_pago') return null;
-  if(!x.correo_enviado_at) return {chip:pgChip('SIN PAGO · ENLACE SIN ENVIAR','#ef4444'), detalle:'Nunca se le mandó el enlace para dejar la tarjeta', orden:1};
+  if(!x.correo_enviado_at) return {chip:pgChip('Enlace sin enviar','#DC2626'), detalle:'Nunca se le mandó el enlace para la tarjeta', orden:1};
   const d = pgDias(x.correo_enviado_at);
-  return {chip:pgChip('SIN PAGO','#f59e0b'), detalle:'Enlace enviado hace '+d+(d===1?' día':' días')+(x.envios>1?' ('+x.envios+' envíos)':''), orden:2};
+  return {chip:pgChip('Sin pago','#D97706'), detalle:'Enlace enviado hace '+d+(d===1?' día':' días'), orden:2};
 }
 async function pgCaidosEmails(){
   const r = await sb.from('subscriptions').select('email,status').in('status',['paused_payment','past_due']);
   return (r.data||[]).map(function(x){return String(x.email||'').toLowerCase();});
 }
+function pgIr(tab){ const b = document.querySelector('.nav-btn[onclick*="'+tab+'"]'); if(b) b.click(); else if(typeof goTabById==='function') goTabById(tab); window.scrollTo(0,0); }
+const PG_ICO = {
+  dinero:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  reloj:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 2h12M6 22h12M7 2c0 5 10 5 10 10S7 17 7 22M17 2c0 5-10 5-10 10s10 5 10 10"/></svg>',
+  equipo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.3 3.3 0 0 1 0 6.6M18 14.6c2 .7 3.2 2.6 3.6 5.4"/></svg>',
+  hecho:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>',
+  tarjeta:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/></svg>',
+  calendario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>',
+  hoja:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"/><path d="M14 2.5V8h5.5M8.5 13h7M8.5 17h5"/></svg>',
+  campana:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9M10 20a2.2 2.2 0 0 0 4 0"/></svg>'
+};
+function pgIcono(nombre,color){ return '<div class="pgd-ico" style="background:'+color+'18;color:'+color+'">'+PG_ICO[nombre]+'</div>'; }
 
-// Tarjeta "Seguimiento de pagos" en el Panel General
-async function renderSeguimientoPagos(){
-  const dist = document.getElementById("plan-dist");
-  if(!dist) return;
-  let card = document.getElementById("seguimiento-pagos");
-  if(!card){
-    card = document.createElement('div');
-    card.id = "seguimiento-pagos";
-    card.className = "card card-p";
-    card.style.marginTop = "20px";
-    dist.closest('.card').after(card);
-  }
-  const [cartR, caidos] = await Promise.all([
+async function renderStats(){
+  const page = document.getElementById('page-dashboard');
+  if(!page) return;
+  renderAvisos(); // mantiene al día el mes del encabezado y los contadores del menú
+  let box = document.getElementById('pgd');
+  if(!box){ box = document.createElement('div'); box.id = 'pgd'; page.prepend(box); }
+  page.classList.add('pgd-on');
+
+  const [subsR, cartR, bookR, priceR, userR] = await Promise.all([
+    sb.from('subscriptions').select('full_name,email,monthly_price,status'),
     sb.from('cartera_altas').select('full_name,email,address,city,monthly_price,estado,technician,correo_enviado_at,envios').neq('estado','descartado'),
-    pgCaidosEmails()
+    sb.from('booking_requests').select('status,assigned_technician'),
+    sb.from('prices').select('label,price,promo_price,active,orden').eq('active',true),
+    sb.auth.getUser()
   ]);
-  const filas = (cartR.data||[]).filter(function(x){return !pgEsPrueba(x);}).map(function(x){ return {x:x, e:pgEstadoPago(x,caidos)}; }).filter(function(f){return f.e;});
+  const subs = (subsR.data||[]).filter(function(x){return !pgEsPrueba(x);});
+  const cart = (cartR.data||[]).filter(function(x){return !pgEsPrueba(x);});
+  const books = bookR.data||[];
+  const prices = priceR.data||[];
+  const caidosEmails = subs.filter(function(x){return x.status==='paused_payment'||x.status==='past_due';}).map(function(x){return String(x.email||'').toLowerCase();});
+
+  const activas = subs.filter(function(x){return x.status==='active';});
+  const mrr = activas.reduce(function(a,x){return a+Number(x.monthly_price||0);},0);
+  const caidas = subs.filter(function(x){return x.status==='paused_payment'||x.status==='past_due';});
+  const esperando = cart.filter(function(x){return x.estado==='esperando_pago';});
+  const esperandoUsd = esperando.reduce(function(a,x){return a+Number(x.monthly_price||0);},0);
+  const sinTecnico = books.filter(function(x){return !x.assigned_technician && ['pending','confirmed','new'].indexOf(x.status)>=0;}).length;
+  const completados = books.filter(function(x){return x.status==='completed'||x.status==='paid';}).length;
+  const tecActivos = TECHS.filter(function(t){return t.status==='active';});
+  const apps = APPS.filter(function(a){return a.status==='pending';}).length;
+  const novs = alertasState.filter(function(a){return a.status==='pending';}).length;
+
+  // Saludo según la hora de Florida
+  const hora = Number(new Date().toLocaleString('en-US',{hour:'numeric',hour12:false,timeZone:'America/New_York'}));
+  const saludo = hora<12 ? 'Buenos días' : (hora<19 ? 'Buenas tardes' : 'Buenas noches');
+  const correo = (userR && userR.data && userR.data.user && userR.data.user.email) || '';
+  const nombre = /totalplan22|poolplusllcapp/i.test(correo) ? ', Daniel' : '';
+  const mes = new Date().toLocaleDateString('es-US',{month:'long',year:'numeric',timeZone:'America/New_York'});
+
+  let h = '';
+  h += '<div class="pgd-top"><div><h1>'+saludo+nombre+'</h1><div class="pgd-sub">Resumen de tu operación · '+mes+'</div></div>'
+     + '<button class="pgd-cta" onclick="pgIr(\'cartera\')">+ Alta de cliente</button></div>';
+
+  // Cuatro números
+  h += '<div class="pgd-kpis">'
+     + '<div class="pgd-kpi">'+pgIcono('dinero','#16A34A')+'<div><div class="pgd-val">'+pgUsd(mrr)+'</div><div class="pgd-lbl">Ingresos mensuales</div><div class="pgd-hint">'+activas.length+' piscinas cobrando</div></div></div>'
+     + '<div class="pgd-kpi">'+pgIcono('reloj','#D97706')+'<div><div class="pgd-val">'+esperando.length+'</div><div class="pgd-lbl">Esperando tarjeta</div><div class="pgd-hint">'+pgUsd(esperandoUsd)+' al mes por activar</div></div></div>'
+     + '<div class="pgd-kpi">'+pgIcono('equipo','#7C3AED')+'<div><div class="pgd-val">'+tecActivos.length+'</div><div class="pgd-lbl">Técnicos activos</div><div class="pgd-hint">'+tecActivos.map(function(t){return String(t.name).split(' ')[0];}).join(', ')+'</div></div></div>'
+     + '<div class="pgd-kpi">'+pgIcono('hecho','#1E88C8')+'<div><div class="pgd-val">'+completados+'</div><div class="pgd-lbl">Servicios completados</div><div class="pgd-hint">Desde el lanzamiento</div></div></div>'
+     + '</div>';
+
+  // Requiere tu atención
+  const att = [];
+  caidas.forEach(function(x){ att.push({ico:'tarjeta',color:'#DC2626',t:'Pago caído',d:cartEsc(x.full_name)+' · '+pgUsd(x.monthly_price)+'/mes',go:'suscripciones'}); });
+  if(sinTecnico) att.push({ico:'calendario',color:'#D97706',t:'Reserva sin técnico',d:sinTecnico+(sinTecnico===1?' reserva por asignar':' reservas por asignar'),go:'reservas'});
+  if(novs) att.push({ico:'campana',color:'#D97706',t:'Novedades',d:novs+(novs===1?' espera tu decisión':' esperan tu decisión'),go:'novedades'});
+  if(apps) att.push({ico:'hoja',color:'#0891B2',t:'Aplicaciones',d:apps+(apps===1?' técnico por revisar':' técnicos por revisar'),go:'aplicaciones'});
+  h += '<div class="pgd-h"><h2>Requiere tu atención</h2></div>';
+  h += att.length
+     ? '<div class="pgd-att">'+att.map(function(a){ return '<button class="pgd-acard" onclick="pgIr(\''+a.go+'\')">'+pgIcono(a.ico,a.color)+'<div><b style="color:'+a.color+'">'+a.t+'</b><span>'+a.d+'</span></div><div class="pgd-arrow">›</div></button>'; }).join('')+'</div>'
+     : '<div class="pgd-ok">Todo al día: no hay nada esperando tu decisión.</div>';
+
+  // Seguimiento de pagos + equipo técnico, lado a lado
+  const filas = cart.map(function(x){return {x:x,e:pgEstadoPago(x,caidosEmails)};}).filter(function(f){return f.e;});
   filas.sort(function(a,b){ return a.e.orden-b.e.orden || String(a.x.technician).localeCompare(String(b.x.technician)); });
-  const total = filas.reduce(function(a,f){return a+Number(f.x.monthly_price||0);},0);
-  card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap"><div style="font-weight:700;font-size:15px">Seguimiento de pagos</div><div style="font-size:12px;color:var(--muted)">'+filas.length+' piscinas sin pago · '+pgUsd(total)+' al mes</div><button class="btn btn-ghost btn-sm" onclick="var b=document.querySelector(\'.nav-btn[onclick*=cartera]\');if(b)b.click();">Ir a cartera →</button></div>'
-    + (filas.length ? filas.map(function(f){
-        return '<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);flex-wrap:wrap"><div style="min-width:200px;flex:1"><b>'+cartEsc(f.x.full_name)+'</b> · '+pgUsd(f.x.monthly_price)+'<br><span style="font-size:12px;color:var(--muted)">'+cartEsc(f.x.address)+(f.x.city?', '+cartEsc(f.x.city):'')+' · '+cartEsc(f.x.technician||'Sin técnico')+'</span></div><div style="text-align:right">'+f.e.chip+'<div style="font-size:11px;color:var(--muted);margin-top:4px">'+f.e.detalle+'</div></div></div>';
-      }).join('') : '<p style="color:var(--muted);font-size:13px">Todas las piscinas tienen el pago al día.</p>');
+  const totalSin = filas.reduce(function(a,f){return a+Number(f.x.monthly_price||0);},0);
+  let pagos = '<div class="pgd-box"><div class="pgd-h"><h2>Seguimiento de pagos</h2><button class="pgd-link" onclick="pgIr(\'cartera\')">Ir a cartera →</button></div>'
+     + '<div class="pgd-hint" style="margin:-6px 0 6px">'+filas.length+' piscinas sin pago · '+pgUsd(totalSin)+' al mes</div>';
+  pagos += filas.length ? filas.map(function(f){
+      return '<div class="pgd-row pgd-pay"><div class="pgd-who"><b>'+cartEsc(f.x.full_name)+'</b> <span style="color:var(--muted);font-size:13px">· '+pgUsd(f.x.monthly_price)+'</span><div>'+cartEsc(f.x.address||'')+' · '+cartEsc(f.x.technician||'Sin técnico')+'</div></div><div class="pgd-st">'+f.e.chip+'<div class="pgd-hint">'+f.e.detalle+'</div></div></div>';
+    }).join('') : '<div class="pgd-ok" style="margin:0">Todas las piscinas tienen el pago al día.</div>';
+  pagos += '</div>';
+
+  const porTec = {};
+  cart.filter(function(x){return x.estado==='activo'||x.estado==='esperando_pago';}).forEach(function(x){
+    const k = x.technician||'Sin técnico'; porTec[k] = porTec[k]||{n:0,usd:0,pagan:0,esperan:0};
+    porTec[k].n++; porTec[k].usd += Number(x.monthly_price||0); if(x.estado==='activo') porTec[k].pagan++; else porTec[k].esperan++;
+  });
+  const colores = ['#1E88C8','#16A34A','#7C3AED','#DC2626','#D97706','#0891B2'];
+  const keys = Object.keys(porTec).sort(function(a,b){return porTec[b].n-porTec[a].n;});
+  let equipo = '<div class="pgd-box"><div class="pgd-h"><h2>Equipo técnico</h2><button class="pgd-link" onclick="pgIr(\'techs\')">Ver equipo →</button></div>';
+  equipo += keys.map(function(k,i){
+    const c = colores[i%colores.length];
+    return '<div class="pgd-row"><div class="pgd-av" style="background:'+c+'18;color:'+c+'">'+cartEsc(k.charAt(0))+'</div><div class="pgd-who"><b>'+cartEsc(k)+'</b><div>'+porTec[k].n+' piscinas · '+pgUsd(porTec[k].usd)+' al mes</div></div><div style="text-align:right;font-size:12px;color:var(--muted)">'+porTec[k].pagan+' pagando'+(porTec[k].esperan?'<br><span style="color:#D97706">'+porTec[k].esperan+' sin tarjeta</span>':'')+'</div></div>';
+  }).join('') + '</div>';
+  h += '<div class="pgd-two">'+pagos+equipo+'</div>';
+
+  // Planes y precios: los tres tamaños; el resto plegado
+  const precio = function(re){ const p = prices.find(function(x){return re.test(x.label||'');}); return p ? (p.promo_price||p.price) : null; };
+  const tam = [['Compacta',/compacta/i,'Más pequeña que la estándar'],['Estándar',/est[aá]ndar/i,'Alrededor de 15 × 30 pies'],['Grande',/grande/i,'Más grande que la estándar']];
+  h += '<div class="pgd-box"><div class="pgd-h"><h2>Planes y precios</h2><div style="display:flex;gap:14px"><button class="pgd-link" id="pgd-vertodos" onclick="var g=document.getElementById(\'pgd-all\');var a=g.style.display===\'grid\';g.style.display=a?\'none\':\'grid\';this.textContent=a?\'Ver todos ('+prices.length+')\':\'Ocultar\';">Ver todos ('+prices.length+')</button><button class="pgd-link" onclick="pgIr(\'precios\')">Editar precios →</button></div></div>'
+     + '<div class="pgd-plans">'+tam.map(function(t){
+          const m = precio(new RegExp('mensual.*'+t[1].source,'i')), a = precio(new RegExp('anual.*'+t[1].source,'i'));
+          return '<div class="pgd-plan"><div><b>'+t[0]+'</b><small>'+t[2]+'</small></div><div class="pgd-p">'+(m!==null?pgUsd(m)+'<span style="font-weight:500;font-size:12px;color:var(--muted)"> /mes</span>':'—')+'<small>'+(a!==null?pgUsd(a)+' /mes en plan anual':'')+'</small></div></div>';
+        }).join('')+'</div>'
+     + '<div class="pgd-all" id="pgd-all">'+prices.slice().sort(function(a,b){return String(a.label).localeCompare(String(b.label));}).map(function(p){ return '<div>'+cartEsc(p.label)+'<b>'+pgUsd(p.promo_price||p.price)+'</b></div>'; }).join('')+'</div>'
+     + '</div>';
+
+  box.innerHTML = h;
 }
 
 // Distintivo en la lista de "Clientes de cartera"
@@ -910,36 +1011,11 @@ async function cartMarcarSinPago(){
     const e = pgEstadoPago(x,caidos);
     if(!e) return;
     const rojo = e.orden<2;
-    tr.style.background = rojo ? '#ef444410' : '#f59e0b10';
-    tr.style.boxShadow = 'inset 3px 0 0 '+(rojo?'#ef4444':'#f59e0b');
+    tr.style.background = rojo ? '#FEF2F2' : '#FFFBEB';
+    tr.style.boxShadow = 'inset 3px 0 0 '+(rojo?'#DC2626':'#D97706');
     const td = tr.querySelector('td');
     if(td && !td.querySelector('.pg-chip')){ const s=document.createElement('div'); s.className='pg-chip'; s.style.marginTop='4px'; s.innerHTML=e.chip; td.appendChild(s); }
   });
-}
-
-// Precios activos plegados en la pantalla principal
-function pgPreciosPlegables(){
-  const snap = document.getElementById("price-snapshot");
-  if(!snap) return;
-  const card = snap.closest('.card'); if(!card) return;
-  const head = card.querySelector('div');
-  const n = snap.children.length;
-  let bar = document.getElementById("precios-toggle");
-  if(!bar){
-    bar = document.createElement('button');
-    bar.id = "precios-toggle";
-    bar.className = "btn btn-ghost btn-sm";
-    bar.onclick = function(){ const abierto = snap.style.display!=='none'; snap.style.display = abierto?'none':'grid'; bar.textContent = abierto ? 'Ver los '+snap.children.length+' precios ▾' : 'Ocultar ▴'; };
-    const editar = head.querySelector('button');
-    head.insertBefore(bar, editar);
-    head.style.gap = '8px';
-    if(editar) editar.style.marginLeft = '0';
-    bar.style.marginLeft = 'auto';
-    snap.style.marginTop = '14px';
-  }
-  snap.style.display = 'none';
-  bar.textContent = 'Ver los '+n+' precios ▾';
-  head.style.marginBottom = '0';
 }
 
 function renderPrecios(){ /* reemplazada por renderPreciosReal */ }
