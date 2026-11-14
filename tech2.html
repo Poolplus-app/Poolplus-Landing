@@ -640,6 +640,7 @@ const ANON_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
 
 let session = null;      // {access_token, expires_at}
 let techName = null;
+let techId = null;   // 14 nov 2026: la ruta y el nombre se filtran por el técnico que entró (un correo de administración ve todo por permisos)
 let currentBooking = null;   // booking being completed
 let compressedBase64 = null; // photo ready to send
 let fotosExtra = [];        // fotos adicionales opcionales (base64), hasta FOTOS_MAX en total
@@ -748,12 +749,14 @@ async function enterApp(){
 
   // Nombre del técnico (RLS: solo ve su propia fila)
   try{
-    const res = await fetch(SUPABASE_URL + '/rest/v1/technicians?select=name',{
+    const yo = (typeof ppqMiCorreo === 'function') ? ppqMiCorreo() : '';
+    const res = await fetch(SUPABASE_URL + '/rest/v1/technicians?select=id,name' + (yo ? '&email=ilike.' + encodeURIComponent(yo) : ''),{
       headers: authHeaders()
     });
     const rows = await res.json();
     if(Array.isArray(rows) && rows.length){
       techName = rows[0].name;
+      techId = rows[0].id;
       document.getElementById('techName').textContent = techName;
     }else{
       document.getElementById('techName').textContent = 'Sin registro';
@@ -848,7 +851,8 @@ async function loadBookings(){
   try{
     const url = SUPABASE_URL + '/rest/v1/booking_requests'
       + '?select=id,full_name,address,city,zip,zip_code,service,service_label,service_date,notes,status,photo_url,completed_at,price,arrival_window,arrival_promised_at,created_at,cancel_pedido_at,cancel_motivo,cancel_resuelto,booking_type,source'
-      + '&order=created_at.desc';
+      + '&order=created_at.desc'
+      + (techId ? '&or=' + encodeURIComponent('(assigned_technician_id.eq.' + techId + ',assigned_technician.eq."' + String(techName || '').replace(/"/g,'') + '")') : '');
     const res = await fetch(url,{headers: authHeaders()});
     if(res.status === 401){ logout(); return; }
     const rows = await res.json();
@@ -1002,7 +1006,7 @@ function ordenDelDia(ymd){
 }
 async function cargarOrdenes(){
   try{
-    const res = await fetch(SUPABASE_URL + '/rest/v1/ruta_orden?select=clave,orden', {headers: authHeaders()});
+    const res = await fetch(SUPABASE_URL + '/rest/v1/ruta_orden?select=clave,orden&tech_email=eq.' + encodeURIComponent((typeof ppqMiCorreo === 'function') ? ppqMiCorreo() : ''), {headers: authHeaders()});
     if(!res.ok) return;
     const filas = await res.json();
     rutaOrdenes = {};
@@ -1073,7 +1077,7 @@ async function guardarOrden(siempre){
     if(!res.ok) throw new Error('Error ' + res.status);
     if(siempre && rutaOrdenes['fecha:' + ymd]){
       // Si ese día tenía un orden "solo hoy", se quita para que mande el fijo
-      await fetch(SUPABASE_URL + '/rest/v1/ruta_orden?clave=eq.' + encodeURIComponent('fecha:' + ymd), {method:'DELETE', headers: authHeaders()});
+      await fetch(SUPABASE_URL + '/rest/v1/ruta_orden?tech_email=eq.' + encodeURIComponent((typeof ppqMiCorreo === 'function') ? ppqMiCorreo() : '') + '&clave=eq.' + encodeURIComponent('fecha:' + ymd), {method:'DELETE', headers: authHeaders()});
       delete rutaOrdenes['fecha:' + ymd];
     }
     rutaOrdenes[clave] = orden;
