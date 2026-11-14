@@ -249,7 +249,7 @@ table th{color:var(--muted)!important;}
   <button class="nav-btn" onclick="goTab('clients',this)"><span>👥</span><span style="flex:1">Clientes</span></button>
   <button class="nav-btn" onclick="goTab('cartera',this);cartLlenarTecnicos();cartCargarLista()"><span>➕</span><span style="flex:1">Clientes de cartera</span></button>
   <button class="nav-btn" onclick="goTab('promos',this)"><span>🏷</span><span style="flex:1">Promociones</span></button>
-  <button class="nav-btn" onclick="location.href='/pagos.html'"><span>💰</span><span style="flex:1">Pagos a Técnicos</span></button>
+  <button class="nav-btn" onclick="goTab('pagos',this);pgAbrirPagos()"><span>💰</span><span style="flex:1">Pagos a técnicos</span></button>
   <button class="nav-btn" onclick="goTab('config',this)"><span>⚙️</span><span style="flex:1">Configuración</span></button>
   <button class="nav-btn" onclick="window.open('https://poolplus.app/rutas.html','_blank')"><span>🗺</span><span style="flex:1">Rutas</span><span style="font-size:10px;color:#64748b">↗</span></button>
   <button class="nav-btn" onclick="window.open('https://poolplus.app/crecimiento.html','_blank')"><span>📈</span><span style="flex:1">Crecimiento</span><span style="font-size:10px;color:#64748b">🔒</span></button>
@@ -423,16 +423,9 @@ table th{color:var(--muted)!important;}
 
   <!-- PAGOS -->
   <div class="page" id="page-pagos">
-    <div class="page-title">Pagos a Técnicos</div>
-    <div class="page-sub">Dispersal vía Stripe Connect</div>
-    <div style="background:#f59e0b10;border:1px solid #f59e0b30;border-radius:12px;padding:16px;margin-bottom:24px;font-size:13px;color:#f59e0b;line-height:1.6">
-      ⚠️ <strong>Stripe Connect aún no está configurado.</strong> Los pagos son manuales por ahora. Una vez conectado, la comisión de cada técnico se dispersará automáticamente al completar cada servicio.
-    </div>
-    <div class="card" style="overflow:hidden">
-      <table class="tbl"><thead><tr style="border-bottom:1px solid var(--border)">
-        <th>Técnico</th><th>Nivel</th><th>Servicios</th><th>Ganancias</th><th>Pago Pendiente</th><th>Stripe Connect</th><th></th>
-      </tr></thead><tbody id="pagos-tbody"></tbody></table>
-    </div>
+    <div class="page-title">Pagos a técnicos</div>
+    <div class="page-sub">Semana de lunes a domingo. El miércoles 6 p.m. llega el reporte y el viernes 7 a.m. se paga solo por Stripe.</div>
+    <iframe id="pagos-marco" title="Pagos a técnicos" style="width:100%;border:0;min-height:600px;display:block;background:transparent"></iframe>
   </div>
 
   <!-- CLIENTES DE CARTERA -->
@@ -2257,11 +2250,11 @@ async function cartReenviar(id){
   const grupos = [
     ['Día a día', ["'dashboard'", "rutas.html", "'reservas'", "'novedades'"]],
     ['Clientes', ["'clients'", "'cartera'", "'suscripciones'"]],
-    ['Equipo', ["'techs'", "'aplicaciones'"]],
+    ['Equipo', ["'techs'", "'pagos'", "'aplicaciones'"]],
     ['Ajustes', ["'precios'", "crecimiento.html"]]
   ];
   // Se esconden (no se borran) las pantallas que hoy son maqueta o que se decidió no usar
-  ["'promos'", "'pagos'", "'config'"].forEach(function(k){ const b = find(k); if(b) b.style.display = 'none'; });
+  ["'promos'", "'config'"].forEach(function(k){ const b = find(k); if(b) b.style.display = 'none'; });
   nav.querySelectorAll('.pg-grupo').forEach(function(e){ e.remove(); });
   grupos.forEach(function(g, i){
     const sep = document.createElement('div');
@@ -2285,10 +2278,28 @@ async function cartReenviar(id){
   ajustar();
   if(window.ResizeObserver){ new ResizeObserver(ajustar).observe(nav); }
   // los escondidos quedan al final, fuera de la vista
-  ["'promos'", "'pagos'", "'config'"].forEach(function(k){ const b = find(k); if(b) poner(b); });
+  ["'promos'", "'config'"].forEach(function(k){ const b = find(k); if(b) poner(b); });
   // nombre del formulario de cartera en el menú
   const c = find("'cartera'"); if(c){ const s = c.querySelectorAll('span')[1]; if(s) s.textContent = 'Clientes de cartera'; }
 })();
+
+// ── PAGOS A TÉCNICOS DENTRO DEL PANEL (14 nov 2026): la página de pagos se muestra aquí, en el grupo Equipo ──
+function pgAbrirPagos(){
+  const f = document.getElementById('pagos-marco');
+  if(!f) return;
+  if(!f.dataset.cargado){
+    f.dataset.cargado = '1';
+    f.src = '/pagos.html?embebido=1';
+    f.addEventListener('load', function(){
+      try{
+        const d = f.contentDocument;
+        const ajustar = function(){ f.style.height = (d.documentElement.scrollHeight + 20) + 'px'; };
+        ajustar();
+        if(window.ResizeObserver) new ResizeObserver(ajustar).observe(d.body);
+      }catch(e){}
+    });
+  }
+}
 
 // ── CERRAR SESIÓN (12 nov 2026): botón al pie del menú, visible en computador y teléfono ──
 async function pgSalir(){

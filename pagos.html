@@ -7,6 +7,7 @@
 <meta name="robots" content="noindex">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
+<script>if(/[?&]embebido=1/.test(location.search)) document.documentElement.classList.add('embebido');</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -70,6 +71,15 @@
   #puerta{max-width:420px;margin:60px auto;text-align:center;color:var(--muted);line-height:1.6;padding:16px}
   #puerta a{color:var(--pool)}
   #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0b1730;border:1px solid var(--border);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60}
+  /* Dentro del panel de administración: sin encabezado propio y con el tema claro del panel */
+  html.embebido{--bg:#F5F9FC;--surface:#FFFFFF;--surface2:#F1F5F9;--border:#E5EAF2;--muted:#6B7280;--text:#0F172A;--pool:#1E88C8}
+  html.embebido body{background:transparent;min-height:0}
+  html.embebido header{border:0;padding:0 0 12px}
+  html.embebido header > div:first-child, html.embebido header a{display:none}
+  html.embebido header .der{margin-left:0}
+  html.embebido main{padding:0;max-width:none}
+  html.embebido .tec, html.embebido .kpi, html.embebido .semana{box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  html.embebido #toast{color:#e2e8f0}
   @media(max-width:600px){ .fila img,.fila .sinfoto{width:54px;height:54px} header .der{margin-left:0} }
 </style>
 </head>
