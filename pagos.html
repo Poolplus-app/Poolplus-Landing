@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoolPlus · Pagos a técnicos</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--pool:#0ea5e9;--deep:#0369a1;--bg:#0a0f1e;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;--muted:#8a99b0;--text:#e2e8f0;--ok:#22c55e;--tarde:#f59e0b;--mal:#ef4444;--r:14px}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+  header{display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  header .titulo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px}
+  header .sub{color:var(--muted);font-size:13px}
+  header .der{margin-left:auto;display:flex;gap:8px}
+  button{font:inherit;cursor:pointer}
+  .bt{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 12px;font-size:13px}
+  main{max-width:960px;margin:0 auto;padding:16px}
+  .semana{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:12px}
+  .semana .flecha{background:none;border:0;color:var(--muted);font-size:24px;padding:0 8px}
+  .semana .rango{flex:1;text-align:center}
+  .semana .rango b{display:block;font-size:16px}
+  .semana .rango span{font-size:13px;color:var(--muted)}
+  .reglas{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px dashed var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;line-height:1.5}
+  .kpis{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .kpi{flex:1;min-width:140px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+  .kpi b{display:block;font-size:22px;font-family:'Syne',sans-serif}
+  .kpi span{font-size:12px;color:var(--muted)}
+  .tec{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+  .tec-cab{display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .tec-cab .nom b{display:block;font-size:17px}
+  .tec-cab .nom span{font-size:13px;color:var(--muted)}
+  .tec-cab .total{margin-left:auto;text-align:right}
+  .tec-cab .total b{display:block;font-size:22px;font-family:'Syne',sans-serif;color:var(--ok)}
+  .tec-cab .total span{font-size:12px;color:var(--muted)}
+  .fila{display:flex;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
+  .fila:last-child{border-bottom:0}
+  .fila img,.fila .sinfoto{width:64px;height:64px;border-radius:10px;object-fit:cover;flex:none;background:var(--surface2);cursor:zoom-in}
+  .fila .sinfoto{display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);text-align:center;cursor:default}
+  .fila .info{flex:1;min-width:0}
+  .fila .info b{display:block;font-size:15px}
+  .fila .info span{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fila .info span.est{display:inline-block;white-space:normal;color:inherit}
+  .fila .lado{text-align:right;flex:none}
+  .fila .lado b{display:block;font-size:15px}
+  .est{display:inline-block;font-size:11.5px;font-weight:700;border-radius:20px;padding:2px 8px;margin-top:3px}
+  .est.pagar{background:#22c55e22;color:var(--ok)}
+  .est.pagada{background:#0ea5e922;color:var(--pool)}
+  .est.aviso{background:#f59e0b22;color:var(--tarde)}
+  .est.mal{background:#ef444422;color:var(--mal)}
+  .est.gris{background:var(--surface2);color:var(--muted)}
+  .acc{display:block;margin-top:4px;background:none;border:0;color:var(--muted);font-size:12px;text-decoration:underline;padding:0}
+  .tec-pie{padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface2)}
+  .tec-pie .bt.pagar{background:var(--ok);border-color:var(--ok);color:#06240f;font-weight:700}
+  .tec-pie small{color:var(--muted);font-size:12px}
+  .vacio{color:var(--muted);text-align:center;padding:30px}
+  .hidden{display:none!important}
+  #visor{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50}
+  #visor img{max-width:100%;max-height:100%}
+  #puerta{max-width:420px;margin:60px auto;text-align:center;color:var(--muted);line-height:1.6;padding:16px}
+  #puerta a{color:var(--pool)}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0b1730;border:1px solid var(--border);padding:10px 16px;border-radius:10px;font-size:14px;z-index:60}
+  @media(max-width:600px){ .fila img,.fila .sinfoto{width:54px;height:54px} header .der{margin-left:0} }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="titulo">Pagos a técnicos</div>
+    <div class="sub">Reporte semanal · lunes a domingo · se paga el viernes siguiente</div>
+  </div>
+  <div class="der">
+    <button class="bt" onclick="actualizarStripe()" id="btnStripe">Actualizar pagos de Stripe</button>
+    <a class="bt" href="/poolplus-admin-v3-es.html" style="text-decoration:none">Panel</a>
+  </div>
+</header>
+
+<div id="puerta" class="hidden">
+  <p>Esta pantalla usa la sesión del panel de administración.</p>
+  <p style="margin-top:10px">Entra primero al <a href="/poolplus-admin-v3-es.html">panel de administración</a> y vuelve a abrir esta página.</p>
+</div>
+
+<main id="app" class="hidden">
+  <div class="semana">
+    <button class="flecha" onclick="moverSemana(-7)" aria-label="Semana anterior">&#8249;</button>
+    <div class="rango"><b id="rango">—</b><span id="diaPago">—</span></div>
+    <button class="flecha" onclick="moverSemana(7)" aria-label="Semana siguiente">&#8250;</button>
+  </div>
+  <div class="reglas">
+    <b>Reglas del pago:</b> 1) solo se paga lo que PoolPlus ya recibió del cliente; 2) solo piscinas cerradas en la app;
+    3) solo con foto válida de la piscina. Si falta 2 o 3, el técnico llama o manda un correo con evidencia y administración puede autorizarla.
+  </div>
+  <div class="kpis">
+    <div class="kpi"><b id="kTotal">—</b><span>a pagar esta semana</span></div>
+    <div class="kpi"><b id="kPagar">—</b><span>piscinas que se pagan</span></div>
+    <div class="kpi"><b id="kNo">—</b><span>piscinas que no se pagan</span></div>
+    <div class="kpi"><b id="kPagado">—</b><span>ya pagado</span></div>
+  </div>
+  <div id="lista"><div class="vacio">Cargando…</div></div>
+</main>
+
+<div id="visor" class="hidden" onclick="this.classList.add('hidden')"><img alt="Foto del servicio"></div>
+<div id="toast" class="hidden"></div>
+
+<script>
+const SUPABASE_URL = 'https://sshbhmfsjyddynfwerpk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let lunes = null, filas = [];
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dinero = n => '$' + Number(n || 0).toFixed(2);
+const hoyNY = () => new Date().toLocaleDateString('en-CA', {timeZone:'America/New_York'});
+function sumar(ymd, n){ const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0,10); }
+function diaLargo(ymd){ return new Date(ymd + 'T12:00:00Z').toLocaleDateString('es-US', {weekday:'long', day:'numeric', month:'long', timeZone:'UTC'}); }
+function diaCorto(ymd){ return new Date(ymd + 'T12:00:00Z').toLocaleDateString('es-US', {weekday:'short', day:'numeric', month:'short', timeZone:'UTC'}); }
+function horaNY(iso){ try{ return new Date(iso).toLocaleString('es-US', {timeZone:'America/New_York', weekday:'short', day:'numeric', hour:'numeric', minute:'2-digit'}); }catch(e){ return ''; } }
+function toast(t){ const el = document.getElementById('toast'); el.textContent = t; el.classList.remove('hidden'); clearTimeout(toast._t); toast._t = setTimeout(()=> el.classList.add('hidden'), 4000); }
+
+// Semana por defecto: la que se paga el viernes más reciente (hoy, si es viernes)
+function semanaPorDefecto(){
+  const hoy = hoyNY();
+  const dow = new Date(hoy + 'T12:00:00Z').getUTCDay();        // 0 dom ... 5 vie
+  const viernes = sumar(hoy, -((dow - 5 + 7) % 7));
+  return sumar(viernes, -11);                                    // lunes de la semana que se paga ese viernes
+}
+
+const ESTADOS = {
+  pagar:           {txt:'Se paga',                           cls:'pagar'},
+  pagada:          {txt:'Pagada',                            cls:'pagada'},
+  sin_cerrar:      {txt:'Sin cerrar · no se paga',           cls:'aviso'},
+  sin_foto:        {txt:'Sin foto · no se paga',             cls:'aviso'},
+  foto_no_valida:  {txt:'Foto no válida · no se paga',       cls:'mal'},
+  cliente_no_pago: {txt:'El cliente no ha pagado · no se paga', cls:'gris'}
+};
+
+async function cargar(){
+  document.getElementById('rango').textContent = diaCorto(lunes) + ' al ' + diaCorto(sumar(lunes, 6));
+  document.getElementById('diaPago').textContent = 'Se paga el ' + diaLargo(sumar(lunes, 11));
+  document.getElementById('lista').innerHTML = '<div class="vacio">Cargando…</div>';
+  const {data, error} = await sb.rpc('pp_reporte_semana', {p_lunes: lunes});
+  if(error){ document.getElementById('lista').innerHTML = '<div class="vacio">No se pudo cargar: ' + esc(error.message) + '</div>'; return; }
+  filas = data || [];
+  pintar();
+}
+
+function pintar(){
+  const porTec = {};
+  filas.forEach(f => { (porTec[f.tecnico] = porTec[f.tecnico] || []).push(f); });
+  const pagar = filas.filter(f => f.estado === 'pagar');
+  document.getElementById('kTotal').textContent = dinero(pagar.reduce((s,f)=> s + Number(f.parte), 0));
+  document.getElementById('kPagar').textContent = pagar.length;
+  document.getElementById('kNo').textContent = filas.filter(f => !['pagar','pagada'].includes(f.estado)).length;
+  document.getElementById('kPagado').textContent = dinero(filas.filter(f => f.estado === 'pagada').reduce((s,f)=> s + Number(f.parte), 0));
+  const cont = document.getElementById('lista');
+  cont.innerHTML = '';
+  const nombres = Object.keys(porTec).sort((a,b)=> a.localeCompare(b));
+  if(!nombres.length){ cont.innerHTML = '<div class="vacio">No hay piscinas en esta semana.</div>'; return; }
+  nombres.forEach(nom => {
+    const lista = porTec[nom];
+    const aPagar = lista.filter(f => f.estado === 'pagar');
+    const total = aPagar.reduce((s,f)=> s + Number(f.parte), 0);
+    const pagado = lista.filter(f => f.estado === 'pagada').reduce((s,f)=> s + Number(f.parte), 0);
+    const caja = document.createElement('div');
+    caja.className = 'tec';
+    caja.innerHTML = '<div class="tec-cab"><div class="nom"><b>' + esc(nom) + '</b><span>' + lista.length + ' piscinas · ' + aPagar.length + ' se pagan</span></div>'
+      + '<div class="total"><b>' + dinero(total) + '</b><span>a pagar' + (pagado ? ' · ya pagado ' + dinero(pagado) : '') + '</span></div></div>';
+    lista.forEach(f => caja.appendChild(filaHTML(f)));
+    const pie = document.createElement('div');
+    pie.className = 'tec-pie';
+    if(aPagar.length){
+      const b = document.createElement('button');
+      b.className = 'bt pagar';
+      b.textContent = 'Ya le pagué ' + dinero(total) + ' a ' + nom.split(' ')[0];
+      b.onclick = () => marcarPagado(lista[0].tecnico_id, nom, total, aPagar.length, b);
+      pie.appendChild(b);
+      pie.insertAdjacentHTML('beforeend', '<small>Primero haz el pago por Stripe o Zelle; este botón solo lo registra.</small>');
+    }else{
+      pie.innerHTML = '<small>' + (pagado ? 'Esta semana ya quedó pagada.' : 'No hay nada para pagar esta semana.') + '</small>';
+    }
+    caja.appendChild(pie);
+    cont.appendChild(caja);
+  });
+}
+
+function filaHTML(f){
+  const el = document.createElement('div');
+  el.className = 'fila';
+  const e = ESTADOS[f.estado] || {txt:f.estado, cls:'gris'};
+  const cuando = f.cerrada ? 'Cerrada ' + horaNY(f.cerrada) : 'Programada ' + diaCorto(String(f.fecha).slice(0,10));
+  el.innerHTML = (f.foto ? '<img loading="lazy" src="' + esc(f.foto) + '" alt="Foto">' : '<div class="sinfoto">sin foto</div>')
+    + '<div class="info"><b>' + esc(f.cliente) + '</b><span>' + esc(f.direccion) + '</span><span>' + esc(cuando) + '</span>'
+    + '<span class="est ' + e.cls + '">' + (f.estado === 'pagada' && f.pagada_at ? 'Pagada el ' + esc(diaCorto(String(f.pagada_at).slice(0,10))) : e.txt) + '</span>'
+    + (f.autorizada ? ' <span class="est pagada">Autorizada por administración</span>' : '') + '</div>'
+    + '<div class="lado"><b>' + dinero(f.parte) + '</b></div>';
+  const img = el.querySelector('img');
+  if(img) img.onclick = () => { const v = document.getElementById('visor'); v.querySelector('img').src = f.foto; v.classList.remove('hidden'); };
+  const info = el.querySelector('.info');
+  const accion = (txt, acc, pregunta) => {
+    const b = document.createElement('button');
+    b.className = 'acc'; b.textContent = txt;
+    b.onclick = async () => {
+      if(pregunta && !confirm(pregunta)) return;
+      const {error} = await sb.rpc('pp_marcar_visita', {p_id: f.id, p_accion: acc});
+      if(error){ toast('No se pudo: ' + error.message); return; }
+      await cargar();
+    };
+    info.appendChild(b);
+  };
+  if(f.estado === 'pagar' && f.foto && !f.autorizada) accion('Marcar foto no válida', 'foto_no_valida', '¿La foto de ' + f.cliente + ' no es de una piscina? Esta visita no se pagará.');
+  if(['sin_cerrar','sin_foto','foto_no_valida'].includes(f.estado)) accion('Autorizar pago (el técnico mostró evidencia)', 'autorizar', '¿El técnico ya mostró evidencia de que hizo ' + f.cliente + '? Se autorizará el pago, siempre que el cliente haya pagado.');
+  if(f.autorizada && f.estado !== 'pagada') accion('Quitar autorización', 'quitar');
+  return el;
+}
+
+async function marcarPagado(tecId, nom, total, n, boton){
+  if(!confirm('¿Ya le pagaste ' + dinero(total) + ' a ' + nom + ' por Stripe o Zelle?\n\nSe marcarán ' + n + ' piscinas como pagadas y él lo verá en su app.')) return;
+  boton.disabled = true;
+  const {data, error} = await sb.rpc('pp_marcar_semana_pagada', {p_tecnico: tecId, p_lunes: lunes});
+  if(error){ toast('No se pudo registrar: ' + error.message); boton.disabled = false; return; }
+  toast('Registrado: ' + data.visitas + ' piscinas, ' + dinero(data.total) + '.');
+  await cargar();
+}
+
+async function actualizarStripe(){
+  const b = document.getElementById('btnStripe');
+  b.disabled = true; b.textContent = 'Leyendo Stripe…';
+  try{
+    const {data:{session}} = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL + '/functions/v1/sync-pagos', {method:'POST', headers:{Authorization:'Bearer ' + session.access_token, apikey:SUPABASE_KEY}});
+    const j = await r.json().catch(()=> ({}));
+    toast(r.ok ? 'Pagos de Stripe actualizados (' + (j.guardadas || 0) + ' facturas).' : 'No se pudo leer Stripe.');
+  }catch(e){ toast('No se pudo leer Stripe.'); }
+  b.disabled = false; b.textContent = 'Actualizar pagos de Stripe';
+  await cargar();
+}
+
+function moverSemana(n){ lunes = sumar(lunes, n); cargar(); }
+
+(async function(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session){ document.getElementById('puerta').classList.remove('hidden'); return; }
+  const adm = await sb.rpc('es_admin');
+  if(adm.data !== true){ document.getElementById('puerta').classList.remove('hidden'); return; }
+  document.getElementById('app').classList.remove('hidden');
+  lunes = semanaPorDefecto();
+  cargar();
+})();
+</script>
+</body>
+</html>
