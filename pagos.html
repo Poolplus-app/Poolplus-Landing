@@ -36,6 +36,13 @@
   .tec-cab .total{margin-left:auto;text-align:right}
   .tec-cab .total b{display:block;font-size:22px;font-family:'Syne',sans-serif;color:var(--ok)}
   .tec-cab .total span{font-size:12px;color:var(--muted)}
+  .tec-cab{cursor:pointer;user-select:none}
+  .tec-cab .flecha{color:var(--muted);font-size:22px;transition:transform .2s;margin-left:4px}
+  .tec.abierta .tec-cab .flecha{transform:rotate(90deg)}
+  .tec .cuerpo{display:none}
+  .tec.abierta .cuerpo{display:block}
+  .tec-cab .resumen{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .tec-cab .resumen .est{margin-top:0}
   .fila{display:flex;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
   .fila:last-child{border-bottom:0}
   .fila img,.fila .sinfoto{width:64px;height:64px;border-radius:10px;object-fit:cover;flex:none;background:var(--surface2);cursor:zoom-in}
@@ -70,7 +77,7 @@
 <header>
   <div>
     <div class="titulo">Pagos a técnicos</div>
-    <div class="sub">Reporte semanal · lunes a domingo · se paga el viernes siguiente</div>
+    <div class="sub">Reporte semanal · lunes a domingo · el miércoles 6 p.m. llega el reporte y el viernes 7 a.m. se paga solo por Stripe</div>
   </div>
   <div class="der">
     <button class="bt" onclick="actualizarStripe()" id="btnStripe">Actualizar pagos de Stripe</button>
@@ -109,7 +116,7 @@
 const SUPABASE_URL = 'https://sshbhmfsjyddynfwerpk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let lunes = null, filas = [];
+let lunes = null, filas = [], totales = {};
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dinero = n => '$' + Number(n || 0).toFixed(2);
@@ -131,6 +138,7 @@ function semanaPorDefecto(){
 const ESTADOS = {
   pagar:           {txt:'Se paga',                           cls:'pagar'},
   pagada:          {txt:'Pagada',                            cls:'pagada'},
+  detenida:        {txt:'Detenida · no se paga el viernes',  cls:'mal'},
   sin_cerrar:      {txt:'Sin cerrar · no se paga',           cls:'aviso'},
   sin_foto:        {txt:'Sin foto · no se paga',             cls:'aviso'},
   foto_no_valida:  {txt:'Foto no válida · no se paga',       cls:'mal'},
@@ -144,6 +152,8 @@ async function cargar(){
   const {data, error} = await sb.rpc('pp_reporte_semana', {p_lunes: lunes});
   if(error){ document.getElementById('lista').innerHTML = '<div class="vacio">No se pudo cargar: ' + esc(error.message) + '</div>'; return; }
   filas = data || [];
+  const t = await sb.rpc('pp_totales_pagados');
+  totales = (t && t.data) || {};
   pintar();
 }
 
@@ -166,19 +176,47 @@ function pintar(){
     const pagado = lista.filter(f => f.estado === 'pagada').reduce((s,f)=> s + Number(f.parte), 0);
     const caja = document.createElement('div');
     caja.className = 'tec';
-    caja.innerHTML = '<div class="tec-cab"><div class="nom"><b>' + esc(nom) + '</b><span>' + lista.length + ' piscinas · ' + aPagar.length + ' se pagan</span></div>'
-      + '<div class="total"><b>' + dinero(total) + '</b><span>a pagar' + (pagado ? ' · ya pagado ' + dinero(pagado) : '') + '</span></div></div>';
-    lista.forEach(f => caja.appendChild(filaHTML(f)));
+    // Resumen por estado (se ve sin abrir la tarjeta)
+    const cuenta = {};
+    lista.forEach(f => { cuenta[f.estado] = (cuenta[f.estado] || 0) + 1; });
+    const chips = Object.keys(cuenta).map(k => '<span class="est ' + (ESTADOS[k] ? ESTADOS[k].cls : 'gris') + '">' + cuenta[k] + ' · ' + (ESTADOS[k] ? ESTADOS[k].txt.split(' · ')[0] : k) + '</span>').join('');
+    const acum = totales[lista[0].tecnico_id];
+    caja.innerHTML = '<div class="tec-cab"><div class="nom"><b>' + esc(nom)
+      + ' <small style="font-weight:600;font-size:12.5px;color:var(--pool);margin-left:6px">Pagado en total: ' + dinero(acum ? acum.total : 0) + '</small></b><span>' + lista.length + ' piscinas · ' + aPagar.length + ' se pagan · toca para ver las fotos</span>'
+      + '<div class="resumen">' + chips + '</div></div>'
+      + '<div class="total"><b>' + dinero(total) + '</b><span>a pagar' + (pagado ? ' · ya pagado ' + dinero(pagado) : '') + '</span></div>'
+      + '<div class="flecha">&#8250;</div></div><div class="cuerpo"></div>';
+    caja.querySelector('.tec-cab').onclick = () => {
+      caja.classList.toggle('abierta');
+      try{ const k = 'pp_pagos_abierta_' + nom; caja.classList.contains('abierta') ? sessionStorage.setItem(k,'1') : sessionStorage.removeItem(k); }catch(e){}
+    };
+    try{ if(sessionStorage.getItem('pp_pagos_abierta_' + nom)) caja.classList.add('abierta'); }catch(e){}
+    const cuerpo = caja.querySelector('.cuerpo');
+    lista.forEach(f => cuerpo.appendChild(filaHTML(f)));
     const pie = document.createElement('div');
     pie.className = 'tec-pie';
+    const detenidas = lista.filter(f => f.estado === 'detenida').length;
     if(aPagar.length){
+      const d = document.createElement('button');
+      d.className = 'bt';
+      d.textContent = 'Detener el pago de ' + nom.split(' ')[0];
+      d.onclick = () => detenerTecnico(lista[0].tecnico_id, nom, true);
+      pie.appendChild(d);
       const b = document.createElement('button');
       b.className = 'bt pagar';
       b.textContent = 'Ya le pagué ' + dinero(total) + ' a ' + nom.split(' ')[0];
       b.onclick = () => marcarPagado(lista[0].tecnico_id, nom, total, aPagar.length, b);
       pie.appendChild(b);
-      pie.insertAdjacentHTML('beforeend', '<small>Primero haz el pago por Stripe o Zelle; este botón solo lo registra.</small>');
-    }else{
+      pie.insertAdjacentHTML('beforeend', '<small>El viernes 7 a.m. se paga solo por Stripe. "Ya le pagué" es solo para cuando le pagas tú por Zelle.</small>');
+    }
+    if(detenidas){
+      const r = document.createElement('button');
+      r.className = 'bt';
+      r.textContent = 'Reanudar ' + detenidas + ' pago' + (detenidas > 1 ? 's' : '') + ' detenido' + (detenidas > 1 ? 's' : '');
+      r.onclick = () => detenerTecnico(lista[0].tecnico_id, nom, false);
+      pie.appendChild(r);
+    }
+    if(!aPagar.length && !detenidas){
       pie.innerHTML = '<small>' + (pagado ? 'Esta semana ya quedó pagada.' : 'No hay nada para pagar esta semana.') + '</small>';
     }
     caja.appendChild(pie);
@@ -213,6 +251,8 @@ function filaHTML(f){
   if(f.estado === 'pagar' && f.foto && !f.autorizada) accion('Marcar foto no válida', 'foto_no_valida', '¿La foto de ' + f.cliente + ' no es de una piscina? Esta visita no se pagará.');
   if(['sin_cerrar','sin_foto','foto_no_valida'].includes(f.estado)) accion('Autorizar pago (el técnico mostró evidencia)', 'autorizar', '¿El técnico ya mostró evidencia de que hizo ' + f.cliente + '? Se autorizará el pago, siempre que el cliente haya pagado.');
   if(f.autorizada && f.estado !== 'pagada') accion('Quitar autorización', 'quitar');
+  if(f.estado === 'pagar') accion('Detener este pago', 'detener');
+  if(f.estado === 'detenida') accion('Reanudar este pago', 'reanudar');
   return el;
 }
 
@@ -222,6 +262,14 @@ async function marcarPagado(tecId, nom, total, n, boton){
   const {data, error} = await sb.rpc('pp_marcar_semana_pagada', {p_tecnico: tecId, p_lunes: lunes});
   if(error){ toast('No se pudo registrar: ' + error.message); boton.disabled = false; return; }
   toast('Registrado: ' + data.visitas + ' piscinas, ' + dinero(data.total) + '.');
+  await cargar();
+}
+
+async function detenerTecnico(tecId, nom, detener){
+  if(detener && !confirm('¿Detener el pago de ' + nom + ' de esta semana? El viernes no se le pagará hasta que lo reanudes.')) return;
+  const {data, error} = await sb.rpc('pp_detener_tecnico', {p_tecnico: tecId, p_lunes: lunes, p_detener: detener});
+  if(error){ toast('No se pudo: ' + error.message); return; }
+  toast((detener ? 'Detenido: ' : 'Reanudado: ') + data.visitas + ' piscinas.');
   await cargar();
 }
 
