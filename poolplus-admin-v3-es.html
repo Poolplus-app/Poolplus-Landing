@@ -2452,11 +2452,12 @@ async function pgSalir(){
         // 14 nov 2026: el botón va en la primera columna, junto al nombre, para no tener que ir al final de la fila
         var b = document.createElement('button');
         b.className = 'btn btn-sm pp-hist-btn';
-        b.style.cssText = 'margin-left:auto;flex:none;background:#1E88C8;color:#fff;border:0;font-weight:700';
+        b.style.cssText = 'display:inline-block;margin-top:6px;padding:4px 12px;background:#1E88C8;color:#fff;border:0;font-weight:700';
         b.textContent = 'Historial';
         b.onclick = function(ev){ ev.stopPropagation(); ppHistAbrir(m[1]); };
         var celda = tr.firstElementChild && tr.firstElementChild.firstElementChild;
-        if (celda) { celda.style.gap = '10px'; celda.appendChild(b); } else g.parentNode.insertBefore(b, g);
+        var bloque = celda && celda.lastElementChild;
+        if (bloque) { var br = document.createElement('div'); br.appendChild(b); bloque.appendChild(br); } else g.parentNode.insertBefore(b, g);
       });
     };
     try { renderClients(); } catch(x) {}
