@@ -640,6 +640,10 @@ const ANON_KEY = 'sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
 
 let session = null;      // {access_token, expires_at}
 let techName = null;
+function ppMiCorreoSesion(){
+  try{ return String(JSON.parse(atob(session.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).email || '').toLowerCase(); }
+  catch(e){ return ''; }
+}
 let techId = null;   // 14 nov 2026: la ruta y el nombre se filtran por el técnico que entró (un correo de administración ve todo por permisos)
 let currentBooking = null;   // booking being completed
 let compressedBase64 = null; // photo ready to send
@@ -749,7 +753,7 @@ async function enterApp(){
 
   // Nombre del técnico (RLS: solo ve su propia fila)
   try{
-    const yo = (typeof ppqMiCorreo === 'function') ? ppqMiCorreo() : '';
+    const yo = ppMiCorreoSesion();
     const res = await fetch(SUPABASE_URL + '/rest/v1/technicians?select=id,name' + (yo ? '&email=ilike.' + encodeURIComponent(yo) : ''),{
       headers: authHeaders()
     });
@@ -1006,7 +1010,7 @@ function ordenDelDia(ymd){
 }
 async function cargarOrdenes(){
   try{
-    const res = await fetch(SUPABASE_URL + '/rest/v1/ruta_orden?select=clave,orden&tech_email=eq.' + encodeURIComponent((typeof ppqMiCorreo === 'function') ? ppqMiCorreo() : ''), {headers: authHeaders()});
+    const res = await fetch(SUPABASE_URL + '/rest/v1/ruta_orden?select=clave,orden&tech_email=eq.' + encodeURIComponent(ppMiCorreoSesion()), {headers: authHeaders()});
     if(!res.ok) return;
     const filas = await res.json();
     rutaOrdenes = {};
@@ -1077,7 +1081,7 @@ async function guardarOrden(siempre){
     if(!res.ok) throw new Error('Error ' + res.status);
     if(siempre && rutaOrdenes['fecha:' + ymd]){
       // Si ese día tenía un orden "solo hoy", se quita para que mande el fijo
-      await fetch(SUPABASE_URL + '/rest/v1/ruta_orden?tech_email=eq.' + encodeURIComponent((typeof ppqMiCorreo === 'function') ? ppqMiCorreo() : '') + '&clave=eq.' + encodeURIComponent('fecha:' + ymd), {method:'DELETE', headers: authHeaders()});
+      await fetch(SUPABASE_URL + '/rest/v1/ruta_orden?tech_email=eq.' + encodeURIComponent(ppMiCorreoSesion()) + '&clave=eq.' + encodeURIComponent('fecha:' + ymd), {method:'DELETE', headers: authHeaders()});
       delete rutaOrdenes['fecha:' + ymd];
     }
     rutaOrdenes[clave] = orden;
