@@ -2124,8 +2124,15 @@ async function cartReenviar(id){
     confirmando = null; showToast('Cliente borrado'); renderClients();
   }
   window.ppCliAccion = function(accion, id){
-    if (accion === 'inactivar') return poner(id, 'inactivo');
-    if (accion === 'reactivar') return poner(id, 'prospecto');
+    // 14 nov 2026: inactivar pide confirmación dos veces, para no hacerlo por error
+    if (accion === 'inactivar') {
+      var cc = CLIENTS.find(function(x){ return x.id === id; }) || {};
+      var quien = (cc.name || 'este cliente') + (cc.addr ? ' (' + cc.addr + ')' : '');
+      if (!confirm('¿Inactivar a ' + quien + '?')) return;
+      if (!confirm('Confirma otra vez: ' + quien + ' quedará INACTIVO y saldrá de la lista de activos.\n\n¿Seguro que quieres inactivarlo?')) return;
+      return poner(id, 'inactivo');
+    }
+    if (accion === 'reactivar') return poner(id, 'activo');
     if (accion === 'borrar') { confirmando = id; return renderClients(); }
     if (accion === 'cancelar') { confirmando = null; return renderClients(); }
     if (accion === 'confirmar') return borrar(id);
