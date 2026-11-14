@@ -2326,5 +2326,126 @@ async function pgSalir(){
   });
 })();
 </script>
+<!-- 14 nov 2026: historial de servicios de cada cliente. Botón "Historial" en la fila; fechas a la izquierda y el detalle con fotos a la derecha. Bloque aditivo. -->
+<style>
+  #ppHist{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:300;display:none;align-items:center;justify-content:center;padding:12px}
+  #ppHist.open{display:flex}
+  #ppHist .caja{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:18px;width:100%;max-width:780px;height:min(86vh,720px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px rgba(15,23,42,.25)}
+  #ppHist .cab{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+  #ppHist .cab b{font-size:16px;display:block}
+  #ppHist .cab span{font-size:12.5px;color:var(--muted)}
+  #ppHist .cab button{margin-left:auto}
+  #ppHist .cuerpo{flex:1;display:flex;min-height:0}
+  #ppHist .fechas{width:132px;flex:none;border-right:1px solid var(--border);overflow-y:auto;background:var(--surface2)}
+  #ppHist .fechas button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--border);background:transparent;padding:10px 12px;font:inherit;font-size:13px;color:var(--text);cursor:pointer}
+  #ppHist .fechas button small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+  #ppHist .fechas button.on{background:#1E88C8;color:#fff}
+  #ppHist .fechas button.on small{color:#e0f2fe}
+  #ppHist .punto{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  #ppHist .detalle{flex:1;overflow-y:auto;padding:16px}
+  #ppHist .dato{margin-bottom:12px}
+  #ppHist .dato label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+  #ppHist .dato div{font-size:14.5px}
+  #ppHist .chip{display:inline-block;font-size:12px;font-weight:700;border-radius:20px;padding:2px 10px}
+  #ppHist .fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+  #ppHist .fotos img{width:100%;border-radius:12px;display:block;cursor:zoom-in;background:var(--surface2)}
+  #ppHist .vacio{color:var(--muted);text-align:center;padding:40px 16px;font-size:14px}
+  #ppHistVisor{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:310;display:none;align-items:center;justify-content:center}
+  #ppHistVisor img{max-width:100%;max-height:100%}
+  @media(max-width:600px){ #ppHist{padding:0} #ppHist .caja{height:100vh;border-radius:0} #ppHist .fechas{width:104px} #ppHist .fechas button{padding:10px 8px;font-size:12.5px} #ppHist .detalle{padding:12px} }
+</style>
+<div id="ppHist" onclick="if(event.target===this) ppHistCerrar()">
+  <div class="caja">
+    <div class="cab"><div><b id="ppHistNombre">Historial</b><span id="ppHistSub"></span></div><button class="btn btn-ghost btn-sm" onclick="ppHistCerrar()">✕</button></div>
+    <div class="cuerpo"><div class="fechas" id="ppHistFechas"></div><div class="detalle" id="ppHistDetalle"></div></div>
+  </div>
+</div>
+<div id="ppHistVisor" onclick="this.style.display='none'"><img alt="Foto del servicio"></div>
+<script>
+(function(){
+  var VIS = [];
+  function esc(t){ return String(t == null ? '' : t).replace(/[<>&"]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); }
+  function dia(ymd, largo){ try{ return new Date(String(ymd).slice(0,10) + 'T12:00:00Z').toLocaleDateString('es-US', largo ? {weekday:'long', day:'numeric', month:'long', year:'numeric', timeZone:'UTC'} : {day:'numeric', month:'short', year:'2-digit', timeZone:'UTC'}); }catch(e){ return String(ymd); } }
+  function hora(iso){ try{ return new Date(iso).toLocaleString('es-US', {timeZone:'America/New_York', weekday:'short', day:'numeric', month:'short', hour:'numeric', minute:'2-digit'}); }catch(e){ return ''; } }
+  function hoyNY(){ return new Date().toLocaleDateString('en-CA', {timeZone:'America/New_York'}); }
+  function estado(v){
+    var s = String(v.status || '').toLowerCase();
+    if (v.completed_at) return {txt:'Cerrada', color:'#16a34a', bg:'#16a34a1f'};
+    if (s.indexOf('cancel') >= 0 || v.cancel_resuelto_at) return {txt:'Cancelada', color:'#64748b', bg:'#64748b1f'};
+    if (v.service_date && String(v.service_date).slice(0,10) > hoyNY()) return {txt:'Programada', color:'#1E88C8', bg:'#1E88C81f'};
+    if (v.service_date && String(v.service_date).slice(0,10) === hoyNY()) return {txt:'Hoy, sin cerrar todavía', color:'#1E88C8', bg:'#1E88C81f'};
+    return {txt:'Sin cerrar', color:'#d97706', bg:'#d977061f'};
+  }
+  function fechaDe(v){ return String(v.service_date || v.completed_at || v.created_at || '').slice(0,10); }
+
+  window.ppHistCerrar = function(){ document.getElementById('ppHist').classList.remove('open'); };
+  window.ppHistVer = function(i){
+    var v = VIS[i]; if (!v) return;
+    document.querySelectorAll('#ppHistFechas button').forEach(function(b, k){ b.classList.toggle('on', k === i); });
+    var e = estado(v);
+    var fotos = [v.photo_url, v.novedad_foto_url].filter(Boolean);
+    var pago = v.tech_consignado_at ? 'Pagado al técnico' + (v.tech_pago_monto != null ? ' ($' + Number(v.tech_pago_monto).toFixed(2) + ')' : '') + ' el ' + hora(v.tech_consignado_at)
+             : (v.paid_at ? 'Cobrado al cliente el ' + hora(v.paid_at) : '');
+    var h = ''
+      + '<div class="dato"><label>Fecha del servicio</label><div style="text-transform:capitalize">' + esc(dia(fechaDe(v), true)) + '</div></div>'
+      + '<div class="dato"><label>Estado</label><div><span class="chip" style="color:' + e.color + ';background:' + e.bg + '">' + e.txt + '</span></div></div>'
+      + '<div class="dato"><label>Técnico</label><div>' + esc(v.assigned_technician || 'Sin asignar') + '</div></div>'
+      + (v.completed_at ? '<div class="dato"><label>Cerrada</label><div>' + esc(hora(v.completed_at)) + '</div></div>' : '')
+      + '<div class="dato"><label>Servicio</label><div>' + esc(v.service_label || v.service || 'Servicio') + '</div></div>'
+      + (v.novedad_tipo || v.novedad_nota ? '<div class="dato"><label>Novedad</label><div>' + esc([v.novedad_tipo, v.novedad_nota].filter(Boolean).join(' · ')) + '</div></div>' : '')
+      + (v.notes ? '<div class="dato"><label>Notas</label><div style="white-space:pre-wrap;font-size:13.5px">' + esc(v.notes) + '</div></div>' : '')
+      + (pago ? '<div class="dato"><label>Pago</label><div style="font-size:13.5px">' + esc(pago) + '</div></div>' : '')
+      + '<div class="dato"><label>Fotos</label>' + (fotos.length
+          ? '<div class="fotos">' + fotos.map(function(f){ return '<img loading="lazy" src="' + esc(f) + '" onclick="ppHistFoto(this.src)" alt="Foto del servicio">'; }).join('') + '</div>'
+          : '<div style="color:var(--muted);font-size:13.5px">Sin foto</div>') + '</div>';
+    document.getElementById('ppHistDetalle').innerHTML = h;
+    document.getElementById('ppHistDetalle').scrollTop = 0;
+  };
+  window.ppHistFoto = function(src){ var v = document.getElementById('ppHistVisor'); v.querySelector('img').src = src; v.style.display = 'flex'; };
+
+  window.ppHistAbrir = async function(id){
+    var c = (typeof CLIENTS !== 'undefined' ? CLIENTS : []).find(function(x){ return x.id === id; }) || {};
+    document.getElementById('ppHistNombre').textContent = c.name || 'Historial';
+    document.getElementById('ppHistSub').textContent = c.addr || '';
+    document.getElementById('ppHistFechas').innerHTML = '';
+    document.getElementById('ppHistDetalle').innerHTML = '<div class="vacio">Cargando…</div>';
+    document.getElementById('ppHist').classList.add('open');
+    var r = await sb.from('booking_requests').select('*').eq('client_id', id);
+    if (r.error) { document.getElementById('ppHistDetalle').innerHTML = '<div class="vacio">No se pudo cargar el historial.</div>'; return; }
+    VIS = (r.data || []).sort(function(a, b){ return fechaDe(b).localeCompare(fechaDe(a)) || String(b.created_at).localeCompare(String(a.created_at)); });
+    var cerradas = VIS.filter(function(v){ return !!v.completed_at; }).length;
+    document.getElementById('ppHistSub').textContent = (c.addr || '') + ' · ' + VIS.length + ' servicios · ' + cerradas + ' cerrados';
+    if (!VIS.length) { document.getElementById('ppHistDetalle').innerHTML = '<div class="vacio">Este cliente todavía no tiene servicios.</div>'; return; }
+    document.getElementById('ppHistFechas').innerHTML = VIS.map(function(v, i){
+      var e = estado(v);
+      return '<button onclick="ppHistVer(' + i + ')"><span class="punto" style="background:' + e.color + '"></span>' + esc(dia(fechaDe(v))) + '<small>' + esc(e.txt) + '</small></button>';
+    }).join('');
+    // abre en el servicio cerrado más reciente; si no hay, en el primero
+    var k = VIS.findIndex(function(v){ return !!v.completed_at; });
+    ppHistVer(k >= 0 ? k : 0);
+  };
+
+  // Botón "Historial" en cada fila de la lista de clientes
+  if (typeof renderClients === 'function') {
+    var previo = window.renderClients || renderClients;
+    window.renderClients = function(){
+      previo.apply(this, arguments);
+      document.querySelectorAll('#clients-tbody tr').forEach(function(tr){
+        var g = tr.querySelector('button[onclick^="openClientModal"]');
+        if (!g || tr.querySelector('.pp-hist-btn')) return;
+        var m = (g.getAttribute('onclick') || '').match(/openClientModal\('([^']+)'\)/);
+        if (!m) return;
+        var b = document.createElement('button');
+        b.className = 'btn btn-ghost btn-sm pp-hist-btn';
+        b.style.marginRight = '6px';
+        b.textContent = 'Historial';
+        b.onclick = function(){ ppHistAbrir(m[1]); };
+        g.parentNode.insertBefore(b, g);
+      });
+    };
+    try { renderClients(); } catch(x) {}
+  }
+})();
+</script>
 </body>
 </html>
