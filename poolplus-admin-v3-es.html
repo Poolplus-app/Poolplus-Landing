@@ -2331,7 +2331,7 @@ async function pgSalir(){
 </script>
 <!-- 14 nov 2026: historial de servicios de cada cliente. Botón "Historial" en la fila; fechas a la izquierda y el detalle con fotos a la derecha. Bloque aditivo. -->
 <style>
-  #ppHist{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:300;display:none;align-items:center;justify-content:center;padding:12px}
+  #ppHist{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:950;display:none;align-items:center;justify-content:center;padding:12px}
   #ppHist.open{display:flex}
   #ppHist .caja{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:18px;width:100%;max-width:780px;height:min(86vh,720px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px rgba(15,23,42,.25)}
   #ppHist .cab{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
@@ -2353,8 +2353,10 @@ async function pgSalir(){
   #ppHist .fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
   #ppHist .fotos img{width:100%;border-radius:12px;display:block;cursor:zoom-in;background:var(--surface2)}
   #ppHist .vacio{color:var(--muted);text-align:center;padding:40px 16px;font-size:14px}
-  #ppHistVisor{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:310;display:none;align-items:center;justify-content:center}
+  #ppHistVisor{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:960;display:none;align-items:center;justify-content:center}
   #ppHistVisor img{max-width:100%;max-height:100%}
+  /* en el teléfono las ventanas quedan por encima de la barra de íconos */
+  .modal-overlay{z-index:950}
   @media(max-width:600px){ #ppHist{padding:0} #ppHist .caja{height:100vh;border-radius:0} #ppHist .fechas{width:104px} #ppHist .fechas button{padding:10px 8px;font-size:12.5px} #ppHist .detalle{padding:12px} }
 </style>
 <div id="ppHist" onclick="if(event.target===this) ppHistCerrar()">
@@ -2387,16 +2389,18 @@ async function pgSalir(){
     document.querySelectorAll('#ppHistFechas button').forEach(function(b, k){ b.classList.toggle('on', k === i); });
     var e = estado(v);
     var fotos = [v.photo_url, v.novedad_foto_url].filter(Boolean);
+    // la nota automática del sistema no se muestra
+    var notas = String(v.notes || '').split('\n').filter(function(l){ return l.indexOf('NO COBRAR (automático)') < 0; }).join('\n').trim();
     var pago = v.tech_consignado_at ? 'Pagado al técnico' + (v.tech_pago_monto != null ? ' ($' + Number(v.tech_pago_monto).toFixed(2) + ')' : '') + ' el ' + hora(v.tech_consignado_at)
              : (v.paid_at ? 'Cobrado al cliente el ' + hora(v.paid_at) : '');
     var h = ''
-      + '<div class="dato"><label>Fecha del servicio</label><div style="text-transform:capitalize">' + esc(dia(fechaDe(v), true)) + '</div></div>'
+      + '<div class="dato"><label>Fecha del servicio</label><div>' + esc((function(t){ return t.charAt(0).toUpperCase() + t.slice(1); })(dia(fechaDe(v), true))) + '</div></div>'
       + '<div class="dato"><label>Estado</label><div><span class="chip" style="color:' + e.color + ';background:' + e.bg + '">' + e.txt + '</span></div></div>'
       + '<div class="dato"><label>Técnico</label><div>' + esc(v.assigned_technician || 'Sin asignar') + '</div></div>'
       + (v.completed_at ? '<div class="dato"><label>Cerrada</label><div>' + esc(hora(v.completed_at)) + '</div></div>' : '')
       + '<div class="dato"><label>Servicio</label><div>' + esc(v.service_label || v.service || 'Servicio') + '</div></div>'
       + (v.novedad_tipo || v.novedad_nota ? '<div class="dato"><label>Novedad</label><div>' + esc([v.novedad_tipo, v.novedad_nota].filter(Boolean).join(' · ')) + '</div></div>' : '')
-      + (v.notes ? '<div class="dato"><label>Notas</label><div style="white-space:pre-wrap;font-size:13.5px">' + esc(v.notes) + '</div></div>' : '')
+      + (notas ? '<div class="dato"><label>Notas</label><div style="white-space:pre-wrap;font-size:13.5px">' + esc(notas) + '</div></div>' : '')
       + (pago ? '<div class="dato"><label>Pago</label><div style="font-size:13.5px">' + esc(pago) + '</div></div>' : '')
       + '<div class="dato"><label>Fotos</label>' + (fotos.length
           ? '<div class="fotos">' + fotos.map(function(f){ return '<img loading="lazy" src="' + esc(f) + '" onclick="ppHistFoto(this.src)" alt="Foto del servicio">'; }).join('') + '</div>'
