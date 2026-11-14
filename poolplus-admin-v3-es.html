@@ -2426,10 +2426,12 @@ async function pgSalir(){
     document.getElementById('ppHist').classList.add('open');
     var r = await sb.from('booking_requests').select('*').eq('client_id', id);
     if (r.error) { document.getElementById('ppHistDetalle').innerHTML = '<div class="vacio">No se pudo cargar el historial.</div>'; return; }
-    VIS = (r.data || []).sort(function(a, b){ return fechaDe(b).localeCompare(fechaDe(a)) || String(b.created_at).localeCompare(String(a.created_at)); });
+    // 14 nov 2026: solo lo que ya pasó (cerradas, o con fecha anterior a hoy); las programadas no se muestran
+    var hoy = hoyNY();
+    VIS = (r.data || []).filter(function(v){ return !!v.completed_at || (fechaDe(v) && fechaDe(v) < hoy); }).sort(function(a, b){ return fechaDe(b).localeCompare(fechaDe(a)) || String(b.created_at).localeCompare(String(a.created_at)); });
     var cerradas = VIS.filter(function(v){ return !!v.completed_at; }).length;
-    document.getElementById('ppHistSub').textContent = (c.addr || '') + ' · ' + VIS.length + ' servicios · ' + cerradas + ' cerrados';
-    if (!VIS.length) { document.getElementById('ppHistDetalle').innerHTML = '<div class="vacio">Este cliente todavía no tiene servicios.</div>'; return; }
+    document.getElementById('ppHistSub').textContent = (c.addr || '') + ' · ' + VIS.length + ' servicios hasta hoy · ' + cerradas + ' cerrados';
+    if (!VIS.length) { document.getElementById('ppHistDetalle').innerHTML = '<div class="vacio">Este cliente todavía no tiene servicios hechos.</div>'; return; }
     document.getElementById('ppHistFechas').innerHTML = VIS.map(function(v, i){
       var e = estado(v);
       return '<button onclick="ppHistVer(' + i + ')"><span class="punto" style="background:' + e.color + '"></span>' + esc(dia(fechaDe(v))) + '<small>' + esc(e.txt) + '</small></button>';
