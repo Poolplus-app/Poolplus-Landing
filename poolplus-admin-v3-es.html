@@ -1656,7 +1656,10 @@ async function verificarCodigo(){
       await sb.auth.signOut();
       document.getElementById('admin-gate').style.display='flex';
       alert('Este correo no tiene acceso al panel de administración.');
+      return;
     }
+    // 14 nov 2026: con la sesión ya confirmada se cargan clientes y técnicos (antes podían quedar en 0)
+    if(typeof cargarDatosReales==='function'){ clearTimeout(window._ppCarga); window._ppCarga=setTimeout(cargarDatosReales,150); }
   }
   sb.auth.onAuthStateChange((_e,ses)=>{ ppGuardiaAdmin(ses); });
   sb.auth.getSession().then(r=>ppGuardiaAdmin(r.data.session));
