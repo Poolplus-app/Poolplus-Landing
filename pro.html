@@ -64,9 +64,9 @@ function mover(n){var p=DIA.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]+n);DIA
 function fechaLarga(s){var p=s.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]);return d.toLocaleDateString('es-US',{weekday:'long',day:'numeric',month:'long'})}
 function horaDe(iso){return new Date(iso).toLocaleTimeString('es-US',{hour:'numeric',minute:'2-digit'})}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function leer(){try{S=JSON.parse(localStorage.getItem('pp_pro_session')||'null')}catch(e){S=null}}
-function guardar(){try{localStorage.setItem('pp_pro_session',JSON.stringify(S))}catch(e){}}
-function salir(){S=null;try{localStorage.removeItem('pp_pro_session')}catch(e){}pintar()}
+function leer(){try{var s=JSON.parse(localStorage.getItem('pp_tech_session')||'null');if(s&&s.access_token){var p=s.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');while(p.length%4)p+='=';var em='';try{em=JSON.parse(atob(p)).email||''}catch(e){}S={a:s.access_token,r:s.refresh_token,x:(s.expires_at||0)*1000,email:em}}else{S=null}}catch(e){S=null}}
+function guardar(){try{localStorage.setItem('pp_tech_session',JSON.stringify({access_token:S.a,refresh_token:S.r,expires_at:Math.floor(S.x/1000)}))}catch(e){}}
+function salir(){S=null;try{localStorage.removeItem('pp_tech_session')}catch(e){}pintar()}
 async function entrar(email,clave){var r=await fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:clave})});var j=await r.json();if(!r.ok)throw new Error('Correo o contraseña incorrectos');S={a:j.access_token,r:j.refresh_token,x:Date.now()+j.expires_in*1000,email:j.user.email};guardar()}
 async function renovar(){var r=await fetch(SB+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:S.r})});var j=await r.json();if(!r.ok){salir();throw new Error('Tu sesión venció, vuelve a entrar')}S.a=j.access_token;S.r=j.refresh_token;S.x=Date.now()+j.expires_in*1000;guardar()}
 async function tok(){if(!S)throw new Error('Sin sesión');if(Date.now()>S.x-60000)await renovar();return S.a}
