@@ -2544,5 +2544,31 @@ function ppoUsarCopia(){
 window.addEventListener('online', ()=> setTimeout(()=>{ if(session && document.getElementById('ppoAviso')) loadBookings(); }, 2500));
 </script>
 
+<script>
+(function(){
+  var LISTA=null;
+  function pintarBarra(){
+    if(!LISTA||!LISTA.length||document.getElementById('pp-emp-tabs'))return;
+    var b=document.createElement('div');b.id='pp-emp-tabs';
+    b.style.cssText='display:flex;gap:4px;padding:6px 12px 0;background:#fff;border-bottom:1px solid #E5EAF2;font-family:Inter,system-ui,sans-serif;position:relative;z-index:50';
+    var h='';
+    LISTA.forEach(function(e){h+='<a href="/pro.html" style="padding:8px 12px;font-size:14px;font-weight:600;color:#6B7280;text-decoration:none;border-bottom:3px solid transparent">'+String(e.nombre||'').replace(/[<>&"]/g,'')+'</a>';});
+    h+='<span style="padding:8px 12px;font-size:14px;font-weight:600;color:#0B2545;border-bottom:3px solid #1E88C8">PoolPlus</span>';
+    b.innerHTML=h;document.body.insertBefore(b,document.body.firstChild);
+  }
+  function cargar(){
+    try{
+      var s=JSON.parse(localStorage.getItem('pp_tech_session')||'null');
+      if(!s||!s.access_token)return;
+      var U=(typeof SUPABASE_URL!=='undefined')?SUPABASE_URL:null,K=(typeof ANON_KEY!=='undefined')?ANON_KEY:null;
+      if(!U||!K)return;
+      fetch(U+'/rest/v1/rpc/rutas_mis_empresas',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:'{}'})
+        .then(function(r){return r.ok?r.json():null}).then(function(l){if(l&&l.length){LISTA=l;pintarBarra();}}).catch(function(){});
+    }catch(e){}
+  }
+  setTimeout(cargar,1500);setTimeout(function(){if(!LISTA)cargar();},6000);
+  setInterval(pintarBarra,3000);
+})();
+</script>
 </body>
 </html>
