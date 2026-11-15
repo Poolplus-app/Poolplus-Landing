@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Totalplan · Ruta</title>
+<meta name="theme-color" content="#0B2545">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Totalplan">
+<link rel="icon" href="/brand/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0B2545;--turq:#1E88C8;--turq2:#29B6F6;--txt:#0F172A;--gris:#6B7280;--linea:#E5EAF2;--papel:#F5F9FC;--azulbg:#E6F1FB;--azultx:#0C447C;--ambar:#854F0B}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--papel);color:var(--txt);font-family:Inter,system-ui,-apple-system,sans-serif;font-size:15px}
+.top{background:#fff;border-bottom:1px solid var(--linea);padding:14px 16px 0;position:sticky;top:0;z-index:5}
+.marca{display:flex;align-items:center;gap:10px}
+.marca .cuadro{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#0B3A6E,#1E88C8 60%,#29D3C2)}
+.marca .nom{font-weight:800;font-size:22px;letter-spacing:-.03em;color:var(--navy)}
+.marca .yo{margin-left:auto;font-size:12px;color:var(--gris);text-align:right}
+.tabs{display:flex;gap:4px;margin-top:12px}
+.tab{padding:9px 14px;font-size:14px;font-weight:600;color:var(--gris);border-bottom:3px solid transparent;text-decoration:none}
+.tab.on{color:var(--navy);border-color:var(--turq)}
+.dia{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid var(--linea)}
+.dia button{border:1px solid var(--linea);background:#fff;border-radius:8px;padding:6px 12px;font-size:16px;color:var(--navy)}
+.dia .f{flex:1;text-align:center;font-weight:600;text-transform:capitalize}
+.prog{padding:10px 16px;font-size:13px;color:var(--gris)}
+.lista{padding:0 12px 24px;display:flex;flex-direction:column;gap:8px}
+.card{background:#fff;border:1px solid var(--linea);border-radius:12px;padding:12px}
+.card.hecha{background:var(--azulbg);border-color:#B5D4F4}
+.fila{display:flex;gap:12px;align-items:center}
+.num{width:26px;height:26px;border-radius:50%;background:var(--papel);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--navy);flex:none}
+.hecha .num{background:#fff;color:var(--azultx)}
+.cli{font-weight:600;font-size:15px}
+.dir{font-size:13px;color:var(--gris)}
+.hecha .cli{color:var(--azultx)}.hecha .dir{color:#185FA5}
+.hora{margin-left:auto;font-size:12px;font-weight:600;color:var(--azultx);white-space:nowrap}
+.nota{margin-top:8px;font-size:13px;color:var(--ambar);background:#FAEEDA;border-radius:8px;padding:6px 10px}
+.det{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.btn{display:block;width:100%;text-align:center;border-radius:10px;padding:12px;font-size:15px;font-weight:600;border:1px solid var(--linea);background:#fff;color:var(--navy);text-decoration:none}
+.btn.pri{background:var(--turq);border-color:var(--turq);color:#fff}
+.btn:disabled{opacity:.5}
+.fotos{display:flex;gap:6px;flex-wrap:wrap}
+.fotos img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--linea)}
+.err{color:#A32D2D;font-size:13px}
+.vacio{text-align:center;color:var(--gris);padding:40px 16px}
+.pie{text-align:center;font-size:11px;color:var(--gris);padding:18px 16px 30px}
+.pie a{color:var(--gris)}
+.login{max-width:380px;margin:60px auto;padding:24px;background:#fff;border:1px solid var(--linea);border-radius:16px}
+.login input{width:100%;padding:12px;border:1px solid var(--linea);border-radius:10px;font-size:16px;margin-top:6px}
+.login label{display:block;font-size:13px;color:var(--gris);margin-top:14px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<input type="file" id="cam" accept="image/*" capture="environment" style="display:none">
+<script>
+var SB='https://sshbhmfsjyddynfwerpk.supabase.co', KEY='sb_publishable_WHp-542LjbsEAeHgdYHg-g_CUFmVEEi';
+var EMP='Totalplan';
+var S=null, VIS=[], ABIERTA=null, FOTOS={}, DIA=hoyStr(), OCUP=false, ERR={};
+function hoyStr(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function mover(n){var p=DIA.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]+n);DIA=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);ABIERTA=null;cargar()}
+function fechaLarga(s){var p=s.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]);return d.toLocaleDateString('es-US',{weekday:'long',day:'numeric',month:'long'})}
+function horaDe(iso){return new Date(iso).toLocaleTimeString('es-US',{hour:'numeric',minute:'2-digit'})}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function leer(){try{S=JSON.parse(localStorage.getItem('pp_pro_session')||'null')}catch(e){S=null}}
+function guardar(){try{localStorage.setItem('pp_pro_session',JSON.stringify(S))}catch(e){}}
+function salir(){S=null;try{localStorage.removeItem('pp_pro_session')}catch(e){}pintar()}
+async function entrar(email,clave){var r=await fetch(SB+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:clave})});var j=await r.json();if(!r.ok)throw new Error('Correo o contraseña incorrectos');S={a:j.access_token,r:j.refresh_token,x:Date.now()+j.expires_in*1000,email:j.user.email};guardar()}
+async function renovar(){var r=await fetch(SB+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:S.r})});var j=await r.json();if(!r.ok){salir();throw new Error('Tu sesión venció, vuelve a entrar')}S.a=j.access_token;S.r=j.refresh_token;S.x=Date.now()+j.expires_in*1000;guardar()}
+async function tok(){if(!S)throw new Error('Sin sesión');if(Date.now()>S.x-60000)await renovar();return S.a}
+async function rpc(n,args){var t=await tok();var r=await fetch(SB+'/rest/v1/rpc/'+n,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(args)});if(r.status===401){await renovar();return rpc(n,args)}var j=await r.json();if(!r.ok)throw new Error(j.message||'Error de conexión');return j}
+async function subir(ruta,blob){var t=await tok();var r=await fetch(SB+'/storage/v1/object/rutas-fotos/'+ruta,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+t,'Content-Type':'image/jpeg'},body:blob});if(!r.ok)throw new Error('No se pudo subir la foto');return SB+'/storage/v1/object/public/rutas-fotos/'+ruta}
+function sello(file,v){return new Promise(function(ok,mal){var img=new Image();img.onload=function(){var M=1600,w=img.naturalWidth,h=img.naturalHeight,k=Math.min(1,M/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);var c=document.createElement('canvas');c.width=w;c.height=h;var g=c.getContext('2d');g.drawImage(img,0,0,w,h);var fs=Math.max(16,Math.round(w*0.03));var bh=Math.round(fs*2.8);g.fillStyle='rgba(0,0,0,0.55)';g.fillRect(0,h-bh,w,bh);g.fillStyle='#fff';g.font='600 '+fs+'px Inter,Arial,sans-serif';var now=new Date();var t1=EMP+'  ·  '+now.toLocaleDateString('en-US')+'  '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});g.fillText(t1,Math.round(fs*0.7),h-Math.round(bh*0.55));g.font='400 '+Math.round(fs*0.8)+'px Inter,Arial,sans-serif';g.fillText(v.direccion||'',Math.round(fs*0.7),h-Math.round(bh*0.15));URL.revokeObjectURL(img.src);c.toBlob(function(b){b?ok(b):mal(new Error('No se pudo procesar la foto'))},'image/jpeg',0.82)};img.onerror=function(){mal(new Error('No se pudo leer la foto'))};img.src=URL.createObjectURL(file)})}
+async function cargar(){if(!S){pintar();return}try{VIS=await rpc('rutas_mi_ruta',{p_fecha:DIA});ERR.g=null}catch(e){ERR.g=e.message;VIS=[]}pintar()}
+function abrir(id){ABIERTA=(ABIERTA===id?null:id);pintar()}
+function foto(id){var c=document.getElementById('cam');c.value='';c.onchange=async function(){if(!c.files||!c.files[0])return;var v=VIS.find(function(x){return x.id===id});try{var b=await sello(c.files[0],v);(FOTOS[id]=FOTOS[id]||[]).push(b);ERR[id]=null}catch(e){ERR[id]=e.message}pintar()};c.click()}
+async function cerrar(id){if(OCUP)return;var fs=FOTOS[id]||[];if(!fs.length){ERR[id]='Falta la foto';pintar();return}OCUP=true;ERR[id]=null;pintar();try{var urls=[];for(var i=0;i<fs.length;i++){urls.push(await subir(id+'/'+Date.now()+'-'+i+'.jpg',fs[i]))}var r=await rpc('rutas_cerrar_visita',{p_visita:id,p_fotos:urls,p_nota:null});if(!r.ok)throw new Error(r.error||'No se pudo cerrar');delete FOTOS[id];ABIERTA=null;OCUP=false;await cargar()}catch(e){OCUP=false;ERR[id]=e.message;pintar()}}
+function mapa(v){return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent((v.direccion||'')+', '+(v.ciudad||'')+' FL '+(v.zip||''))}
+function pintar(){var a=document.getElementById('app');if(!S){a.innerHTML='<div class="login"><div class="marca"><div class="cuadro"></div><div class="nom">Totalplan</div></div><label>Correo</label><input id="em" type="email" autocomplete="username"><label>Contraseña</label><input id="pw" type="password" autocomplete="current-password"><div style="height:16px"></div><button class="btn pri" id="go">Entrar</button><div class="err" id="le" style="margin-top:10px"></div></div><div class="pie">Powered by PoolPlus</div>';document.getElementById('go').onclick=async function(){var b=this;b.disabled=true;document.getElementById('le').textContent='';try{await entrar(document.getElementById('em').value.trim(),document.getElementById('pw').value);await cargar()}catch(e){document.getElementById('le').textContent=e.message;b.disabled=false}};return}
+var hechas=VIS.filter(function(v){return v.estado==='cerrada'}).length;
+var h='<div class="top"><div class="marca"><div class="cuadro"></div><div class="nom">Totalplan</div><div class="yo">'+esc(S.email)+'</div></div><div class="tabs"><span class="tab on">Totalplan</span><a class="tab" href="/tech.html">PoolPlus</a></div></div>';
+h+='<div class="dia"><button onclick="mover(-1)">&lsaquo;</button><div class="f">'+esc(fechaLarga(DIA))+'</div><button onclick="mover(1)">&rsaquo;</button></div>';
+if(DIA!==hoyStr())h+='<div style="text-align:center;padding:8px"><a href="#" onclick="DIA=hoyStr();cargar();return false" style="color:var(--turq);font-size:13px">Volver a hoy</a></div>';
+if(ERR.g)h+='<div class="prog err">'+esc(ERR.g)+'</div>';
+h+='<div class="prog">'+hechas+' de '+VIS.length+' cerradas</div><div class="lista">';
+if(!VIS.length&&!ERR.g)h+='<div class="vacio">No tienes piscinas este día.</div>';
+VIS.forEach(function(v,i){var hecha=v.estado==='cerrada';h+='<div class="card'+(hecha?' hecha':'')+'"><div class="fila" onclick="abrir(&quot;'+v.id+'&quot;)"><div class="num">'+(v.orden||i+1)+'</div><div style="flex:1;min-width:0"><div class="cli">'+esc(v.cliente_nombre)+'</div><div class="dir">'+esc(v.direccion)+(v.ciudad?' · '+esc(v.ciudad):'')+'</div></div>'+(hecha?'<div class="hora">Cerrada '+esc(horaDe(v.cerrada_at))+'</div>':'')+'</div>';
+if(v.nota_fija&&(ABIERTA===v.id||!hecha))h+='<div class="nota">'+esc(v.nota_fija)+'</div>';
+if(ABIERTA===v.id){h+='<div class="det">';if(hecha){h+='<div class="fotos">'+(v.fotos||[]).map(function(u){return '<a href="'+esc(u)+'" target="_blank"><img src="'+esc(u)+'"></a>'}).join('')+'</div>'}else{var fs=FOTOS[v.id]||[];h+='<a class="btn" href="'+mapa(v)+'" target="_blank">Cómo llegar</a>';if(fs.length)h+='<div class="fotos">'+fs.map(function(b){return '<img src="'+URL.createObjectURL(b)+'">'}).join('')+'</div>';h+='<button class="btn" onclick="foto(&quot;'+v.id+'&quot;)">'+(fs.length?'Tomar otra foto':'Tomar foto')+'</button><button class="btn pri" '+(OCUP||!fs.length?'disabled':'')+' onclick="cerrar(&quot;'+v.id+'&quot;)">'+(OCUP?'Cerrando...':'Cerrar visita')+'</button>'}if(ERR[v.id])h+='<div class="err">'+esc(ERR[v.id])+'</div>';h+='</div>'}
+h+='</div>'});
+h+='</div><div class="pie">Powered by PoolPlus · <a href="#" onclick="salir();return false">Salir</a></div>';a.innerHTML=h}
+leer();cargar();
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&S&&!OCUP&&!ABIERTA)cargar()});
+</script>
+</body>
+</html>
