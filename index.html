@@ -691,7 +691,7 @@ footer{background:var(--dark);border-top:1px solid rgba(255,255,255,.06);padding
     <div style="margin-top:16px;display:grid;gap:10px;">
       <input id="subName" placeholder="Full name *" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
       <input id="subEmail" type="email" placeholder="Email *" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
-      <input id="subPhone" type="tel" placeholder="Phone" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
+      <input id="subPhone" type="tel" placeholder="Phone *" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
       <input id="subAddress" placeholder="Pool address *" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
       <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:10px;">
         <input id="subCity" placeholder="City" style="padding:13px;border:1.5px solid #dde8f4;border-radius:10px;font-size:14.5px;">
@@ -762,8 +762,9 @@ async function submitSubscription(){
     err.textContent='Please fill in your name, email, pool address and ZIP.';
     err.style.display='block';return;
   }
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
-    err.textContent='Please enter a valid email address.';
+  var malo=ppDatosBasura({name:name,email:email,phone:phone,address:address,zip:zip});
+  if(malo){
+    err.textContent=malo;
     err.style.display='block';return;
   }
   var btn=document.getElementById('subGoBtn');
@@ -778,7 +779,9 @@ async function submitSubscription(){
       body:JSON.stringify({
         plan_key:SUB_SIZE+'_'+PLAN_MODE,
         full_name:name,email:email,phone:phone,
-        address:address,city:city,zip:zip,notes:notes
+        address:address,city:city,zip:zip,notes:notes,
+        source:(typeof PP_ORIGEN!=='undefined'&&PP_ORIGEN)?PP_ORIGEN.source:null,
+        source_detail:(typeof PP_ORIGEN!=='undefined'&&PP_ORIGEN)?PP_ORIGEN.detail:null
       })
     });
     var d=await r.json();
@@ -1112,6 +1115,35 @@ var GHL_WEBHOOK="https://services.leadconnectorhq.com/hooks/Q9902WErnxzPxpByDd3j
    `source_detail` es la cadena cruda de la URL, por si algún día hay que
    saber qué campaña exacta y no solo qué canal.
 ========================================================================== */
+
+/* Filtro de datos basura (20 nov 2026): alguien abrió el pago con "xxx" en todo
+   y no hubo a quién llamar. Se rechaza lo que claramente no es un dato real,
+   sin bloquear nombres o correos poco comunes. */
+function ppDatoRepetido(t){ t=String(t||'').toLowerCase().replace(/[^a-z0-9]/g,''); return t.length>1 && /^(.)\1*$/.test(t); }
+function ppDatosBasura(d){
+  var basura=/^(asdf|qwer|qwerty|zxcv|xxx+|aaa+|abc|n\/?a|none|nada|ninguno)$/i;
+  var nombre=String(d.name||'').trim();
+  if(nombre.replace(/[^A-Za-zÀ-ÿ]/g,'').length<2 || ppDatoRepetido(nombre) || basura.test(nombre.replace(/\s+/g,'')))
+    return 'Please enter your real full name.';
+  var em=String(d.email||'').trim().toLowerCase();
+  var m=em.match(/^([^@\s]+)@([^@\s]+)\.([a-z]{2,})$/);
+  if(!m || ppDatoRepetido(m[1]) || ppDatoRepetido(m[2]) || basura.test(m[1]))
+    return 'Please enter a valid email address so we can send your confirmation.';
+  if(d.phone!==undefined){
+    var tel=String(d.phone||'').replace(/\D/g,'');
+    if(tel.length===11 && tel.charAt(0)==='1') tel=tel.slice(1);
+    if(tel.length!==10 || ppDatoRepetido(tel))
+      return 'Please enter a valid 10-digit phone number so we can confirm your service.';
+  }
+  if(d.address!==undefined){
+    var ad=String(d.address||'').trim();
+    if(ad.length<6 || !/\d/.test(ad) || !/[A-Za-z]/.test(ad) || ppDatoRepetido(ad))
+      return 'Please enter the full pool address (number and street).';
+  }
+  if(d.zip!==undefined && !/^\d{5}$/.test(String(d.zip||'').trim()))
+    return 'Please enter a valid 5-digit ZIP code.';
+  return null;
+}
 var PP_ORIGEN=(function(){
   function leer(){try{return JSON.parse(sessionStorage.getItem("pp_origen")||"null");}catch(e){return null;}}
   function guardar(o){try{sessionStorage.setItem("pp_origen",JSON.stringify(o));}catch(e){}}
@@ -1155,8 +1187,9 @@ async function submitBooking(){
     alert("Please enter your name, email and phone so we can confirm your service.");
     return;
   }
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
-    alert("Please enter a valid email address.");
+  var malo=ppDatosBasura({name:name,email:email,phone:phone});
+  if(malo){
+    alert(malo);
     return;
   }
   if(SCHED_TYPE==="scheduled" && !dateVal){
