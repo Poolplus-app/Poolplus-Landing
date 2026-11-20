@@ -2489,5 +2489,141 @@ async function pgSalir(){
   }
 })();
 </script>
+<!-- 20 nov 2026: Pagos sin terminar. Quien abrió el pago y no lo terminó, para llamar. -->
+<script>
+(function(){
+  function esc(t){ return String(t == null ? '' : t).replace(/[<>&"]/g, function(c){ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]; }); }
+  function chip(t, c){ return '<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;background:'+c+'18;color:'+c+';border:1px solid '+c+'40">'+t+'</span>'; }
+  function fecha(iso){
+    if(!iso) return '';
+    return new Date(iso).toLocaleString('es-US', { timeZone:'America/New_York', weekday:'short', day:'numeric', month:'short', hour:'numeric', minute:'2-digit' });
+  }
+  var PS = { grupos: [], filtro: 'pendiente' };
+  var ETIQ = {
+    pendiente: ['Por llamar', '#DC2626'],
+    llamado: ['Ya lo llamé', '#1E88C8'],
+    pago: ['Ya pagó', '#16A34A'],
+    descartado: ['Descartado', '#64748B']
+  };
+
+  // Botón en el menú, justo debajo de Suscripciones (grupo Clientes)
+  var primero = document.querySelector('.nav-btn');
+  if(!primero || document.getElementById('page-sinterminar')) return;
+  var nav = primero.parentElement;
+  var b = document.createElement('button');
+  b.className = 'nav-btn';
+  b.setAttribute('onclick', "goTab('sinterminar',this);psCargar()");
+  b.innerHTML = '<span>◷</span><span style="flex:1">Pagos sin terminar</span><span class="nav-badge" id="badge-ps" style="display:none"></span>';
+  var subs = Array.prototype.find.call(nav.querySelectorAll('.nav-btn'), function(x){ return (x.getAttribute('onclick')||'').indexOf("'suscripciones'") >= 0; });
+  if(subs) subs.parentNode.insertBefore(b, subs.nextSibling); else nav.insertBefore(b, nav.querySelector('.sidebar-footer'));
+
+  // Página
+  var p = document.createElement('div');
+  p.className = 'page';
+  p.id = 'page-sinterminar';
+  p.innerHTML =
+    '<div class="page-title">Pagos sin terminar</div>' +
+    '<div class="page-sub">Personas que abrieron el pago y no lo terminaron. Llámalas y marca qué pasó. Si después pagan, salen solas como "Ya pagó".</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap" id="ps-filtros">' +
+      '<button class="btn btn-sm active-f" data-f="pendiente" onclick="psFiltro(\'pendiente\',this)">Por llamar</button>' +
+      '<button class="btn btn-sm" data-f="llamado" onclick="psFiltro(\'llamado\',this)">Ya llamados</button>' +
+      '<button class="btn btn-sm" data-f="pago" onclick="psFiltro(\'pago\',this)">Ya pagaron</button>' +
+      '<button class="btn btn-sm" data-f="descartado" onclick="psFiltro(\'descartado\',this)">Descartados</button>' +
+      '<button class="btn btn-sm" data-f="todos" onclick="psFiltro(\'todos\',this)">Todos</button>' +
+      '<button class="btn btn-sm" onclick="psCargar()" style="margin-left:auto">Actualizar</button>' +
+    '</div>' +
+    '<div class="card card-p"><div id="ps-lista"><p style="color:var(--muted);font-size:13px">Cargando…</p></div></div>';
+  document.getElementById('content').appendChild(p);
+  var est = document.createElement('style');
+  est.textContent = '#ps-filtros .active-f{background:#1E88C8;color:#fff;border-color:#1E88C8}';
+  document.head.appendChild(est);
+
+  window.psFiltro = function(f, btn){
+    PS.filtro = f;
+    document.querySelectorAll('#ps-filtros [data-f]').forEach(function(x){ x.classList.toggle('active-f', x === btn); });
+    psPintar();
+  };
+
+  window.psCargar = async function(soloContador){
+    var r = await Promise.all([
+      sb.from('aviso_abandono').select('session_id,email,monto,nombre,telefono,direccion,plan,llego_por,abierto_at,avisado_at,estado,nota').order('avisado_at', { ascending: false }).limit(400),
+      sb.from('subscriptions').select('email,status'),
+      sb.from('cartera_altas').select('email,estado')
+    ]);
+    if(r[0].error){ if(!soloContador) document.getElementById('ps-lista').innerHTML = '<p style="color:#DC2626;font-size:13px">No se pudo cargar: ' + esc(r[0].error.message) + '</p>'; return; }
+    var pagaron = {};
+    (r[1].data || []).forEach(function(s){ if(s.email && ['active','trialing','past_due','paused_payment'].indexOf(s.status) >= 0) pagaron[s.email.toLowerCase()] = 1; });
+    (r[2].data || []).forEach(function(c){ if(c.email && c.estado === 'activo') pagaron[c.email.toLowerCase()] = 1; });
+    // Una tarjeta por persona: se juntan los intentos del mismo correo
+    var porClave = {}, orden = [];
+    (r[0].data || []).forEach(function(x){
+      var k = (x.email || x.session_id).toLowerCase();
+      if(!porClave[k]){ porClave[k] = { ultimo: x, filas: [] }; orden.push(k); }
+      porClave[k].filas.push(x);
+    });
+    PS.grupos = orden.map(function(k){
+      var g = porClave[k], u = g.ultimo;
+      var nombre = ''; g.filas.forEach(function(f){ if(!nombre && f.nombre) nombre = f.nombre; });
+      var tel = ''; g.filas.forEach(function(f){ if(!tel && f.telefono) tel = f.telefono; });
+      var dir = ''; g.filas.forEach(function(f){ if(!dir && f.direccion) dir = f.direccion; });
+      var monto = ''; g.filas.forEach(function(f){ if(!monto && f.monto) monto = f.monto; });
+      var cat = (u.email && pagaron[u.email.toLowerCase()] && u.estado !== 'descartado') ? 'pago' : u.estado;
+      return { clave: k, u: u, ids: g.filas.map(function(f){ return f.session_id; }), intentos: g.filas.length, nombre: nombre, tel: tel, dir: dir, monto: monto, cat: cat };
+    });
+    var n = PS.grupos.filter(function(g){ return g.cat === 'pendiente'; }).length;
+    var badge = document.getElementById('badge-ps');
+    if(badge){ badge.textContent = n; badge.style.display = n ? '' : 'none'; }
+    if(!soloContador) psPintar();
+  };
+
+  window.psPintar = function(){
+    var box = document.getElementById('ps-lista');
+    if(!box) return;
+    var lista = PS.grupos.filter(function(g){ return PS.filtro === 'todos' || g.cat === PS.filtro; });
+    if(!lista.length){ box.innerHTML = '<p style="color:var(--muted);font-size:13px">No hay nada aquí.</p>'; return; }
+    box.innerHTML = lista.map(function(g, i){
+      var u = g.u, e = ETIQ[g.cat] || ETIQ.pendiente;
+      var botones = '';
+      if(g.cat === 'pendiente') botones = '<button class="btn btn-sm" onclick="psMarcar(' + PS.grupos.indexOf(g) + ',\'llamado\')">Ya lo llamé</button> <button class="btn btn-sm btn-ghost" onclick="psMarcar(' + PS.grupos.indexOf(g) + ',\'descartado\')">Descartar</button>';
+      else if(g.cat === 'llamado' || g.cat === 'descartado') botones = '<button class="btn btn-sm btn-ghost" onclick="psMarcar(' + PS.grupos.indexOf(g) + ',\'pendiente\')">Volver a Por llamar</button>';
+      return '<div style="padding:14px 0;' + (i ? 'border-top:1px solid var(--border);' : '') + '">' +
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">' +
+          '<span style="font-weight:800;font-size:15px">' + esc(g.nombre || 'Sin nombre') + '</span>' +
+          chip(e[0], e[1]) +
+          (g.intentos > 1 ? chip(g.intentos + ' intentos', '#D97706') : '') +
+          (u.llego_por ? chip('Llegó por: ' + esc(u.llego_por), '#7C3AED') : '') +
+        '</div>' +
+        '<div style="font-size:13px;line-height:1.7">' +
+          ((u.plan && u.plan !== 'Plan') || g.monto ? '<b>' + esc(u.plan && u.plan !== 'Plan' ? u.plan : 'Plan') + (g.monto ? ' · $' + esc(Number(g.monto).toLocaleString('en-US')) + '/mes' : '') + '</b><br>' : '') +
+          (g.tel ? 'Teléfono: <a href="tel:' + esc(g.tel) + '">' + esc(g.tel) + '</a><br>' : '') +
+          (u.email ? 'Correo: <a href="mailto:' + esc(u.email) + '">' + esc(u.email) + '</a><br>' : '') +
+          (g.dir ? 'Dirección: ' + esc(g.dir) + '<br>' : '') +
+          '<span style="color:var(--muted)">Abrió el pago: ' + esc(fecha(u.abierto_at || u.avisado_at)) + '</span> · ' +
+          '<a href="https://dashboard.stripe.com/checkout/sessions/' + esc(u.session_id) + '" target="_blank" rel="noopener">Ver en Stripe</a>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">' + botones +
+          '<input class="input" placeholder="Nota (qué dijo)" value="' + esc(u.nota || '') + '" onchange="psNota(' + PS.grupos.indexOf(g) + ',this.value)" style="flex:1;min-width:180px;font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:transparent;color:inherit">' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  };
+
+  window.psMarcar = async function(i, estado){
+    var g = PS.grupos[i]; if(!g) return;
+    var r = await sb.from('aviso_abandono').update({ estado: estado, actualizado_at: new Date().toISOString() }).in('session_id', g.ids);
+    if(r.error){ alert('No se pudo guardar: ' + r.error.message); return; }
+    await psCargar();
+  };
+  window.psNota = async function(i, texto){
+    var g = PS.grupos[i]; if(!g) return;
+    await sb.from('aviso_abandono').update({ nota: texto || null, actualizado_at: new Date().toISOString() }).in('session_id', g.ids);
+    g.u.nota = texto;
+  };
+
+  // Contador del menú: al abrir el panel y cada 10 minutos
+  setTimeout(function(){ psCargar(true); }, 2500);
+  setInterval(function(){ psCargar(true); }, 600000);
+})();
+</script>
 </body>
 </html>
