@@ -13,6 +13,8 @@
 </script>
   <!-- Microsoft Clarity -->
   <script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","zivnrzzetw");</script>
+<!-- Origen del cliente: se calcula primero, antes que todo lo demas -->
+<script>var PP_ORIGEN=(function(){try{var prev=JSON.parse(sessionStorage.getItem("pp_origen")||"null");if(prev&&prev.source)return prev;}catch(e){}var p;try{p=new URLSearchParams(location.search);}catch(e){p=null;}function q(k){return p?(p.get(k)||""):"";}var gclid=q("gclid")||q("wbraid")||q("gbraid");var utm=q("utm_source").toLowerCase();var src=q("src").toLowerCase();var source;if(src)source=src;else if(gclid)source="google_ads";else if(utm)source=utm;else if(document.referrer&&document.referrer.indexOf(location.hostname)===-1)source="referido";else source="directo";var detail=(location.search||"").replace(/^\?/,"")||null;if(!detail&&source==="referido")detail=document.referrer.slice(0,300);var o={source:source,detail:detail};try{sessionStorage.setItem("pp_origen",JSON.stringify(o));}catch(e){}return o;})();</script>
 <title>PoolPlus — Pool Service in Broward, FL | Book in Minutes</title>
 <meta name="description" content="South Florida's first pool service marketplace. Book pool cleaning, green pool rescue &amp; repairs in minutes — serving Weston, Davie, Pembroke Pines, Miramar, Hollywood &amp; all of Broward. You won't be charged until the job is completed."/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -1145,7 +1147,7 @@ function ppDatosBasura(d){
     return 'Please enter a valid 5-digit ZIP code.';
   return null;
 }
-var PP_ORIGEN=(function(){
+var PP_ORIGEN=window.PP_ORIGEN||(function(){
   function leer(){try{return JSON.parse(sessionStorage.getItem("pp_origen")||"null");}catch(e){return null;}}
   function guardar(o){try{sessionStorage.setItem("pp_origen",JSON.stringify(o));}catch(e){}}
   var previo=leer();
